@@ -1,0 +1,55 @@
+{
+  "name": "mossmind",
+  "version": "1.0.0",
+  "description": "Creative workflow manager for ADHD brains",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "package": "electron-vite build && electron-builder",
+    "mobile:dev": "vite --config vite.mobile.config.ts",
+    "mobile:build": "vite build --config vite.mobile.config.ts",
+    "mobile:sync": "npm run mobile:build && npx cap sync ios",
+    "mobile:open": "npx cap open ios",
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.5.2",
+    "vite": "^5.3.1",
+    "vite-plugin-svgr": "^5.2.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/preferences": "^8.0.1",
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
+    "electron-store": "^8.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "build": {
+    "appId": "com.mossmind.app",
+    "productName": "MossMind",
+    "mac": {
+      "category": "public.app-category.productivity"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "directories": {
+      "buildResources": "resources"
+    }
+  }
+}
