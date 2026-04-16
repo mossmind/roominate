@@ -359,7 +359,10 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       if (!result || !Array.isArray(result.nodes) || !Array.isArray(result.edges)) {
         throw new Error('Unexpected response shape from AI');
       }
-      let n = result.nodes as MindNode[];
+      let n = (result.nodes as MindNode[]).map(nd => ({
+        ...nd,
+        color: MIND_COLORS.includes(nd.color ?? '') ? nd.color : MIND_COLORS[Math.floor(Math.random() * MIND_COLORS.length)],
+      }));
       const e = result.edges as MindEdge[];
       // Scale and center the layout to fit the visible canvas
       if (n.length > 0 && canvasRef.current) {

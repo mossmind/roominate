@@ -78,7 +78,7 @@ export const ai = {
   generateMindMap: async (brief: string, taskName: string): Promise<{ nodes: unknown[]; edges: unknown[] }> => {
     if (isElectron) return (window as any).anthropic.generate(brief, taskName)
     const text = await anthropicFetch(
-      [{ role: 'user', content: `Project: ${taskName}\n\nBrief: ${brief}\n\nGenerate a mind map as JSON with "nodes" (array of {id, type:"text", x, y, w, text, color?}) and "edges" (array of {id, from, to}). Lay out all nodes within a 800x600 bounding box (x: 0-800, y: 0-600). Node w should be 140-180. Space nodes evenly. Return only valid JSON, no markdown.` }],
+      [{ role: 'user', content: `Project: ${taskName}\n\nBrief: ${brief}\n\nGenerate a mind map as JSON with "nodes" (array of {id, type:"text", x, y, w, text, color?}) and "edges" (array of {id, from, to}). Lay out all nodes within a 800x600 bounding box (x: 0-800, y: 0-600). Node w should be 140-180. Space nodes evenly. For color, you MUST only use one of these exact hex values: "#242329", "#454449", "#2E3B2F", "#3D5A3E", "#657946", "#8A9E6A", "#7B6557", "#C4956A", "#EF9982", "#B85C4A", "#8B7BA8", "#5B7FA8". Return only valid JSON, no markdown.` }],
       'You are a creative thinking assistant. Output only valid JSON, no markdown.'
     )
     const json = JSON.parse(text.replace(/```json|```/g, '').trim())
