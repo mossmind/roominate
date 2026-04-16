@@ -1152,6 +1152,83 @@ function TodoDetail({ item, onUpdate, onDelete, onBack }: { item: TodoItem; onUp
   );
 }
 
+// ── Create Project Modal ───────────────────────────────────────────────────
+function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCreate: (task: Task, cat: CategoryKey) => void }) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [cat, setCat] = useState<CategoryKey>(null);
+
+  function handleCreate() {
+    if (!name.trim()) return;
+    const task: Task = {
+      gid: "local_" + Date.now(),
+      name: name.trim(),
+      due_on: null,
+      notes: description.trim(),
+      url: "",
+    };
+    onCreate(task, cat);
+    onClose();
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }} onClick={onClose}>
+      <div style={{ background: C.dark, border: `1px solid rgba(255,255,255,0.12)`, width: 480, maxWidth: "90vw", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ background: C.mid, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>New Project</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Name */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.4)", letterSpacing: 1.2 }}>PROJECT NAME</label>
+            <input autoFocus value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCreate()} placeholder="Name your project…"
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.peach, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+          </div>
+
+          {/* Description */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.4)", letterSpacing: 1.2 }}>DESCRIPTION</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project about…"
+              style={{ fontFamily: FONT, fontSize: 13, color: C.peach, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 90, lineHeight: 1.7 }} />
+          </div>
+
+          {/* Category */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.4)", letterSpacing: 1.2 }}>CATEGORY</label>
+            <div style={{ display: "flex", gap: 10 }}>
+              {([["factory", "Outside", C.coral], ["creative", "Inside", C.main], [null, "Uncategorized", "rgba(255,255,255,0.2)"]] as [CategoryKey, string, string][]).map(([key, label, color]) => {
+                const isSelected = cat === key;
+                return (
+                  <button key={String(key)} onClick={() => setCat(key)}
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)", border: `1.5px solid ${isSelected ? color : "rgba(255,255,255,0.08)"}`, borderRadius: 0, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}>
+                    <div style={{ color: isSelected ? color : "rgba(255,255,255,0.3)", display: "flex" }}>
+                      {key === "factory" ? <OutsideIcon width={28} height={28} /> : key === "creative" ? <InsideIcon width={28} height={28} /> : <UncatIcon width={28} height={28} />}
+                    </div>
+                    <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: isSelected ? C.peach : "rgba(255,255,255,0.35)" }}>{label}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "16px 24px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "flex-end", gap: 10 }}>
+          <button onClick={onClose} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.4)", borderRadius: 0, padding: "10px 20px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+          <button onClick={handleCreate} disabled={!name.trim()}
+            style={{ background: name.trim() ? C.main : "rgba(255,255,255,0.08)", color: name.trim() ? C.white : "rgba(255,255,255,0.2)", border: "none", borderRadius: 0, padding: "10px 24px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+            Create Project
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main App ───────────────────────────────────────────────────────────────
 export default function App() {
   const [projects, setProjects]     = useState<Task[]>([]);
@@ -1172,6 +1249,7 @@ export default function App() {
   const [projectsPanelOpen, setProjectsPanelOpen] = useState(false);
   const [dragGid, setDragGid] = useState<string | null>(null);
   const [dragOverCat, setDragOverCat] = useState<CategoryKey | undefined>(undefined);
+  const [showCreate, setShowCreate] = useState(false);
   const hasFetched = useRef(false);
 
   useEffect(() => {
@@ -1208,6 +1286,18 @@ export default function App() {
       try { const r = await storageGet("workflow_" + t.gid); if (r) { const d = JSON.parse(r); p[t.gid] = STAGES.filter(s => d.done && d.done[s.id]).length; } else { p[t.gid] = 0; } } catch (_) { p[t.gid] = 0; }
     }));
     setProgresses(p);
+  }
+
+  async function createProject(task: Task, cat: CategoryKey) {
+    const updated = [task, ...projects];
+    setProjects(updated);
+    await storageSet("mossmind_tasks", JSON.stringify({ projects: updated, ts: Date.now() }));
+    loadProgresses(updated);
+    if (cat) {
+      const updatedCats = { ...categories, [task.gid]: cat };
+      setCategories(updatedCats);
+      await storageSet("mossmind_categories", JSON.stringify(updatedCats));
+    }
   }
 
   async function updateCategory(gid: string, cat: CategoryKey) {
@@ -1337,6 +1427,7 @@ export default function App() {
     <div className="graph-bg" style={{ display: "flex", flexDirection: "column", height: "100vh", fontFamily: FONT, overflow: "hidden" }}>
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} onSaved={(gids, quickGid) => { setSectionGids(gids); setQuickTaskSectionGid(quickGid); syncTasks(gids); syncQuickTasks(quickGid); }} />}
       {showPrayer && <MorningPrayerLock onUnlock={() => setShowPrayer(false)} />}
+      {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreate={createProject} />}
 
       {/* Title bar */}
       <div style={{ background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.08)`, padding: "0 24px", display: "flex", alignItems: "center", gap: 16, height: 54, flexShrink: 0 }}>
@@ -1346,6 +1437,7 @@ export default function App() {
           <MossIcon width={42} height={42} style={{ color: C.main, flexShrink: 0 }} />
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.peach, letterSpacing: 0 }}>MossMind</div>
         </div>
+        <button onClick={() => setShowCreate(true)} style={{ background: C.main, border: "none", borderRadius: 0, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.white, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {syncMsg && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? C.green : C.coral }}>{syncMsg}</div>}
