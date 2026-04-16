@@ -447,39 +447,41 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
   const nodeEls = nodes.map(node => {
     const isFirst = connecting === node.id;
+    const cardColor = node.color || C.mid;
     return (
       <div key={node.id}
         ref={el => { if (el) nodeHeights.current[node.id] = el.offsetHeight; }}
+        className="mind-node"
         style={{ position: 'absolute', left: node.x, top: node.y, width: node.w, zIndex: dragging?.id === node.id ? 100 : 1 }}
         onClick={() => { if (connectMode) handleNodeClick(node.id); }}>
-        <div style={{ background: isFirst ? 'rgba(239,153,130,0.12)' : (node.color || C.mid), border: `1.5px solid ${isFirst ? C.coral : 'rgba(255,255,255,0.45)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '2px 2px 0 rgba(0,0,0,0.3)', transition: 'border-color 0.15s' }}>
-          {/* Drag handle */}
-          <div onMouseDown={e => onMD(e, node.id)} style={{ height: 10, cursor: connectMode ? 'crosshair' : 'grab', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-            {[0,1,2].map(i => <div key={i} style={{ width: 14, height: 1.5, background: 'rgba(255,255,255,0.25)', borderRadius: 1 }} />)}
-          </div>
+        <div style={{ background: C.dark, border: `1px solid ${isFirst ? C.coral : 'rgba(255,255,255,0.1)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+          {/* Color strip — drag handle */}
+          <div onMouseDown={e => onMD(e, node.id)}
+            style={{ height: 5, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab' }} />
+
           {node.type === 'image' ? (
-            <div style={{ padding: '4px 4px 8px' }}>
-              <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = 'rgba(255,255,255,0.05)'; }} />
+            <div style={{ padding: '6px 6px 10px' }}>
+              <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = 'rgba(255,255,255,0.04)'; }} />
               {editingId === node.id
-                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 6, fontFamily: 'monospace', fontSize: 11, background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)', outline: 'none', color: C.peach, boxSizing: 'border-box' }} />
-                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 6, fontFamily: 'monospace', fontSize: 11, color: node.text ? C.peach : 'rgba(255,255,255,0.25)', cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
+                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 8, fontFamily: FONT, fontSize: 11, background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)', outline: 'none', color: 'rgba(255,255,255,0.45)', boxSizing: 'border-box' }} />
+                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 8, fontFamily: FONT, fontSize: 11, color: node.text ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
             </div>
           ) : (
-            <div style={{ padding: '5px 8px 4px' }}>
+            <div style={{ padding: '10px 10px 8px' }}>
               <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder="type here…"
                 onMouseDown={e => e.stopPropagation()}
-                style={{ width: '100%', minHeight: 36, fontFamily: 'monospace', fontSize: 11, background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'vertical', lineHeight: 1.4, boxSizing: 'border-box', display: 'block', cursor: 'text' }} />
-              <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 3, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
+                style={{ width: '100%', minHeight: 52, fontFamily: FONT, fontSize: 12, fontWeight: 500, background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'vertical', lineHeight: 1.6, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: 0.85, padding: 0 }} />
+              <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>
-                  <div style={{ width: 10, height: 10, background: node.color || C.mid, border: '1px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
-                  <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>▾</span>
+                  style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer', opacity: 0.4 }}>
+                  <div style={{ width: 8, height: 8, background: cardColor, borderRadius: '50%' }} />
+                  <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>▾</span>
                 </button>
                 {colorPickerNode === node.id && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 500, background: '#2a2830', border: '1px solid rgba(255,255,255,0.2)', padding: 5, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3, marginTop: 3, boxShadow: '0 6px 20px rgba(0,0,0,0.6)' }}>
+                  <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: C.dark, border: '1px solid rgba(255,255,255,0.12)', padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
                     {MIND_COLORS.map(col => (
                       <div key={col} onClick={() => { updateNode(node.id, { color: col }); setColorPickerNode(null); }}
-                        style={{ width: 14, height: 14, background: col, border: `1.5px solid ${(node.color || C.mid) === col ? C.white : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer' }} />
+                        style={{ width: 14, height: 14, background: col, border: `2px solid ${cardColor === col ? 'rgba(255,255,255,0.5)' : 'transparent'}`, cursor: 'pointer', borderRadius: '50%' }} />
                     ))}
                   </div>
                 )}
@@ -487,7 +489,9 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             </div>
           )}
         </div>
-        <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }} style={{ position: 'absolute', top: -8, right: -8, width: 18, height: 18, borderRadius: '50%', background: C.coral, border: '1.5px solid rgba(255,255,255,0.4)', color: C.white, fontSize: 10, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>×</button>
+        <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }}
+          className="node-delete"
+          style={{ position: 'absolute', top: -6, right: -6, width: 16, height: 16, borderRadius: '50%', background: C.dark, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.35)', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, opacity: 0, transition: 'opacity 0.15s' }}>×</button>
       </div>
     );
   });
@@ -1492,6 +1496,7 @@ export default function App() {
         }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         [style*="-webkit-app-region: drag"] { -webkit-app-region: drag; }
+        .mind-node:hover .node-delete { opacity: 1 !important; }
       `}</style>
     </div>
   );
