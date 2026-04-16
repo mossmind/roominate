@@ -373,12 +373,10 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         const contentW = maxX - minX;
         const contentH = maxY - minY;
         const scaleX = contentW > 0 ? (cw - pad * 2) / contentW : 1;
-        const scaleY = contentH > 0 ? (ch - pad * 2) / contentH : 1;
-        const scale = Math.min(scaleX, scaleY, 1); // never scale up, only down
+        const scale = Math.min(scaleX, 1); // scale to fit width, never scale up
         const scaledW = contentW * scale;
-        const scaledH = contentH * scale;
         const offsetX = (cw - scaledW) / 2 - minX * scale;
-        const offsetY = (ch - scaledH) / 2 - minY * scale;
+        const offsetY = pad - minY * scale; // anchor to top with padding
         n = n.map(nd => ({ ...nd, x: nd.x * scale + offsetX, y: nd.y * scale + offsetY, w: nd.w * scale }));
       }
       setNodes(n); setEdges(e);
