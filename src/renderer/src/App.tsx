@@ -299,7 +299,7 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
 }
 
 // ── Mind Map ──────────────────────────────────────────────────────────────
-interface MindNode { id: string; type: 'text' | 'image'; x: number; y: number; w: number; text: string; url: string; color?: string }
+interface MindNode { id: string; type: 'text' | 'image'; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
 interface MindEdge { id: string; from: string; to: string }
 
 function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }: { taskGid: string; taskName?: string; taskNotes?: string; fullscreen?: boolean }) {
@@ -317,6 +317,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   const [genError, setGenError] = useState<string | null>(null);
   const [colorPickerNode, setColorPickerNode] = useState<string | null>(null);
   const [resizing, setResizing] = useState<{ id: string; startW: number; startX: number } | null>(null);
+  const [resizingH, setResizingH] = useState<{ id: string; startH: number; startY: number } | null>(null);
   const nodeHeights = useRef<Record<string, number>>({});
 
   const MIND_COLORS = [
@@ -417,11 +418,16 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       const newW = Math.max(120, resizing.startW + e.clientX - resizing.startX);
       setNodes(prev => prev.map(n => n.id === resizing.id ? { ...n, w: newW } : n));
     }
+    if (resizingH) {
+      const newH = Math.max(60, resizingH.startH + e.clientY - resizingH.startY);
+      setNodes(prev => prev.map(n => n.id === resizingH.id ? { ...n, h: newH } : n));
+    }
   }
 
   function onMU() {
     if (dragging) { save(nodes, edges); setDragging(null); }
     if (resizing) { save(nodes, edges); setResizing(null); }
+    if (resizingH) { save(nodes, edges); setResizingH(null); }
   }
 
   function nc(node: MindNode): [number, number] {
@@ -435,10 +441,6 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <filter id="wavy-line" x="-20%" y="-20%" width="140%" height="140%">
           <feTurbulence type="turbulence" baseFrequency="0.008" numOctaves="2" seed="5" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="32" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-        <filter id="wavy-border" x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="2" seed="8" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
       {edges.map(edge => {
@@ -467,11 +469,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         className="mind-node"
         style={{ position: 'absolute', left: node.x, top: node.y, width: node.w, zIndex: dragging?.id === node.id ? 100 : 1 }}
         onClick={() => { if (connectMode) handleNodeClick(node.id); }}>
-        <div style={{ background: cardColor, border: 'none', boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'box-shadow 0.15s', overflow: 'visible', position: 'relative' }}>
-          {/* Wavy border overlay */}
-          <svg style={{ position: 'absolute', inset: '-2px', width: 'calc(100% + 4px)', height: 'calc(100% + 4px)', pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
-            <rect x="1" y="1" width="98%" height="98%" fill="none" stroke={isFirst ? C.coral : 'rgba(255,255,255,0.22)'} strokeWidth="1.5" filter="url(#wavy-border)" />
-          </svg>
+        <div style={{ background: cardColor, border: `1px solid ${isFirst ? C.coral : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
           {/* Color strip — drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
             style={{ height: 5, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab' }} />
@@ -487,7 +485,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             <div style={{ padding: '10px 10px 8px' }}>
               <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder="type here…"
                 onMouseDown={e => e.stopPropagation()}
-                style={{ width: '100%', minHeight: 52, fontFamily: FONT, fontSize: 12, fontWeight: 500, background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'vertical', lineHeight: 1.6, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: 0.85, padding: 0 }} />
+                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: 52, fontFamily: FONT, fontSize: 12, fontWeight: 500, background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'none', lineHeight: 1.6, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: 0.85, padding: 0 }} />
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>
@@ -511,6 +509,12 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
           className="node-resize"
           style={{ position: 'absolute', top: 0, right: -6, width: 12, height: '100%', cursor: 'ew-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s' }}>
           <div style={{ width: 3, height: 24, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
+        </div>
+        {/* Height resize handle */}
+        <div onMouseDown={e => { e.stopPropagation(); setResizingH({ id: node.id, startH: node.h || nodeHeights.current[node.id] || 80, startY: e.clientY }); }}
+          className="node-resize"
+          style={{ position: 'absolute', bottom: -6, left: 0, width: '100%', height: 12, cursor: 'ns-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s' }}>
+          <div style={{ width: 24, height: 3, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
         </div>
         <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }}
           className="node-delete"
