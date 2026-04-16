@@ -316,6 +316,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
   const [colorPickerNode, setColorPickerNode] = useState<string | null>(null);
+  const [resizing, setResizing] = useState<{ id: string; startW: number; startX: number } | null>(null);
   const nodeHeights = useRef<Record<string, number>>({});
 
   const MIND_COLORS = [
@@ -408,12 +409,20 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   }
 
   function onMM(e: React.MouseEvent) {
-    if (!dragging) return;
-    const scroll = canvasRef.current ? { x: canvasRef.current.scrollLeft, y: canvasRef.current.scrollTop } : { x: 0, y: 0 };
-    setNodes(prev => prev.map(n => n.id === dragging.id ? { ...n, x: dragging.ox + (e.clientX - scroll.x) - dragging.mx, y: dragging.oy + (e.clientY - scroll.y) - dragging.my } : n));
+    if (dragging) {
+      const scroll = canvasRef.current ? { x: canvasRef.current.scrollLeft, y: canvasRef.current.scrollTop } : { x: 0, y: 0 };
+      setNodes(prev => prev.map(n => n.id === dragging.id ? { ...n, x: dragging.ox + (e.clientX - scroll.x) - dragging.mx, y: dragging.oy + (e.clientY - scroll.y) - dragging.my } : n));
+    }
+    if (resizing) {
+      const newW = Math.max(120, resizing.startW + e.clientX - resizing.startX);
+      setNodes(prev => prev.map(n => n.id === resizing.id ? { ...n, w: newW } : n));
+    }
   }
 
-  function onMU() { if (dragging) { save(nodes, edges); setDragging(null); } }
+  function onMU() {
+    if (dragging) { save(nodes, edges); setDragging(null); }
+    if (resizing) { save(nodes, edges); setResizing(null); }
+  }
 
   function nc(node: MindNode): [number, number] {
     const h = nodeHeights.current[node.id] || (node.type === 'image' ? 180 : 80);
@@ -426,6 +435,10 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <filter id="wavy-line" x="-20%" y="-20%" width="140%" height="140%">
           <feTurbulence type="turbulence" baseFrequency="0.008" numOctaves="2" seed="5" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="32" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <filter id="wavy-border" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="2" seed="8" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
       {edges.map(edge => {
@@ -454,7 +467,11 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         className="mind-node"
         style={{ position: 'absolute', left: node.x, top: node.y, width: node.w, zIndex: dragging?.id === node.id ? 100 : 1 }}
         onClick={() => { if (connectMode) handleNodeClick(node.id); }}>
-        <div style={{ background: cardColor, border: `1px solid ${isFirst ? C.coral : 'rgba(255,255,255,0.1)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+        <div style={{ background: cardColor, border: 'none', boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'box-shadow 0.15s', overflow: 'visible', position: 'relative' }}>
+          {/* Wavy border overlay */}
+          <svg style={{ position: 'absolute', inset: '-2px', width: 'calc(100% + 4px)', height: 'calc(100% + 4px)', pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
+            <rect x="1" y="1" width="98%" height="98%" fill="none" stroke={isFirst ? C.coral : 'rgba(255,255,255,0.22)'} strokeWidth="1.5" filter="url(#wavy-border)" />
+          </svg>
           {/* Color strip — drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
             style={{ height: 5, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab' }} />
@@ -473,8 +490,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
                 style={{ width: '100%', minHeight: 52, fontFamily: FONT, fontSize: 12, fontWeight: 500, background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'vertical', lineHeight: 1.6, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: 0.85, padding: 0 }} />
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer', opacity: 0.4 }}>
-                  <div style={{ width: 8, height: 8, background: cardColor, borderRadius: '50%' }} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>
+                  <div style={{ width: 18, height: 18, background: cardColor, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
                   <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>▾</span>
                 </button>
                 {colorPickerNode === node.id && (
@@ -488,6 +505,12 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
               </div>
             </div>
           )}
+        </div>
+        {/* Width resize handle */}
+        <div onMouseDown={e => { e.stopPropagation(); setResizing({ id: node.id, startW: node.w, startX: e.clientX }); }}
+          className="node-resize"
+          style={{ position: 'absolute', top: 0, right: -6, width: 12, height: '100%', cursor: 'ew-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s' }}>
+          <div style={{ width: 3, height: 24, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
         </div>
         <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }}
           className="node-delete"
@@ -1497,6 +1520,7 @@ export default function App() {
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         [style*="-webkit-app-region: drag"] { -webkit-app-region: drag; }
         .mind-node:hover .node-delete { opacity: 1 !important; }
+        .mind-node:hover .node-resize { opacity: 1 !important; }
       `}</style>
     </div>
   );
