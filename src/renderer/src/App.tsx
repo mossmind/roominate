@@ -454,7 +454,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         className="mind-node"
         style={{ position: 'absolute', left: node.x, top: node.y, width: node.w, zIndex: dragging?.id === node.id ? 100 : 1 }}
         onClick={() => { if (connectMode) handleNodeClick(node.id); }}>
-        <div style={{ background: C.dark, border: `1px solid ${isFirst ? C.coral : 'rgba(255,255,255,0.1)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+        <div style={{ background: cardColor, border: `1px solid ${isFirst ? C.coral : 'rgba(255,255,255,0.1)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
           {/* Color strip — drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
             style={{ height: 5, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab' }} />
@@ -478,7 +478,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
                   <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>▾</span>
                 </button>
                 {colorPickerNode === node.id && (
-                  <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: C.dark, border: '1px solid rgba(255,255,255,0.12)', padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
+                  <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: '#1a1920', border: '1px solid rgba(255,255,255,0.12)', padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
                     {MIND_COLORS.map(col => (
                       <div key={col} onClick={() => { updateNode(node.id, { color: col }); setColorPickerNode(null); }}
                         style={{ width: 14, height: 14, background: col, border: `2px solid ${cardColor === col ? 'rgba(255,255,255,0.5)' : 'transparent'}`, cursor: 'pointer', borderRadius: '50%' }} />
