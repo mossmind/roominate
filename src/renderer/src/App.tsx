@@ -904,7 +904,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
           </>
         )}
       </div>
-      <>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
         {/* Step indicators — always visible */}
         <div style={{ background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.08)`, padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           {STAGES.slice(0, 2).map((s, i) => {
@@ -1014,7 +1014,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
             )}
           </>
         )}
-      </>
+      </div>
       <style>{`@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
     </div>
   );
