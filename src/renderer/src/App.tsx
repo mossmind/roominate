@@ -361,17 +361,25 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       }
       let n = result.nodes as MindNode[];
       const e = result.edges as MindEdge[];
-      // Center the layout on the visible canvas
+      // Scale and center the layout to fit the visible canvas
       if (n.length > 0 && canvasRef.current) {
         const cw = canvasRef.current.offsetWidth;
         const ch = canvasRef.current.offsetHeight;
+        const pad = 60;
         const minX = Math.min(...n.map(nd => nd.x));
         const maxX = Math.max(...n.map(nd => nd.x + nd.w));
         const minY = Math.min(...n.map(nd => nd.y));
-        const maxY = Math.max(...n.map(nd => nd.y + 80)); // approx node height
-        const dx = cw / 2 - (minX + maxX) / 2;
-        const dy = ch / 2 - (minY + maxY) / 2;
-        n = n.map(nd => ({ ...nd, x: nd.x + dx, y: nd.y + dy }));
+        const maxY = Math.max(...n.map(nd => nd.y + 80));
+        const contentW = maxX - minX;
+        const contentH = maxY - minY;
+        const scaleX = contentW > 0 ? (cw - pad * 2) / contentW : 1;
+        const scaleY = contentH > 0 ? (ch - pad * 2) / contentH : 1;
+        const scale = Math.min(scaleX, scaleY, 1); // never scale up, only down
+        const scaledW = contentW * scale;
+        const scaledH = contentH * scale;
+        const offsetX = (cw - scaledW) / 2 - minX * scale;
+        const offsetY = (ch - scaledH) / 2 - minY * scale;
+        n = n.map(nd => ({ ...nd, x: nd.x * scale + offsetX, y: nd.y * scale + offsetY, w: nd.w * scale }));
       }
       setNodes(n); setEdges(e);
       await save(n, e);

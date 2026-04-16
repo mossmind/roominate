@@ -78,7 +78,7 @@ export const ai = {
   generateMindMap: async (brief: string, taskName: string): Promise<{ nodes: unknown[]; edges: unknown[] }> => {
     if (isElectron) return (window as any).anthropic.generate(brief, taskName)
     const text = await anthropicFetch(
-      [{ role: 'user', content: `Project: ${taskName}\n\nBrief: ${brief}\n\nGenerate a mind map as JSON with "nodes" (array of {id, type:"text", x, y, w, text, color?}) and "edges" (array of {id, from, to}). Lay out nodes spatially. Return only valid JSON.` }],
+      [{ role: 'user', content: `Project: ${taskName}\n\nBrief: ${brief}\n\nGenerate a mind map as JSON with "nodes" (array of {id, type:"text", x, y, w, text, color?}) and "edges" (array of {id, from, to}). Lay out all nodes within a 800x600 bounding box (x: 0-800, y: 0-600). Node w should be 140-180. Space nodes evenly. Return only valid JSON, no markdown.` }],
       'You are a creative thinking assistant. Output only valid JSON, no markdown.'
     )
     const json = JSON.parse(text.replace(/```json|```/g, '').trim())
