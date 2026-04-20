@@ -470,7 +470,7 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
   const slideAnim = slideDir === 'next' ? 'slideInRight 0.28s ease' : slideDir === 'prev' ? 'slideInLeft 0.28s ease' : 'none'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'rgba(255,255,255,0.97)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(255,255,255,0.97)' }}>
       {showMorningLock && <MobilePrayerLock onUnlock={handleMorningUnlock} />}
 
       {celebrate && (
@@ -567,7 +567,7 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
 function MobileFactoryDetail({ task, category, onCategoryChange, onBack }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void }) {
   const ul = urgLabel(task.due_on); const uc = urgColor(task.due_on)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'rgba(255,255,255,0.97)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(255,255,255,0.97)' }}>
       <div style={{ background: C.dark, paddingTop: 'env(safe-area-inset-top)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
           <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: 'pointer', minHeight: 44 }}>← Back</button>
@@ -703,7 +703,7 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div style={{ background: 'rgba(30,28,38,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', paddingTop: 'env(safe-area-inset-top)', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
@@ -724,7 +724,7 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
       </div>
 
       {/* Body: left tab strip + sliding panel + cards */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
         {/* Left tab strip */}
         <div style={{ width: 52, flexShrink: 0, background: 'rgba(18,16,26,0.98)', display: 'flex', flexDirection: 'column', paddingTop: 12, borderRight: '1px solid rgba(255,255,255,0.06)', zIndex: 10, gap: 2 }}>
@@ -744,24 +744,24 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
           ))}
         </div>
 
-        {/* Sliding panel — covers cards area when open */}
-        <div style={{
-          position: 'absolute', left: 52, top: 0, right: 0, bottom: 0,
-          transform: activeTab ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-          background: 'rgba(22,20,30,0.98)',
-          zIndex: 8,
-          overflowY: 'auto',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          {activeTab === 'create'     && <CreatePanel onCreate={name => { onCreateTask(name); setActiveTab(null) }} />}
-          {activeTab === 'quicktasks' && <QuickTasksPanel />}
-          {activeTab === 'prayer'     && <PrayerPanel onOpen={() => { setActiveTab(null); onPrayer() }} />}
+        {/* Sliding panel — overflow:hidden wrapper clips the transform on Safari */}
+        <div style={{ position: 'absolute', left: 52, top: 0, right: 0, bottom: 0, overflow: 'hidden', zIndex: 8, pointerEvents: activeTab ? 'auto' : 'none' }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            transform: activeTab ? 'translateX(0)' : 'translateX(100%)',
+            transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+            background: 'rgba(22,20,30,0.98)',
+            overflowY: 'auto',
+          }}>
+            {activeTab === 'create'     && <CreatePanel onCreate={name => { onCreateTask(name); setActiveTab(null) }} />}
+            {activeTab === 'quicktasks' && <QuickTasksPanel />}
+            {activeTab === 'prayer'     && <PrayerPanel onOpen={() => { setActiveTab(null); onPrayer() }} />}
+          </div>
         </div>
 
         {/* Cards column */}
         <div ref={listRef} onTouchStart={onListTouchStart} onTouchMove={onListTouchMove} onTouchEnd={onListTouchEnd}
-          style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}>
+          style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px 16px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}>
           {tasks.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.6 }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
