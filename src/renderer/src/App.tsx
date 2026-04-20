@@ -1444,19 +1444,19 @@ export default function App() {
       {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreate={createProject} />}
 
       {/* Title bar */}
-      <div style={{ background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.08)`, padding: "0 24px", display: "flex", alignItems: "center", gap: 16, height: 54, flexShrink: 0 }}>
-        {/* Traffic light spacer on Mac */}
-        <div style={{ width: 60, flexShrink: 0 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <MossIcon width={42} height={42} style={{ color: C.main, flexShrink: 0 }} />
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.peach, letterSpacing: 0 }}>MossMind</div>
+      <div style={{ background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.08)`, padding: "0 12px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, height: 54, flexShrink: 0, minWidth: 0, overflow: "hidden" }}>
+        {/* Traffic light spacer on Mac — skip on mobile */}
+        {!isMobile && <div style={{ width: 60, flexShrink: 0 }} />}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, minWidth: 0 }}>
+          <MossIcon width={isMobile ? 28 : 42} height={isMobile ? 28 : 42} style={{ color: C.main, flexShrink: 0 }} />
+          {!isMobile && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.peach, letterSpacing: 0 }}>MossMind</div>}
         </div>
-        <button onClick={() => setShowCreate(true)} style={{ background: C.main, border: "none", borderRadius: 0, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.white, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>
+        {!isMobile && <button onClick={() => setShowCreate(true)} style={{ background: C.main, border: "none", borderRadius: 0, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.white, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {syncMsg && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? C.green : C.coral }}>{syncMsg}</div>}
-          <button onClick={syncTasks} disabled={syncing} style={{ background: "rgba(255,255,255,0.15)", border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 8, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.peach, cursor: syncing ? "not-allowed" : "pointer" }}>{syncing ? "Syncing…" : "↻ Sync"}</button>
-<button onClick={() => setShowSettings(true)} style={{ background: "rgba(255,255,255,0.1)", border: b(2, "rgba(255,255,255,0.2)"), borderRadius: 8, padding: "6px 12px", fontFamily: FONT, fontSize: 13, color: C.peach, cursor: "pointer" }}>⚙</button>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+          {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? C.green : C.coral }}>{syncMsg}</div>}
+          <button onClick={() => syncTasks()} disabled={syncing} style={{ background: "rgba(255,255,255,0.15)", border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 8, padding: isMobile ? "5px 8px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 16 : 12, fontWeight: 800, color: C.peach, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
+          <button onClick={() => setShowSettings(true)} style={{ background: "rgba(255,255,255,0.1)", border: b(2, "rgba(255,255,255,0.2)"), borderRadius: 8, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: C.peach, cursor: "pointer", lineHeight: 1 }}>⚙</button>
         </div>
       </div>
 
