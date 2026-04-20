@@ -1463,13 +1463,13 @@ export default function App() {
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {isMobile && !openTask && !openTodoId ? (
           <>
-            {/* ── Mobile: left tab strip ── */}
-            <div style={{ width: 52, flexShrink: 0, background: "rgba(30,28,40,0.98)", borderRight: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 4, zIndex: 10 }}>
+            {/* ── Mobile: individual left tabs ── */}
+            <div style={{ width: 52, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", paddingTop: 16, gap: 10, zIndex: 10 }}>
               {(["create", "tasks", "prayer"] as const).map(tab => {
                 const active = mobileTab === tab;
                 return (
                   <button key={tab} onClick={() => setMobileTab(p => p === tab ? null : tab)}
-                    style={{ width: 44, height: 52, background: active ? "rgba(255,255,255,0.1)" : "transparent", border: "none", borderRadius: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, color: active ? C.peach : "rgba(255,255,255,0.4)", transition: "background 0.15s, color 0.15s" }}>
+                    style={{ width: 50, height: 56, background: active ? C.mid : C.dark, border: `1px solid ${active ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)"}`, borderRight: active ? "none" : `1px solid rgba(255,255,255,0.1)`, borderRadius: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: active ? C.peach : "rgba(255,255,255,0.45)", transition: "background 0.15s, color 0.15s, border-color 0.15s", boxShadow: active ? "none" : "0 2px 8px rgba(0,0,0,0.3)" }}>
                     {tab === "prayer" ? <PrayerIcon width={18} height={18} /> : tab === "create" ? <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> : <span style={{ fontSize: 14 }}>☑</span>}
                     <span style={{ fontFamily: FONT, fontSize: 8, fontWeight: 800, letterSpacing: 0.4 }}>{tab === "create" ? "Create" : tab === "tasks" ? "Tasks" : "Prayer"}</span>
                   </button>
