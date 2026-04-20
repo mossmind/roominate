@@ -1229,6 +1229,17 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
   );
 }
 
+// ── Mobile detection ──────────────────────────────────────────────────────
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return mobile;
+}
+
 // ── Main App ───────────────────────────────────────────────────────────────
 export default function App() {
   const [projects, setProjects]     = useState<Task[]>([]);
@@ -1251,6 +1262,9 @@ export default function App() {
   const [dragOverCat, setDragOverCat] = useState<CategoryKey | undefined>(undefined);
   const [showCreate, setShowCreate] = useState(false);
   const hasFetched = useRef(false);
+  const isMobile = useIsMobile();
+  const [mobileTab, setMobileTab] = useState<'create' | 'tasks' | 'prayer' | null>(null);
+  const [mobileCreateName, setMobileCreateName] = useState('');
 
   useEffect(() => {
     if (!hasFetched.current) {
@@ -1447,141 +1461,252 @@ export default function App() {
       </div>
 
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        {/* Projects panel — visible when a project is open */}
-        {openTask && (
-          <div style={{ borderRight: "1px solid rgba(255,255,255,0.08)", backgroundColor: C.dark, display: "flex", flexDirection: "column", flexShrink: 0, width: projectsPanelOpen ? 280 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
-            {projectsPanelOpen ? (
-              <>
-                <div style={{ padding: "16px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: C.peach }}>Projects</div>
-                  <button onClick={() => setProjectsPanelOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "2px 4px" }}>‹</button>
-                </div>
-                <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 0" }}>
-                  {[{ label: "Outside", items: allOutside, color: C.coral, icon: <OutsideIcon width={18} height={18} /> }, { label: "Inside", items: allInside, color: C.main, icon: <InsideIcon width={18} height={18} /> }].map(({ label, items, color, icon }) => (
-                    items.length === 0 ? null : (
-                      <div key={label} style={{ marginBottom: 8 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 8px", color: "rgba(255,255,255,0.55)" }}>
-                          {icon}
-                          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.7)", letterSpacing: 0 }}>{label}</div>
-                        </div>
-                        {items.map(p => {
-                          const isCurrent = openTask.gid === p.gid;
-                          return (
-                            <button key={p.gid} onClick={() => setOpenTask(p)}
-                              style={{ width: "calc(100% - 20px)", margin: "0 10px 10px", background: isCurrent ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${isCurrent ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 0, padding: 0, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", overflow: "hidden", transition: "background 0.15s, border-color 0.15s", boxShadow: isCurrent ? "0 4px 16px rgba(0,0,0,0.3)" : "none" }}>
-                              <div style={{ height: 5, background: color, flexShrink: 0 }} />
-                              <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
-                                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? C.peach : "rgba(255,255,255,0.6)", lineHeight: 1.35 }}>{p.name}</div>
-                                {p.due_on && <div style={{ fontFamily: FONT, fontSize: 10, color: urgColor(p.due_on), fontWeight: 600 }}>{p.due_on}</div>}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )
-                  ))}
-                  {allOutside.length === 0 && allInside.length === 0 && (
-                    <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 24 }}>No categorized projects</div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <button onClick={() => setProjectsPanelOpen(true)}
-                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: "rgba(255,255,255,0.3)" }}>
-                <span style={{ fontSize: 16 }}>›</span>
-                <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", writingMode: "vertical-rl", letterSpacing: 1.5 }}>PROJECTS</div>
-              </button>
-            )}
-          </div>
-        )}
+        {isMobile && !openTask && !openTodoId ? (
+          <>
+            {/* ── Mobile: left tab strip ── */}
+            <div style={{ width: 52, flexShrink: 0, background: "rgba(30,28,40,0.98)", borderRight: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 4, zIndex: 10 }}>
+              {(["create", "tasks", "prayer"] as const).map(tab => {
+                const active = mobileTab === tab;
+                return (
+                  <button key={tab} onClick={() => setMobileTab(p => p === tab ? null : tab)}
+                    style={{ width: 44, height: 52, background: active ? "rgba(255,255,255,0.1)" : "transparent", border: "none", borderRadius: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, color: active ? C.peach : "rgba(255,255,255,0.4)", transition: "background 0.15s, color 0.15s" }}>
+                    {tab === "prayer" ? <PrayerIcon width={18} height={18} /> : tab === "create" ? <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> : <span style={{ fontSize: 14 }}>☑</span>}
+                    <span style={{ fontFamily: FONT, fontSize: 8, fontWeight: 800, letterSpacing: 0.4 }}>{tab === "create" ? "Create" : tab === "tasks" ? "Tasks" : "Prayer"}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-        {/* Main content */}
-        <div style={{ flex: 1, overflowY: "auto", position: "relative" }}>
-          {(() => {
-            const openTodo = openTodoId ? todos.find(t => t.id === openTodoId) ?? null : null;
-            if (openTodo) return (
-              <TodoDetail item={openTodo} onUpdate={u => updateTodo(openTodo.id, u)} onDelete={() => deleteTodo(openTodo.id)} onBack={() => setOpenTodoId(null)} />
-            );
-            if (openTask) return (
-              categories[openTask.gid] === "factory"
-                ? <ProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} session={sessions[openTask.gid]} onStartSession={() => startSession(openTask.gid)} onTogglePause={() => togglePauseSession(openTask.gid)} onReset={() => resetSession(openTask.gid)} />
-                : <FactoryDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
-            );
-            return (
-              <div style={{ padding: "36px 48px", minHeight: "100%" }}>
-                {!projects.length ? (
-                  <div style={{ textAlign: "center", padding: "80px 40px", opacity: 0.6 }}>
-                    <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.peach }}>No tasks yet</div>
-                    <div style={{ fontFamily: FONT, fontSize: 12, color: C.peach, marginTop: 8, opacity: 0.7 }}>Add your Asana Personal Access Token in ⚙ Settings, then hit Sync</div>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-                    <div style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
-                      {renderColumn(<OutsideIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Outside", allOutside, "factory")}
-                      {renderColumn(<InsideIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Inside", allInside, "creative")}
-                      {renderColumn(<UncatIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Uncategorized", allUncategorized, null, true)}
+            {/* ── Mobile: panel + cards ── */}
+            <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
+              {/* Sliding panel */}
+              <div style={{ position: "absolute", inset: 0, overflow: "hidden", zIndex: 5, pointerEvents: mobileTab ? "auto" : "none" }}>
+                <div style={{ position: "absolute", inset: 0, background: C.dark, transform: mobileTab ? "translateX(0)" : "translateX(100%)", transition: "transform 0.22s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+                  {/* Panel header */}
+                  <div style={{ background: C.mid, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>
+                      {mobileTab === "create" ? "New Project" : mobileTab === "tasks" ? "Quick Tasks" : "Prayer"}
                     </div>
+                    <button onClick={() => setMobileTab(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "2px 6px" }}>×</button>
                   </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
 
-        {/* Todo panel — always visible on home screen */}
-        {!openTask && !openTodoId && (
-          <div style={{ borderLeft: "1px solid rgba(255,255,255,0.08)", backgroundColor: C.dark, backgroundImage: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "24px 24px", display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 260 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
-            {todosPanelOpen ? (
-              <>
-                <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 12, background: C.dark }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>Quick Tasks</div>
-                    <button onClick={() => setTodosPanelOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "2px 4px" }}>‹</button>
-                  </div>
-                  <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
-                    <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
-                      style={{ flex: 1, fontFamily: "monospace", fontSize: 12, color: C.peach, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "7px 10px", outline: "none", minWidth: 0 }} />
-                    <button type="submit" style={{ background: C.main, color: C.white, border: "none", borderRadius: 0, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
-                  </form>
-                </div>
-                <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
-                  {todos.filter(t => !t.done).map(t => (
-                    <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: true }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
-                  ))}
-                  {todos.filter(t => t.done).length > 0 && (
+                  {/* Create panel */}
+                  {mobileTab === "create" && (
+                    <div style={{ padding: "24px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+                      <input autoFocus value={mobileCreateName} onChange={e => setMobileCreateName(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && mobileCreateName.trim()) { createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); } }}
+                        placeholder="Project name…"
+                        style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.peach, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 0, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                      <button onClick={() => { if (!mobileCreateName.trim()) return; createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); }} disabled={!mobileCreateName.trim()}
+                        style={{ background: mobileCreateName.trim() ? C.main : "rgba(255,255,255,0.08)", color: mobileCreateName.trim() ? C.white : "rgba(255,255,255,0.2)", border: "none", borderRadius: 0, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
+                        Create Project
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Tasks panel */}
+                  {mobileTab === "tasks" && (
                     <>
-                      <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: 1.5, paddingTop: 12, paddingBottom: 2 }}>DONE</div>
-                      {todos.filter(t => t.done).map(t => (
-                        <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: false }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
-                      ))}
+                      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
+                        <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
+                          <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
+                            style={{ flex: 1, fontFamily: "monospace", fontSize: 13, color: C.peach, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "9px 12px", outline: "none", minWidth: 0 }} />
+                          <button type="submit" style={{ background: C.main, color: C.white, border: "none", borderRadius: 0, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                        </form>
+                      </div>
+                      <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                        {todos.filter(t => !t.done).map(t => (
+                          <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: true }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
+                        ))}
+                        {todos.filter(t => t.done).length > 0 && (
+                          <>
+                            <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: 1.5, paddingTop: 10, paddingBottom: 2 }}>DONE</div>
+                            {todos.filter(t => t.done).map(t => (
+                              <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: false }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
+                            ))}
+                          </>
+                        )}
+                        {todos.length === 0 && <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 32 }}>No tasks yet</div>}
+                      </div>
                     </>
                   )}
-                  {todos.length === 0 && (
-                    <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 32 }}>No tasks yet</div>
+
+                  {/* Prayer panel */}
+                  {mobileTab === "prayer" && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 28px", textAlign: "center", gap: 24, flex: 1 }}>
+                      <PrayerIcon width={52} height={52} style={{ color: C.peach, opacity: 0.8 }} />
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 600, color: C.peach, lineHeight: 1.3 }}>Open the Door</div>
+                      <div style={{ width: 32, height: 2, background: C.main }} />
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: "italic", color: C.peach, opacity: 0.6, lineHeight: 1.7 }}>
+                        "Behold, I stand at the door and knock."
+                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "normal", fontWeight: 700, opacity: 0.6, marginTop: 4 }}>Rev 3:20</div>
+                      </div>
+                      <button onClick={() => { setMobileTab(null); setShowPrayer(true); }}
+                        style={{ background: C.main, color: C.white, border: "none", borderRadius: 0, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
+                        Begin Prayer →
+                      </button>
+                    </div>
                   )}
                 </div>
-              </>
-            ) : (
-              <button onClick={() => setTodosPanelOpen(true)}
-                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: "rgba(255,255,255,0.3)" }}>
-                <span style={{ fontSize: 16 }}>‹</span>
-                <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
-                {todos.filter(t => !t.done).length > 0 && (
-                  <div style={{ background: C.main, color: C.white, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
-                    {todos.filter(t => !t.done).length}
+              </div>
+
+              {/* Cards column — single column */}
+              <div style={{ position: "absolute", inset: 0, overflowY: "auto", overflowX: "hidden", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
+                {projects.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "60px 20px", opacity: 0.6 }}>
+                    <div style={{ fontSize: 36, marginBottom: 12 }}>🌿</div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.peach }}>No tasks yet</div>
+                    <div style={{ fontFamily: FONT, fontSize: 12, color: C.peach, marginTop: 8, opacity: 0.7 }}>Add your Asana token in ⚙ Settings, then Sync</div>
                   </div>
+                ) : (
+                  [...projects].sort(byDueDate).map(p => (
+                    <ProjectCard key={p.gid} task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} />
+                  ))
                 )}
-              </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Projects panel — visible when a project is open */}
+            {openTask && (
+              <div style={{ borderRight: "1px solid rgba(255,255,255,0.08)", backgroundColor: C.dark, display: "flex", flexDirection: "column", flexShrink: 0, width: projectsPanelOpen ? 280 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
+                {projectsPanelOpen ? (
+                  <>
+                    <div style={{ padding: "16px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: C.peach }}>Projects</div>
+                      <button onClick={() => setProjectsPanelOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "2px 4px" }}>‹</button>
+                    </div>
+                    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 0" }}>
+                      {[{ label: "Outside", items: allOutside, color: C.coral, icon: <OutsideIcon width={18} height={18} /> }, { label: "Inside", items: allInside, color: C.main, icon: <InsideIcon width={18} height={18} /> }].map(({ label, items, color, icon }) => (
+                        items.length === 0 ? null : (
+                          <div key={label} style={{ marginBottom: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 8px", color: "rgba(255,255,255,0.55)" }}>
+                              {icon}
+                              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.7)", letterSpacing: 0 }}>{label}</div>
+                            </div>
+                            {items.map(p => {
+                              const isCurrent = openTask.gid === p.gid;
+                              return (
+                                <button key={p.gid} onClick={() => setOpenTask(p)}
+                                  style={{ width: "calc(100% - 20px)", margin: "0 10px 10px", background: isCurrent ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${isCurrent ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 0, padding: 0, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", overflow: "hidden", transition: "background 0.15s, border-color 0.15s", boxShadow: isCurrent ? "0 4px 16px rgba(0,0,0,0.3)" : "none" }}>
+                                  <div style={{ height: 5, background: color, flexShrink: 0 }} />
+                                  <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
+                                    <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? C.peach : "rgba(255,255,255,0.6)", lineHeight: 1.35 }}>{p.name}</div>
+                                    {p.due_on && <div style={{ fontFamily: FONT, fontSize: 10, color: urgColor(p.due_on), fontWeight: 600 }}>{p.due_on}</div>}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )
+                      ))}
+                      {allOutside.length === 0 && allInside.length === 0 && (
+                        <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 24 }}>No categorized projects</div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <button onClick={() => setProjectsPanelOpen(true)}
+                    style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: "rgba(255,255,255,0.3)" }}>
+                    <span style={{ fontSize: 16 }}>›</span>
+                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", writingMode: "vertical-rl", letterSpacing: 1.5 }}>PROJECTS</div>
+                  </button>
+                )}
+              </div>
             )}
-          </div>
+
+            {/* Main content */}
+            <div style={{ flex: 1, overflowY: "auto", position: "relative" }}>
+              {(() => {
+                const openTodo = openTodoId ? todos.find(t => t.id === openTodoId) ?? null : null;
+                if (openTodo) return (
+                  <TodoDetail item={openTodo} onUpdate={u => updateTodo(openTodo.id, u)} onDelete={() => deleteTodo(openTodo.id)} onBack={() => setOpenTodoId(null)} />
+                );
+                if (openTask) return (
+                  categories[openTask.gid] === "factory"
+                    ? <ProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} session={sessions[openTask.gid]} onStartSession={() => startSession(openTask.gid)} onTogglePause={() => togglePauseSession(openTask.gid)} onReset={() => resetSession(openTask.gid)} />
+                    : <FactoryDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
+                );
+                return (
+                  <div style={{ padding: "36px 48px", minHeight: "100%" }}>
+                    {!projects.length ? (
+                      <div style={{ textAlign: "center", padding: "80px 40px", opacity: 0.6 }}>
+                        <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.peach }}>No tasks yet</div>
+                        <div style={{ fontFamily: FONT, fontSize: 12, color: C.peach, marginTop: 8, opacity: 0.7 }}>Add your Asana Personal Access Token in ⚙ Settings, then hit Sync</div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
+                        <div style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
+                          {renderColumn(<OutsideIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Outside", allOutside, "factory")}
+                          {renderColumn(<InsideIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Inside", allInside, "creative")}
+                          {renderColumn(<UncatIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Uncategorized", allUncategorized, null, true)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Todo panel — always visible on home screen */}
+            {!openTask && !openTodoId && (
+              <div style={{ borderLeft: "1px solid rgba(255,255,255,0.08)", backgroundColor: C.dark, backgroundImage: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "24px 24px", display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 260 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
+                {todosPanelOpen ? (
+                  <>
+                    <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 12, background: C.dark }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>Quick Tasks</div>
+                        <button onClick={() => setTodosPanelOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "2px 4px" }}>‹</button>
+                      </div>
+                      <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
+                        <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
+                          style={{ flex: 1, fontFamily: "monospace", fontSize: 12, color: C.peach, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "7px 10px", outline: "none", minWidth: 0 }} />
+                        <button type="submit" style={{ background: C.main, color: C.white, border: "none", borderRadius: 0, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                      </form>
+                    </div>
+                    <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+                      {todos.filter(t => !t.done).map(t => (
+                        <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: true }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
+                      ))}
+                      {todos.filter(t => t.done).length > 0 && (
+                        <>
+                          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: 1.5, paddingTop: 12, paddingBottom: 2 }}>DONE</div>
+                          {todos.filter(t => t.done).map(t => (
+                            <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: false }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
+                          ))}
+                        </>
+                      )}
+                      {todos.length === 0 && (
+                        <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 32 }}>No tasks yet</div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <button onClick={() => setTodosPanelOpen(true)}
+                    style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: "rgba(255,255,255,0.3)" }}>
+                    <span style={{ fontSize: 16 }}>‹</span>
+                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
+                    {todos.filter(t => !t.done).length > 0 && (
+                      <div style={{ background: C.main, color: C.white, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
+                        {todos.filter(t => !t.done).length}
+                      </div>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* Prayer FAB */}
-      <button onClick={() => setShowPrayer(true)} style={{ position: "fixed", bottom: 28, right: 28, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: C.white, zIndex: 50 }}>
-        <PrayerIcon width={44} height={44} />
-      </button>
+      {/* Prayer FAB — desktop only */}
+      {!isMobile && (
+        <button onClick={() => setShowPrayer(true)} style={{ position: "fixed", bottom: 28, right: 28, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: C.white, zIndex: 50 }}>
+          <PrayerIcon width={44} height={44} />
+        </button>
+      )}
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
