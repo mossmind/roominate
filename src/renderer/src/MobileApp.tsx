@@ -7,7 +7,7 @@ import OutsideIcon from './assets/icons/Outside.svg?react'
 import UncatIcon from './assets/icons/uncat.svg?react'
 import prayerVideo from './assets/Prayer Motion 1.mp4'
 import prayerMusic from './assets/Prayer Motion Music 1.mp3'
-import bgPhoto from './assets/bg.png'
+import bgPhoto from './assets/bg2.png'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Task { gid: string; name: string; due_on: string | null; notes: string; url: string }
@@ -15,21 +15,28 @@ type CategoryKey = 'factory' | 'creative' | null
 interface ImageCard { id: string; url: string; x: number; y: number; w: number }
 interface QuickTaskItem { id: string; text: string; done: boolean }
 
-// ── Design tokens ──────────────────────────────────────────────────────────
-const C = { main: '#606E4A', dark: '#1E1C26', light: '#FFFFFF' }
-const FONT = "'Inter', system-ui, sans-serif"
+// ── Design tokens — match desktop App.tsx ─────────────────────────────────
+const C = {
+  dark:  '#242329',
+  mid:   '#454449',
+  main:  '#657946',
+  peach: '#F4EDEA',
+  coral: '#EF9982',
+  light: '#FFFFFF',
+}
+const FONT         = "'Bricolage Grotesque', system-ui, sans-serif"
 const FONT_DISPLAY = "'Cormorant', Georgia, serif"
 
 const CATEGORIES = {
-  factory:  { label: 'Outside', emoji: '⚙️', color: C.dark, text: C.light },
-  creative: { label: 'Inside',  emoji: '✦',  color: C.main, text: C.light },
+  factory:  { label: 'Outside', emoji: '⚙️', color: C.coral, text: C.dark },
+  creative: { label: 'Inside',  emoji: '✦',  color: C.main,  text: C.dark },
 } as const
 
 const STAGES = [
-  { id: 'prayer',     step: 1, label: 'Prayer',     sub: 'Open the Door', color: C.dark,  textColor: C.light, prompt: "Before anything else — invite God in. This isn't the backup plan, it's the first move.",                                   scripture: 'Behold, I stand at the door and knock.',                                  ref: 'Rev 3:20', q: 'What are you asking God to unveil through this project?',           reward: 'Door Unlocked'  },
-  { id: 'revelation', step: 2, label: 'Revelation', sub: 'Mood Board',    color: C.main,  textColor: C.light, prompt: 'Vision before execution. Build your mood board — collect images, colors, textures that speak the truth this project must say.', scripture: 'The revelation of Jesus Christ, which God gave him to show his servants.', ref: 'Rev 1:1',  q: 'What does this project look, feel, and sound like?',                   reward: 'Vision Captured' },
-  { id: 'action',     step: 3, label: 'Action',     sub: 'Walk Through',  color: C.dark,  textColor: C.light, prompt: 'God opens the door. You walk through. First brushstroke is obedience. Starting is worship.',                               scripture: 'I have set before you an open door, which no one is able to shut.',       ref: 'Rev 3:8',  q: 'What is the single next move? Do it now — that step is yours.',         reward: 'Action Taken'   },
-  { id: 'surrender',  step: 4, label: 'Surrender',  sub: 'Open Hands',   color: C.light, textColor: C.dark,  prompt: 'The work is borrowed. Deliver it open-handed. The win is faithfulness, not flawlessness.',                                  scripture: 'Worthy are you, our Lord and God, to receive glory and honor and power.', ref: 'Rev 4:11', q: 'Can you release this — imperfect and complete — as an act of worship?',  reward: '🏆 Complete!'  },
+  { id: 'prayer',     step: 1, label: 'Prayer',     sub: 'Open the Door', color: C.dark,  textColor: C.peach, prompt: "Before anything else — invite God in. This isn't the backup plan, it's the first move.",                                   scripture: 'Behold, I stand at the door and knock.',                                  ref: 'Rev 3:20', q: 'What are you asking God to unveil through this project?',           reward: 'Door Unlocked'  },
+  { id: 'revelation', step: 2, label: 'Revelation', sub: 'Mood Board',    color: C.main,  textColor: C.peach, prompt: 'Vision before execution. Build your mood board — collect images, colors, textures that speak the truth this project must say.', scripture: 'The revelation of Jesus Christ, which God gave him to show his servants.', ref: 'Rev 1:1',  q: 'What does this project look, feel, and sound like?',                   reward: 'Vision Captured' },
+  { id: 'action',     step: 3, label: 'Action',     sub: 'Walk Through',  color: C.dark,  textColor: C.peach, prompt: 'God opens the door. You walk through. First brushstroke is obedience. Starting is worship.',                               scripture: 'I have set before you an open door, which no one is able to shut.',       ref: 'Rev 3:8',  q: 'What is the single next move? Do it now — that step is yours.',         reward: 'Action Taken'   },
+  { id: 'surrender',  step: 4, label: 'Surrender',  sub: 'Open Hands',   color: C.peach, textColor: C.dark,  prompt: 'The work is borrowed. Deliver it open-handed. The win is faithfulness, not flawlessness.',                                  scripture: 'Worthy are you, our Lord and God, to receive glory and honor and power.', ref: 'Rev 4:11', q: 'Can you release this — imperfect and complete — as an act of worship?',  reward: '🏆 Complete!'  },
 ]
 
 const PROJECT_GID = '1208321640687989'
@@ -39,7 +46,7 @@ const IMG_DEFAULT_W = 140
 // ── Helpers ────────────────────────────────────────────────────────────────
 function daysLeft(due: string | null) { return due ? Math.ceil((new Date(due).getTime() - Date.now()) / 86400000) : null }
 function urgLabel(due: string | null) { const d = daysLeft(due); if (d === null) return null; if (d < 0) return Math.abs(d) + 'd overdue'; if (d === 0) return 'Due today'; if (d <= 7) return d + 'd left'; return null }
-function urgColor(due: string | null) { const d = daysLeft(due); return d !== null && d <= 3 ? '#e05c5c' : d !== null && d <= 7 ? '#d4956a' : C.main }
+function urgColor(due: string | null) { const d = daysLeft(due); return d !== null && d <= 3 ? C.coral : d !== null && d <= 7 ? '#d4956a' : C.main }
 async function storageGet(key: string) { return platformStorage.get(key) }
 async function storageSet(key: string, value: unknown) { await platformStorage.set(key, value as string) }
 function haptic(style: ImpactStyle = ImpactStyle.Medium) { Haptics.impact({ style }).catch(() => {}) }
@@ -100,32 +107,32 @@ function MobilePrayerLock({ onUnlock }: { onUnlock: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, overflow: 'hidden' }}>
       <video src={prayerVideo} autoPlay loop muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(30,28,38,0.55)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(36,35,41,0.6)' }} />
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '0 36px', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div style={{ animation: 'fadeInUp 0.6s ease' }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 80, fontWeight: 600, color: C.light, lineHeight: 1, marginBottom: 16 }}>Prayer</div>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 400, color: C.light, lineHeight: 1.7, marginBottom: 8, fontStyle: 'italic' }}>"Commit your work to the LORD, and your plans will be established."</div>
-          <div style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 40 }}>Proverbs 16:3</div>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 80, fontWeight: 600, color: C.peach, lineHeight: 1, marginBottom: 16 }}>Prayer</div>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 400, color: C.peach, lineHeight: 1.7, marginBottom: 8, fontStyle: 'italic', opacity: 0.8 }}>"Commit your work to the LORD, and your plans will be established."</div>
+          <div style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(244,237,234,0.5)', marginBottom: 40 }}>Proverbs 16:3</div>
           {!isDone ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ position: 'relative', width: 68, height: 68 }}>
                 <svg width={68} height={68} style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx={34} cy={34} r={r} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={4} />
-                  <circle cx={34} cy={34} r={r} fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={4} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1s linear' }} />
+                  <circle cx={34} cy={34} r={r} fill="none" stroke="rgba(244,237,234,0.2)" strokeWidth={4} />
+                  <circle cx={34} cy={34} r={r} fill="none" stroke={C.peach} strokeWidth={4} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1s linear' }} />
                 </svg>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, fontSize: 20, fontWeight: 900, color: C.light }}>{seconds}</div>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, fontSize: 20, fontWeight: 900, color: C.peach }}>{seconds}</div>
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>seconds of stillness</div>
+              <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(244,237,234,0.4)' }}>seconds of stillness</div>
             </div>
           ) : (
-            <button onClick={onUnlock} style={{ alignSelf: 'flex-start', background: C.light, color: C.dark, border: 'none', borderRadius: 14, padding: '16px 40px', fontFamily: FONT, fontSize: 15, fontWeight: 700, cursor: 'pointer', animation: 'popIn 0.4s cubic-bezier(.34,1.56,.64,1)', minHeight: 44 }}>
+            <button onClick={onUnlock} style={{ alignSelf: 'flex-start', background: C.main, color: C.peach, border: 'none', borderRadius: 0, padding: '16px 40px', fontFamily: FONT, fontSize: 15, fontWeight: 800, cursor: 'pointer', animation: 'popIn 0.4s cubic-bezier(.34,1.56,.64,1)', minHeight: 44 }}>
               Begin Work →
             </button>
           )}
         </div>
       </div>
       <button onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m) }}
-        style={{ position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', right: 24, zIndex: 2, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', minHeight: 44 }}>
+        style={{ position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', right: 24, zIndex: 2, background: 'rgba(244,237,234,0.1)', border: '1px solid rgba(244,237,234,0.2)', borderRadius: 0, padding: '10px 14px', fontFamily: FONT, fontSize: 12, color: 'rgba(244,237,234,0.6)', cursor: 'pointer', minHeight: 44 }}>
         {muted ? '♪ Unmute' : '♪ Mute'}
       </button>
     </div>
@@ -158,34 +165,34 @@ function MobileSettings({ onClose, onSaved }: { onClose: () => void; onSaved: (g
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1500, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <div onClick={onClose} style={{ flex: 1, background: 'rgba(30,28,38,0.6)' }} />
-      <div style={{ background: '#1a1824', borderRadius: '20px 20px 0 0', padding: '0 24px', paddingBottom: 'env(safe-area-inset-bottom)', maxHeight: '82vh', overflowY: 'auto', boxShadow: '0 -8px 40px rgba(0,0,0,0.5)', animation: 'slideUp 0.3s ease' }}>
+      <div onClick={onClose} style={{ flex: 1, background: 'rgba(36,35,41,0.7)' }} />
+      <div style={{ background: C.mid, borderTop: `2px solid rgba(255,255,255,0.15)`, padding: '0 24px', paddingBottom: 'env(safe-area-inset-bottom)', maxHeight: '82vh', overflowY: 'auto', animation: 'slideUp 0.3s ease' }}>
         <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, marginBottom: 20 }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }} />
+          <div style={{ width: 40, height: 3, background: 'rgba(255,255,255,0.2)' }} />
         </div>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.light, marginBottom: 20 }}>Settings</div>
-        <div style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Asana Personal Access Token</div>
+        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.peach, marginBottom: 20 }}>Settings</div>
+        <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.peach, opacity: 0.5, marginBottom: 8, letterSpacing: 0.5 }}>ASANA PERSONAL ACCESS TOKEN</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="Paste your PAT…"
-            style={{ flex: 1, fontFamily: FONT, fontSize: 14, border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '12px 14px', outline: 'none', background: 'rgba(255,255,255,0.07)', color: C.light, minHeight: 44 }} />
-          <button onClick={loadSections} style={{ background: C.main, color: C.light, border: 'none', borderRadius: 10, padding: '12px 16px', fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>{loading ? '…' : 'Load'}</button>
+            style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: '2px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '12px 14px', outline: 'none', background: 'rgba(255,255,255,0.07)', color: C.peach, minHeight: 44 }} />
+          <button onClick={loadSections} style={{ background: C.main, color: C.peach, border: 'none', borderRadius: 0, padding: '12px 16px', fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>{loading ? '…' : 'Load'}</button>
         </div>
-        {error && <div style={{ fontFamily: FONT, fontSize: 12, color: '#e05c5c', marginBottom: 12 }}>{error}</div>}
+        {error && <div style={{ fontFamily: FONT, fontSize: 12, color: C.coral, marginBottom: 12 }}>{error}</div>}
         {sections.length > 0 && (
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>Sections to sync</div>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.peach, opacity: 0.5, marginBottom: 10, letterSpacing: 0.5 }}>SECTIONS TO SYNC</div>
             {sections.map(sec => {
               const checked = selectedGids.includes(sec.gid)
               return (
-                <label key={sec.gid} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
+                <label key={sec.gid} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
                   <input type="checkbox" checked={checked} onChange={() => setSelectedGids(p => p.includes(sec.gid) ? p.filter(g => g !== sec.gid) : [...p, sec.gid])} style={{ width: 20, height: 20, accentColor: C.main, flexShrink: 0 }} />
-                  <span style={{ fontFamily: FONT, fontSize: 14, color: C.light }}>{sec.name}</span>
+                  <span style={{ fontFamily: FONT, fontSize: 14, color: C.peach }}>{sec.name}</span>
                 </label>
               )
             })}
           </div>
         )}
-        <button onClick={save} style={{ width: '100%', background: saved ? C.main : C.light, color: saved ? C.light : C.dark, border: 'none', borderRadius: 14, padding: '16px 0', fontFamily: FONT, fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 16, minHeight: 44 }}>
+        <button onClick={save} style={{ width: '100%', background: saved ? C.main : C.peach, color: saved ? C.peach : C.dark, border: 'none', borderRadius: 0, padding: '16px 0', fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: 'pointer', marginBottom: 16, minHeight: 44 }}>
           {saved ? '✓ Saved' : 'Save'}
         </button>
       </div>
@@ -202,14 +209,14 @@ function CreatePanel({ onCreate }: { onCreate: (name: string) => void }) {
   }
   return (
     <div style={{ padding: '28px 20px 20px' }}>
-      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.light, marginBottom: 8 }}>New Project</div>
-      <div style={{ width: 28, height: 3, background: C.main, borderRadius: 99, marginBottom: 24 }} />
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.peach, marginBottom: 6 }}>New Project</div>
+      <div style={{ width: 28, height: 3, background: C.main, marginBottom: 24 }} />
       <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()}
         placeholder="Project name…" autoFocus
-        style={{ width: '100%', fontFamily: FONT, fontSize: 14, color: C.light, background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '12px 14px', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+        style={{ width: '100%', fontFamily: FONT, fontSize: 14, color: C.peach, background: 'rgba(255,255,255,0.07)', border: '2px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '12px 14px', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
       <button onClick={submit}
-        style={{ width: '100%', background: C.main, color: C.light, border: 'none', borderRadius: 10, padding: '14px', fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>
-        Create
+        style={{ width: '100%', background: C.main, color: C.peach, border: 'none', borderRadius: 0, padding: '14px', fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
+        Create Project
       </button>
     </div>
   )
@@ -231,33 +238,33 @@ function QuickTasksPanel() {
   const active = items.filter(i => !i.done); const done = items.filter(i => i.done)
   return (
     <div style={{ padding: '28px 20px 32px' }}>
-      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.light, marginBottom: 8 }}>Quick Tasks</div>
-      <div style={{ width: 28, height: 3, background: C.main, borderRadius: 99, marginBottom: 20 }} />
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.peach, marginBottom: 6 }}>Quick Tasks</div>
+      <div style={{ width: 28, height: 3, background: C.main, marginBottom: 20 }} />
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Add task…"
-          style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: C.light, background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '10px 12px', outline: 'none', minHeight: 44 }} />
-        <button onClick={add} style={{ background: C.main, color: C.light, border: 'none', borderRadius: 10, padding: '10px 16px', fontFamily: FONT, fontSize: 20, fontWeight: 300, cursor: 'pointer', minHeight: 44, lineHeight: 1 }}>+</button>
+          style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: C.peach, background: 'rgba(255,255,255,0.07)', border: '2px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '10px 12px', outline: 'none', minHeight: 44 }} />
+        <button onClick={add} style={{ background: C.main, color: C.peach, border: 'none', borderRadius: 0, padding: '10px 16px', fontFamily: FONT, fontSize: 20, fontWeight: 300, cursor: 'pointer', minHeight: 44, lineHeight: 1 }}>+</button>
       </div>
       {active.length === 0 && done.length === 0 && (
-        <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', textAlign: 'center', paddingTop: 20 }}>No tasks yet</div>
+        <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(244,237,234,0.3)', fontStyle: 'italic', textAlign: 'center', paddingTop: 20 }}>No tasks yet</div>
       )}
       {active.map(item => (
-        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <button onClick={() => toggle(item.id)}
-            style={{ width: 22, height: 22, borderRadius: 6, border: '1.5px solid rgba(255,255,255,0.3)', background: 'transparent', flexShrink: 0, cursor: 'pointer' }} />
-          <span style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: C.light, lineHeight: 1.4 }}>{item.text}</span>
-          <button onClick={() => remove(item.id)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 18, cursor: 'pointer', padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}>×</button>
+            style={{ width: 20, height: 20, borderRadius: 0, border: '1.5px solid rgba(244,237,234,0.35)', background: 'transparent', flexShrink: 0, cursor: 'pointer' }} />
+          <span style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: C.peach, lineHeight: 1.4 }}>{item.text}</span>
+          <button onClick={() => remove(item.id)} style={{ background: 'transparent', border: 'none', color: 'rgba(244,237,234,0.25)', fontSize: 18, cursor: 'pointer', padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}>×</button>
         </div>
       ))}
       {done.length > 0 && (
         <>
-          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', marginTop: 20, marginBottom: 8 }}>DONE</div>
+          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: 'rgba(244,237,234,0.3)', letterSpacing: '0.08em', marginTop: 20, marginBottom: 8 }}>DONE</div>
           {done.map(item => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <button onClick={() => toggle(item.id)}
-                style={{ width: 22, height: 22, borderRadius: 6, border: `1.5px solid ${C.main}`, background: C.main, flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.light, fontSize: 11, fontWeight: 700 }}>✓</button>
-              <span style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', lineHeight: 1.4 }}>{item.text}</span>
-              <button onClick={() => remove(item.id)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 18, cursor: 'pointer', padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}>×</button>
+                style={{ width: 20, height: 20, borderRadius: 0, border: `1.5px solid ${C.main}`, background: C.main, flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.peach, fontSize: 11, fontWeight: 800 }}>✓</button>
+              <span style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: 'rgba(244,237,234,0.3)', textDecoration: 'line-through', lineHeight: 1.4 }}>{item.text}</span>
+              <button onClick={() => remove(item.id)} style={{ background: 'transparent', border: 'none', color: 'rgba(244,237,234,0.2)', fontSize: 18, cursor: 'pointer', padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}>×</button>
             </div>
           ))}
         </>
@@ -270,14 +277,14 @@ function QuickTasksPanel() {
 function PrayerPanel({ onOpen }: { onOpen: () => void }) {
   return (
     <div style={{ padding: '28px 20px' }}>
-      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.light, marginBottom: 8 }}>Prayer</div>
-      <div style={{ width: 28, height: 3, background: C.main, borderRadius: 99, marginBottom: 24 }} />
-      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontStyle: 'italic', color: 'rgba(255,255,255,0.65)', lineHeight: 1.85, marginBottom: 8 }}>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.peach, marginBottom: 6 }}>Prayer</div>
+      <div style={{ width: 28, height: 3, background: C.main, marginBottom: 24 }} />
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontStyle: 'italic', color: C.peach, opacity: 0.65, lineHeight: 1.85, marginBottom: 8 }}>
         "Commit your work to the LORD, and your plans will be established."
       </div>
-      <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 28 }}>Proverbs 16:3</div>
+      <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(244,237,234,0.35)', marginBottom: 28 }}>Proverbs 16:3</div>
       <button onClick={onOpen}
-        style={{ width: '100%', background: 'rgba(255,255,255,0.1)', color: C.light, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '14px', fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>
+        style={{ width: '100%', background: C.main, color: C.peach, border: 'none', borderRadius: 0, padding: '14px', fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
         Begin Prayer →
       </button>
     </div>
@@ -312,11 +319,9 @@ function MobileMoodBoard({ taskGid }: { taskGid: string }) {
     const canvas = canvasRef.current
     const existing = imagesRef.current
     const col = existing.length % 2; const row = Math.floor(existing.length / 2)
-    const x = 16 + col * (IMG_DEFAULT_W + 12)
-    const y = 16 + row * (IMG_DEFAULT_W + 40)
+    const x = 16 + col * (IMG_DEFAULT_W + 12); const y = 16 + row * (IMG_DEFAULT_W + 40)
     const next = [...existing, { id: Date.now().toString(), url: urlInput.trim(), x, y, w: IMG_DEFAULT_W }]
-    setImages(next); persist(next)
-    setUrlInput(''); setShowInput(false)
+    setImages(next); persist(next); setUrlInput(''); setShowInput(false)
     _ = canvas
   }
 
@@ -343,48 +348,42 @@ function MobileMoodBoard({ taskGid }: { taskGid: string }) {
 
   function onCanvasTouchEnd() {
     if (!dragRef.current) return
-    persist(imagesRef.current)
-    dragRef.current = null
+    persist(imagesRef.current); dragRef.current = null
   }
 
   if (!loaded) return null
-
   const canvasH = Math.max(400, ...images.map(i => i.y + IMG_DEFAULT_W + 60))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(30,28,38,0.08)', flexShrink: 0, background: 'rgba(255,255,255,0.97)' }}>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.dark, flex: 1 }}>Mood Board</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `1px solid rgba(255,255,255,0.1)`, flexShrink: 0, background: C.mid }}>
+        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.peach, flex: 1 }}>Mood Board</div>
         <button onClick={() => { setShowInput(v => !v); haptic(ImpactStyle.Light) }}
-          style={{ background: C.main, border: 'none', borderRadius: 10, padding: '10px 16px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: 'pointer', minHeight: 44 }}>+ Add</button>
+          style={{ background: C.main, border: 'none', borderRadius: 0, padding: '8px 16px', fontFamily: FONT, fontSize: 13, fontWeight: 800, color: C.peach, cursor: 'pointer', minHeight: 44 }}>+ Add</button>
       </div>
-
       {showInput && (
-        <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'rgba(255,255,255,0.97)', borderBottom: '1px solid rgba(30,28,38,0.08)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.1)`, flexShrink: 0 }}>
           <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImage()} placeholder="Paste image URL…" autoFocus
-            style={{ flex: 1, fontFamily: FONT, fontSize: 14, border: '1.5px solid rgba(30,28,38,0.2)', borderRadius: 10, padding: '12px 14px', outline: 'none', background: 'rgba(255,255,255,0.9)', color: C.dark, minHeight: 44 }} />
-          <button onClick={addImage} style={{ background: C.dark, color: C.light, border: 'none', borderRadius: 10, padding: '12px 16px', fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Add</button>
+            style={{ flex: 1, fontFamily: FONT, fontSize: 14, border: '2px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '10px 14px', outline: 'none', background: 'rgba(255,255,255,0.07)', color: C.peach, minHeight: 44 }} />
+          <button onClick={addImage} style={{ background: C.dark, color: C.peach, border: 'none', borderRadius: 0, padding: '10px 16px', fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Add</button>
         </div>
       )}
-
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'rgba(255,255,255,0.95)' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: C.dark }}>
         <div ref={canvasRef} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd}
-          style={{ position: 'relative', width: '100%', minHeight: canvasH, backgroundImage: 'radial-gradient(circle, rgba(30,28,38,0.06) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
-
+          style={{ position: 'relative', width: '100%', minHeight: canvasH, backgroundImage: 'radial-gradient(circle, rgba(244,237,234,0.06) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
           {images.length === 0 && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: 0.3, pointerEvents: 'none' }}>
               <div style={{ fontSize: 44 }}>🖼</div>
-              <div style={{ fontFamily: FONT, fontSize: 13, color: C.dark }}>Add images to build your vision</div>
+              <div style={{ fontFamily: FONT, fontSize: 13, color: C.peach }}>Add images to build your vision</div>
             </div>
           )}
-
           {images.map(img => (
             <div key={img.id} onTouchStart={e => onImgTouchStart(e, img)}
-              style={{ position: 'absolute', left: img.x, top: img.y, width: img.w, background: C.light, borderRadius: 4, padding: '4px 4px 20px', boxShadow: '3px 4px 12px rgba(30,28,38,0.2)', touchAction: 'none', userSelect: 'none' }}>
-              <img src={img.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 2, pointerEvents: 'none' }}
-                onError={e => { (e.target as HTMLImageElement).style.minHeight = '80px'; (e.target as HTMLImageElement).style.background = '#eee' }} />
+              style={{ position: 'absolute', left: img.x, top: img.y, width: img.w, background: C.mid, borderRadius: 0, padding: '4px 4px 20px', boxShadow: '3px 4px 12px rgba(36,35,41,0.5)', touchAction: 'none', userSelect: 'none' }}>
+              <img src={img.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }}
+                onError={e => { (e.target as HTMLImageElement).style.minHeight = '80px'; (e.target as HTMLImageElement).style.background = C.mid }} />
               <button onPointerDown={e => { e.stopPropagation(); removeImage(img.id) }}
-                style={{ position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: '50%', background: '#e05c5c', border: `2px solid ${C.light}`, color: C.light, fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                style={{ position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: '50%', background: C.coral, border: `2px solid ${C.dark}`, color: C.dark, fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
             </div>
           ))}
         </div>
@@ -399,13 +398,13 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
   const [notes, setNotes]   = useState<Record<string, string>>({})
   const [done, setDone]     = useState<Record<string, boolean>>({})
   const [loaded, setLoaded] = useState(false)
-  const [viewingIdx, setViewingIdx]       = useState(0)
-  const [slideDir, setSlideDir]           = useState<'next' | 'prev' | null>(null)
-  const [slideKey, setSlideKey]           = useState(0)
+  const [viewingIdx, setViewingIdx]           = useState(0)
+  const [slideDir, setSlideDir]               = useState<'next' | 'prev' | null>(null)
+  const [slideKey, setSlideKey]               = useState(0)
   const [showMorningLock, setShowMorningLock] = useState(false)
-  const [celebrate, setCelebrate]         = useState<typeof STAGES[number] | null>(null)
+  const [celebrate, setCelebrate]             = useState<typeof STAGES[number] | null>(null)
   const initialViewSet = useRef(false)
-  const contentRef = useRef<HTMLDivElement>(null)
+  const contentRef     = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     storageGet(KEY).then(v => {
@@ -435,9 +434,7 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
 
   function navigate(idx: number) {
     if (idx === viewingIdx) return
-    setSlideDir(idx > viewingIdx ? 'next' : 'prev')
-    setSlideKey(k => k + 1)
-    setViewingIdx(idx)
+    setSlideDir(idx > viewingIdx ? 'next' : 'prev'); setSlideKey(k => k + 1); setViewingIdx(idx)
     contentRef.current?.scrollTo({ top: 0, behavior: 'instant' })
   }
 
@@ -455,69 +452,68 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
     setShowMorningLock(false)
   }
 
-  const allDone = STAGES.every(s => done[s.id])
-  const stage   = viewingIdx < STAGES.length ? STAGES[viewingIdx] : null
-  const isLocked  = stage ? viewingIdx > 0 && !done[STAGES[viewingIdx - 1].id] : false
-  const isDone    = stage ? !!done[stage.id] : false
-  const isActive  = stage ? !done[stage.id] && (viewingIdx === 0 || !!done[STAGES[viewingIdx - 1].id]) : false
-  const isRevelation = stage?.id === 'revelation'
-
+  const allDone       = STAGES.every(s => done[s.id])
+  const stage         = viewingIdx < STAGES.length ? STAGES[viewingIdx] : null
+  const isLocked      = stage ? viewingIdx > 0 && !done[STAGES[viewingIdx - 1].id] : false
+  const isDone        = stage ? !!done[stage.id] : false
+  const isActive      = stage ? !done[stage.id] && (viewingIdx === 0 || !!done[STAGES[viewingIdx - 1].id]) : false
+  const isRevelation  = stage?.id === 'revelation'
   const swipe = useSwipe(
     () => { const next = Math.min(viewingIdx + 1, STAGES.length - 1); if (next !== viewingIdx && (next === 0 || done[STAGES[next - 1].id])) navigate(next) },
     () => { const prev = Math.max(viewingIdx - 1, 0); if (prev !== viewingIdx) navigate(prev) },
   )
-
   const slideAnim = slideDir === 'next' ? 'slideInRight 0.28s ease' : slideDir === 'prev' ? 'slideInLeft 0.28s ease' : 'none'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(255,255,255,0.97)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: C.dark }}>
       {showMorningLock && <MobilePrayerLock onUnlock={handleMorningUnlock} />}
-
       {celebrate && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ background: celebrate.color, borderRadius: 24, padding: '28px 40px', textAlign: 'center', animation: 'popIn 0.4s cubic-bezier(.34,1.56,.64,1)', boxShadow: '0 8px 40px rgba(0,0,0,0.3)' }}>
+          <div style={{ background: celebrate.color, border: `2px solid rgba(255,255,255,0.2)`, borderRadius: 0, padding: '28px 40px', textAlign: 'center', animation: 'popIn 0.4s cubic-bezier(.34,1.56,.64,1)' }}>
             <div style={{ marginBottom: 8 }}><StageIcon stage={celebrate} size={52} /></div>
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: celebrate.textColor }}>{celebrate.reward}!</div>
           </div>
         </div>
       )}
 
-      <div style={{ background: C.dark, paddingTop: 'env(safe-area-inset-top)', flexShrink: 0 }}>
+      {/* Header */}
+      <div style={{ background: C.mid, paddingTop: 'env(safe-area-inset-top)', flexShrink: 0, borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
-          <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: 'pointer', minHeight: 44 }}>← Back</button>
+          <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 0, padding: '8px 14px', fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.peach, cursor: 'pointer', minHeight: 44 }}>← Back</button>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.light, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</div>
-            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{task.due_on}</div>}
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.peach, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</div>
+            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(244,237,234,0.4)', marginTop: 2 }}>{task.due_on}</div>}
           </div>
-          <button onClick={() => setShowMorningLock(true)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 10, padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', minHeight: 44, minWidth: 44, justifyContent: 'center' }}>
+          <button onClick={() => setShowMorningLock(true)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 0, padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', minHeight: 44, minWidth: 44, justifyContent: 'center' }}>
             <PrayerIcon width={18} height={18} />
           </button>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 24px 12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '6px 24px 10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           {STAGES.map((s, i) => {
             const unlocked = i === 0 || !!done[STAGES[i - 1].id]
             const viewing  = i === viewingIdx
             return (
               <button key={s.id} onClick={() => { if (unlocked) { haptic(ImpactStyle.Light); navigate(i) } }}
                 style={{ background: 'transparent', border: 'none', cursor: unlocked ? 'pointer' : 'default', opacity: viewing ? 1 : unlocked ? 0.35 : 0.12, transition: 'opacity 0.2s', padding: '4px 8px', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <StageIcon stage={s} size={26} />
+                <StageIcon stage={s} size={24} />
               </button>
             )
           })}
         </div>
       </div>
 
+      {/* Content */}
       <div ref={contentRef} {...(isRevelation ? {} : swipe)}
-        style={{ flex: 1, overflowY: isRevelation ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column' }}>
+        style={{ flex: 1, minHeight: 0, overflowY: isRevelation ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column' }}>
         <div key={slideKey} style={{ flex: 1, display: 'flex', flexDirection: 'column', animation: slideAnim }}>
           {allDone && viewingIdx >= STAGES.length ? (
             <div style={{ padding: '48px 28px', textAlign: 'center' }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 600, color: C.dark, marginBottom: 8 }}>Faithfully Finished.</div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 400, color: C.dark, opacity: 0.5, fontStyle: 'italic', marginBottom: 32 }}>Well done. The work is offered up.</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 600, color: C.peach, marginBottom: 8 }}>Faithfully Finished.</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, color: C.peach, opacity: 0.5, fontStyle: 'italic', marginBottom: 32 }}>Well done. The work is offered up.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {STAGES.map((s, i) => (
-                  <button key={s.id} onClick={() => navigate(i)} style={{ background: 'rgba(30,28,38,0.05)', border: '1.5px solid rgba(30,28,38,0.1)', borderRadius: 12, padding: '14px 20px', fontFamily: FONT, fontSize: 14, fontWeight: 600, color: C.dark, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, minHeight: 44 }}>
-                    <StageIcon stage={s} size={20} /><span>{s.label}</span>
+                  <button key={s.id} onClick={() => navigate(i)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 0, padding: '14px 20px', fontFamily: FONT, fontSize: 14, fontWeight: 700, color: C.peach, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, minHeight: 44 }}>
+                    <StageIcon stage={s} size={18} /><span>{s.label}</span>
                   </button>
                 ))}
               </div>
@@ -527,21 +523,21 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
           ) : stage ? (
             <div style={{ padding: '28px 24px 120px' }}>
               {isLocked ? (
-                <div style={{ fontFamily: FONT, fontSize: 14, color: C.dark, opacity: 0.4, fontStyle: 'italic', marginTop: 20 }}>Complete the previous stage to unlock.</div>
+                <div style={{ fontFamily: FONT, fontSize: 14, color: C.peach, opacity: 0.4, fontStyle: 'italic', marginTop: 20 }}>Complete the previous stage to unlock.</div>
               ) : (
                 <>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 600, color: C.dark, marginBottom: 4 }}>{stage.label}</div>
-                  <div style={{ fontFamily: FONT, fontSize: 11, color: C.dark, opacity: 0.3, marginBottom: 18 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
-                  <div style={{ width: 32, height: 3, background: stage.color, borderRadius: 99, marginBottom: 18 }} />
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 400, color: C.dark, lineHeight: 1.85, marginBottom: 10 }}>{stage.prompt}</div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 14, fontStyle: 'italic', color: C.dark, opacity: 0.4, marginBottom: 22 }}>"{stage.scripture}" — {stage.ref}</div>
-                  <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: stage.color, marginBottom: 8 }}>{stage.q}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
+                  <div style={{ fontFamily: FONT, fontSize: 11, color: C.peach, opacity: 0.3, marginBottom: 18 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
+                  <div style={{ width: 32, height: 3, background: stage.id === 'surrender' ? C.dark : stage.color, marginBottom: 18 }} />
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, color: C.peach, lineHeight: 1.85, marginBottom: 10 }}>{stage.prompt}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 14, fontStyle: 'italic', color: C.peach, opacity: 0.4, marginBottom: 22 }}>"{stage.scripture}" — {stage.ref}</div>
+                  <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.main, marginBottom: 8 }}>{stage.q}</div>
                   <textarea value={notes[stage.id] || ''} onChange={e => setNote(stage.id, e.target.value)} placeholder="Write your thoughts here…" disabled={isDone}
-                    style={{ width: '100%', minHeight: 140, fontFamily: FONT, fontSize: 15, color: C.dark, background: isDone ? 'rgba(0,0,0,0.02)' : C.light, border: `1.5px solid ${isDone ? 'rgba(30,28,38,0.08)' : 'rgba(30,28,38,0.15)'}`, borderRadius: 12, padding: '14px 16px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.7, display: 'block' }} />
+                    style={{ width: '100%', minHeight: 140, fontFamily: FONT, fontSize: 14, color: C.peach, background: 'rgba(255,255,255,0.05)', border: `1px solid ${isDone ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '14px 16px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.7, display: 'block' }} />
                   {isDone && (
-                    <div style={{ marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(96,110,74,0.1)', borderRadius: 20, padding: '8px 16px' }}>
+                    <div style={{ marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(101,121,70,0.15)', padding: '8px 16px' }}>
                       <span style={{ color: C.main, fontSize: 14 }}>✓</span>
-                      <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.main }}>{stage.reward}</span>
+                      <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: C.main }}>{stage.reward}</span>
                     </div>
                   )}
                 </>
@@ -551,10 +547,11 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
         </div>
       </div>
 
+      {/* Complete bar */}
       {loaded && stage && isActive && !showMorningLock && (
-        <div style={{ flexShrink: 0, background: stage.color, padding: '14px 24px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))' } as React.CSSProperties}>
+        <div style={{ flexShrink: 0, background: stage.id === 'surrender' ? C.peach : stage.color, padding: '12px 24px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' } as React.CSSProperties}>
           <button onClick={() => completeStage(stage.id)}
-            style={{ width: '100%', background: 'rgba(255,255,255,0.2)', color: stage.textColor, border: '2px solid rgba(255,255,255,0.35)', borderRadius: 14, padding: '16px 0', fontFamily: FONT, fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 52 }}>
+            style={{ width: '100%', background: 'rgba(0,0,0,0.15)', color: stage.textColor, border: `2px solid rgba(0,0,0,0.2)`, borderRadius: 0, padding: '16px 0', fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 52 }}>
             {stage.step === STAGES.length ? '🏆 Complete & Surrender' : `Complete ${stage.label} →`}
           </button>
         </div>
@@ -567,36 +564,36 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
 function MobileFactoryDetail({ task, category, onCategoryChange, onBack }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void }) {
   const ul = urgLabel(task.due_on); const uc = urgColor(task.due_on)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(255,255,255,0.97)' }}>
-      <div style={{ background: C.dark, paddingTop: 'env(safe-area-inset-top)', flexShrink: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: C.dark }}>
+      <div style={{ background: C.mid, paddingTop: 'env(safe-area-inset-top)', flexShrink: 0, borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
-          <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: 'pointer', minHeight: 44 }}>← Back</button>
+          <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 0, padding: '8px 14px', fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.peach, cursor: 'pointer', minHeight: 44 }}>← Back</button>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.light, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.peach, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</div>
             {ul && <div style={{ fontFamily: FONT, fontSize: 11, color: uc, marginTop: 2 }}>{ul}</div>}
           </div>
         </div>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 24 }}>
         {category === 'creative' ? (
-          <div style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 20, padding: 28 }}>
+          <div style={{ background: C.mid, border: '1px solid rgba(255,255,255,0.15)', padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-              <InsideIcon width={32} height={32} />
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.dark }}>Inside Task</div>
+              <InsideIcon width={28} height={28} />
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>Inside Task</div>
             </div>
             {task.notes
-              ? <div style={{ fontFamily: FONT, fontSize: 14, color: C.dark, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{task.notes}</div>
-              : <div style={{ fontFamily: FONT, fontSize: 13, color: C.dark, opacity: 0.5, fontStyle: 'italic' }}>No description in Asana yet.</div>
+              ? <div style={{ fontFamily: FONT, fontSize: 14, color: C.peach, lineHeight: 1.8, whiteSpace: 'pre-wrap', opacity: 0.8 }}>{task.notes}</div>
+              : <div style={{ fontFamily: FONT, fontSize: 13, color: C.peach, opacity: 0.4, fontStyle: 'italic' }}>No description in Asana yet.</div>
             }
             {task.url && (
-              <button onClick={() => window.open(task.url, '_blank', 'noopener,noreferrer')} style={{ marginTop: 24, background: C.dark, color: C.light, border: 'none', borderRadius: 12, padding: '14px 0', width: '100%', fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Open in Asana ↗</button>
+              <button onClick={() => window.open(task.url, '_blank', 'noopener,noreferrer')} style={{ marginTop: 24, background: C.dark, color: C.peach, border: '1px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '12px 0', width: '100%', fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Open in Asana ↗</button>
             )}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
-            <UncatIcon width={64} height={64} style={{ color: C.dark, opacity: 0.4, marginBottom: 16 }} />
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.dark, marginBottom: 10, textAlign: 'center' }}>Uncategorized</div>
-            <div style={{ fontFamily: FONT, fontSize: 14, color: C.dark, opacity: 0.6, lineHeight: 1.7, marginBottom: 28, textAlign: 'center' }}>
+            <UncatIcon width={56} height={56} style={{ color: C.peach, opacity: 0.3, marginBottom: 16 }} />
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.peach, marginBottom: 10, textAlign: 'center' }}>Uncategorized</div>
+            <div style={{ fontFamily: FONT, fontSize: 14, color: C.peach, opacity: 0.6, lineHeight: 1.7, marginBottom: 28, textAlign: 'center' }}>
               Mark as Inside to view the Asana description, or Outside to run it through the creative process.
             </div>
             <div style={{ display: 'flex', gap: 8, width: '100%' }}>
@@ -604,9 +601,9 @@ function MobileFactoryDetail({ task, category, onCategoryChange, onBack }: { tas
                 const cfg = cat ? CATEGORIES[cat] : null; const active = category === cat
                 return (
                   <button key={cat ?? 'none'} onClick={() => { haptic(ImpactStyle.Light); onCategoryChange(cat) }}
-                    style={{ flex: 1, background: active ? (cfg ? cfg.color : 'rgba(30,28,38,0.1)') : 'rgba(30,28,38,0.06)', border: `1.5px solid ${active ? 'transparent' : 'rgba(30,28,38,0.12)'}`, borderRadius: 14, padding: '16px 8px', cursor: 'pointer', minHeight: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: active ? 1 : 0.6 }}>
-                    {cat === 'creative' ? <InsideIcon width={40} height={40} /> : <OutsideIcon width={40} height={40} />}
-                    <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: active ? (cfg ? cfg.text : C.dark) : C.dark }}>{cfg ? cfg.label : ''}</span>
+                    style={{ flex: 1, background: active ? (cfg ? cfg.color : C.mid) : 'rgba(255,255,255,0.06)', border: `1px solid ${active ? 'transparent' : 'rgba(255,255,255,0.15)'}`, borderRadius: 0, padding: '16px 8px', cursor: 'pointer', minHeight: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: active ? 1 : 0.6 }}>
+                    {cat === 'creative' ? <InsideIcon width={36} height={36} /> : <OutsideIcon width={36} height={36} />}
+                    <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: active ? (cfg ? cfg.text : C.peach) : C.peach }}>{cfg ? cfg.label : ''}</span>
                   </button>
                 )
               })}
@@ -618,28 +615,33 @@ function MobileFactoryDetail({ task, category, onCategoryChange, onBack }: { tas
   )
 }
 
-// ── Mobile Project Card ────────────────────────────────────────────────────
+// ── Mobile Project Card — matches desktop ProjectCard style ────────────────
 function MobileProjectCard({ task, progress: _progress, category, onOpen, onCategoryChange }: { task: Task; progress: number; category: CategoryKey; onOpen: (t: Task) => void; onCategoryChange: (c: CategoryKey) => void }) {
+  const catCfg = category ? CATEGORIES[category] : null
   const due = task.due_on ? new Date(task.due_on + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null
   function toggle(cat: 'creative' | 'factory', e: React.MouseEvent) {
     e.stopPropagation(); haptic(ImpactStyle.Light); onCategoryChange(category === cat ? null : cat)
   }
   return (
     <div onClick={() => { haptic(ImpactStyle.Light); onOpen(task) }}
-      style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 16px rgba(30,28,38,0.3)', cursor: 'pointer', minHeight: 72 }}>
-      <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.light, lineHeight: 1.3 }}>{task.name}</div>
-        {due && <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3 }}>{due}</div>}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, padding: '0 14px', flexShrink: 0 }}>
-        <button onClick={e => toggle('creative', e)} title="Inside"
-          style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: category === 'creative' ? C.light : 'rgba(255,255,255,0.25)' }}>
-          <InsideIcon width={40} height={40} />
-        </button>
-        <button onClick={e => toggle('factory', e)} title="Outside"
-          style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: category === 'factory' ? C.light : 'rgba(255,255,255,0.25)' }}>
-          <OutsideIcon width={40} height={40} />
-        </button>
+      style={{ background: C.dark, border: '1px solid rgba(255,255,255,0.2)', borderRadius: 0, overflow: 'hidden', marginBottom: 8, cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
+      {/* Color strip — same as desktop */}
+      <div style={{ height: 5, background: catCfg ? catCfg.color : 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+      <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 600, color: C.peach, lineHeight: 1.3, wordBreak: 'break-word' }}>{task.name}</div>
+          {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: 'rgba(244,237,234,0.5)', marginTop: 4 }}>Due: {due}</div>}
+        </div>
+        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+          <button onClick={e => toggle('creative', e)} title="Inside"
+            style={{ background: category === 'creative' ? 'rgba(101,121,70,0.25)' : 'transparent', border: 'none', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: category === 'creative' ? C.main : 'rgba(244,237,234,0.25)' }}>
+            <InsideIcon width={22} height={22} />
+          </button>
+          <button onClick={e => toggle('factory', e)} title="Outside"
+            style={{ background: category === 'factory' ? 'rgba(239,153,130,0.2)' : 'transparent', border: 'none', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: category === 'factory' ? C.coral : 'rgba(244,237,234,0.25)' }}>
+            <OutsideIcon width={22} height={22} />
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -659,10 +661,7 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
   const [pullDist, setPullDist] = useState(0)
   const [activeTab, setActiveTab] = useState<LeftTabId | null>(null)
 
-  function toggleTab(tab: LeftTabId) {
-    haptic(ImpactStyle.Light)
-    setActiveTab(prev => prev === tab ? null : tab)
-  }
+  function toggleTab(tab: LeftTabId) { haptic(ImpactStyle.Light); setActiveTab(prev => prev === tab ? null : tab) }
 
   function onListTouchStart(e: React.TouchEvent) {
     if ((listRef.current?.scrollTop ?? 1) === 0) { pullStart.current = e.touches[0].clientY; isPulling.current = true }
@@ -685,9 +684,9 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
     if (!list.length) return null
     return (
       <div key={label} style={{ marginBottom: 28 }}>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 500, color: C.light, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600, color: C.peach, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>{label}</span>
-          <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>({list.length})</span>
+          <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(244,237,234,0.35)', fontWeight: 400 }}>({list.length})</span>
         </div>
         {list.map(t => (
           <MobileProjectCard key={t.gid} task={t} progress={progresses[t.gid] || 0} category={categories[t.gid] || null} onOpen={onOpen} onCategoryChange={c => onCategoryChange(t.gid, c)} />
@@ -698,91 +697,86 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
 
   const tabDefs: { id: LeftTabId; label: string; icon: React.ReactNode }[] = [
     { id: 'create',     label: 'Create', icon: <span style={{ fontSize: 22, fontWeight: 300, lineHeight: 1, color: 'inherit' }}>+</span> },
-    { id: 'quicktasks', label: 'Tasks',  icon: <span style={{ fontSize: 16, lineHeight: 1, color: 'inherit' }}>☑</span> },
-    { id: 'prayer',     label: 'Prayer', icon: <PrayerIcon width={20} height={20} style={{ display: 'block' }} /> },
+    { id: 'quicktasks', label: 'Tasks',  icon: <span style={{ fontSize: 15, lineHeight: 1, color: 'inherit' }}>☑</span> },
+    { id: 'prayer',     label: 'Prayer', icon: <PrayerIcon width={18} height={18} style={{ display: 'block' }} /> },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
-      <div style={{ background: 'rgba(30,28,38,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', paddingTop: 'env(safe-area-inset-top)', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Header — matches desktop title bar */}
+      <div style={{ background: C.mid, paddingTop: 'env(safe-area-inset-top)', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.light, flex: 1 }}>MossMind</div>
-          {syncMsg && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith('✓') ? C.main : '#e05c5c' }}>{syncMsg}</div>}
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.peach, flex: 1 }}>MossMind</div>
+          {syncMsg && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: syncMsg.startsWith('✓') ? C.main : C.coral }}>{syncMsg}</div>}
           <button onClick={onSync} disabled={syncing}
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: syncing ? 'not-allowed' : 'pointer', minHeight: 44 }}>
-            {syncing ? '…' : '↻'}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '8px 14px', fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.peach, cursor: syncing ? 'not-allowed' : 'pointer', minHeight: 44 }}>
+            {syncing ? '…' : '↻ Sync'}
           </button>
           <button onClick={onSettings}
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 12px', fontFamily: FONT, fontSize: 15, color: C.light, cursor: 'pointer', minHeight: 44 }}>⚙</button>
+            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 0, padding: '8px 12px', fontFamily: FONT, fontSize: 14, color: C.peach, cursor: 'pointer', minHeight: 44 }}>⚙</button>
         </div>
         {pullDist > 0 && (
           <div style={{ display: 'flex', justifyContent: 'center', height: pullDist, alignItems: 'center', overflow: 'hidden', transition: 'height 0.1s' }}>
-            <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.4)', animation: pullDist > 40 ? 'spin 0.6s linear infinite' : 'none' }}>↻</div>
+            <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(244,237,234,0.4)', animation: pullDist > 40 ? 'spin 0.6s linear infinite' : 'none' }}>↻</div>
           </div>
         )}
       </div>
 
-      {/* Cards list */}
-      <div ref={listRef} onTouchStart={onListTouchStart} onTouchMove={onListTouchMove} onTouchEnd={onListTouchEnd}
-        style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px 16px' }}>
-        {tasks.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.6 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.light, marginBottom: 8 }}>No projects yet</div>
-            <div style={{ fontFamily: FONT, fontSize: 13, color: C.light, opacity: 0.6 }}>Tap + Create or add your Asana token in Settings</div>
-          </div>
-        ) : (
-          <>
-            {renderGroup('In Progress', inProgress)}
-            {renderGroup('Ready to Start', notStarted)}
-            {renderGroup('Completed', completed)}
-          </>
-        )}
-      </div>
+      {/* Body: left tab strip + panel + cards */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
-      {/* Slide-up panel */}
-      <div style={{
-        flexShrink: 0,
-        overflow: 'hidden',
-        maxHeight: activeTab ? '48vh' : 0,
-        transition: 'max-height 0.28s cubic-bezier(0.4,0,0.2,1)',
-        background: 'rgba(22,20,30,0.98)',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-      }}>
-        <div style={{ height: '48vh', overflowY: 'auto' }}>
-          {activeTab === 'create'     && <CreatePanel onCreate={name => { onCreateTask(name); setActiveTab(null) }} />}
-          {activeTab === 'quicktasks' && <QuickTasksPanel />}
-          {activeTab === 'prayer'     && <PrayerPanel onOpen={() => { setActiveTab(null); onPrayer() }} />}
+        {/* Left tab strip — matches desktop side panel style */}
+        <div style={{ width: 52, flexShrink: 0, background: '#1e1c28', display: 'flex', flexDirection: 'column', paddingTop: 8, borderRight: '1px solid rgba(255,255,255,0.08)', zIndex: 10, gap: 2 }}>
+          {tabDefs.map(tab => (
+            <button key={tab.id} onClick={() => toggleTab(tab.id)}
+              style={{
+                width: 52, height: 76,
+                background: activeTab === tab.id ? 'rgba(101,121,70,0.2)' : 'transparent',
+                border: 'none',
+                borderLeft: activeTab === tab.id ? `3px solid ${C.main}` : '3px solid transparent',
+                cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                color: activeTab === tab.id ? C.main : 'rgba(244,237,234,0.35)',
+                transition: 'all 0.15s',
+              }}>
+              {tab.icon}
+              <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', lineHeight: 1 }}>{tab.label}</span>
+            </button>
+          ))}
         </div>
-      </div>
 
-      {/* Bottom tab bar */}
-      <div style={{
-        flexShrink: 0,
-        display: 'flex',
-        background: 'rgba(18,16,26,0.98)',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}>
-        {tabDefs.map(tab => (
-          <button key={tab.id} onClick={() => toggleTab(tab.id)}
-            style={{
-              flex: 1,
-              padding: '10px 8px 12px',
-              background: 'transparent',
-              border: 'none',
-              borderTop: activeTab === tab.id ? `2px solid ${C.main}` : '2px solid transparent',
-              cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-              color: activeTab === tab.id ? C.main : 'rgba(255,255,255,0.4)',
-              transition: 'color 0.2s',
-              minHeight: 56,
-            }}>
-            {tab.icon}
-            <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, letterSpacing: '0.03em' }}>{tab.label}</span>
-          </button>
-        ))}
+        {/* Sliding panel — overflow:hidden wrapper clips on Safari */}
+        <div style={{ position: 'absolute', left: 52, top: 0, right: 0, bottom: 0, overflow: 'hidden', zIndex: 8, pointerEvents: activeTab ? 'auto' : 'none' }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            transform: activeTab ? 'translateX(0)' : 'translateX(100%)',
+            transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1)',
+            background: C.dark,
+            borderLeft: '1px solid rgba(255,255,255,0.1)',
+            overflowY: 'auto',
+          }}>
+            {activeTab === 'create'     && <CreatePanel onCreate={name => { onCreateTask(name); setActiveTab(null) }} />}
+            {activeTab === 'quicktasks' && <QuickTasksPanel />}
+            {activeTab === 'prayer'     && <PrayerPanel onOpen={() => { setActiveTab(null); onPrayer() }} />}
+          </div>
+        </div>
+
+        {/* Cards column */}
+        <div ref={listRef} onTouchStart={onListTouchStart} onTouchMove={onListTouchMove} onTouchEnd={onListTouchEnd}
+          style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '16px 14px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
+          {tasks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.5 }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.peach, marginBottom: 8 }}>No projects yet</div>
+              <div style={{ fontFamily: FONT, fontSize: 13, color: C.peach }}>Tap + Create or sync Asana tasks</div>
+            </div>
+          ) : (
+            <>
+              {renderGroup('In Progress', inProgress)}
+              {renderGroup('Ready to Start', notStarted)}
+              {renderGroup('Completed', completed)}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -790,11 +784,11 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
 
 // ── Main Mobile App ────────────────────────────────────────────────────────
 export default function MobileApp() {
-  const [tasks, setTasks]         = useState<Task[]>([])
+  const [tasks, setTasks]           = useState<Task[]>([])
   const [localTasks, setLocalTasks] = useState<Task[]>([])
-  const [openTask, setOpenTask]   = useState<Task | null>(null)
-  const [syncing, setSyncing]     = useState(false)
-  const [syncMsg, setSyncMsg]     = useState<string | null>(null)
+  const [openTask, setOpenTask]     = useState<Task | null>(null)
+  const [syncing, setSyncing]       = useState(false)
+  const [syncMsg, setSyncMsg]       = useState<string | null>(null)
   const [progresses, setProgresses] = useState<Record<string, number>>({})
   const [categories, setCategories] = useState<Record<string, CategoryKey>>({})
   const [showSettings, setShowSettings] = useState(false)
@@ -848,7 +842,8 @@ export default function MobileApp() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, fontFamily: FONT, overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(30,28,38,0.52) 0%,rgba(30,28,38,0.52) 100%),url(${bgPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      {/* Background — same as desktop graph-bg */}
+      <div style={{ position: 'absolute', inset: 0, backgroundColor: C.dark, backgroundImage: `linear-gradient(rgba(36,35,41,0.8), rgba(36,35,41,0.8)), url(${bgPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
       <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
         {showPrayer    && <MobilePrayerLock onUnlock={() => setShowPrayer(false)} />}
         {showSettings  && <MobileSettings onClose={() => setShowSettings(false)} onSaved={gids => { setSectionGids(gids); syncTasks(gids) }} />}
@@ -873,16 +868,16 @@ export default function MobileApp() {
         )}
       </div>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap');
         * { box-sizing:border-box; -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent; }
         body { margin:0; overflow:hidden; }
         ::-webkit-scrollbar { display:none; }
-        @keyframes fadeInUp   { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes popIn      { from { transform:scale(0.5); opacity:0; }       to { transform:scale(1); opacity:1; } }
+        @keyframes fadeInUp    { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes popIn       { from { transform:scale(0.5); opacity:0; }      to { transform:scale(1); opacity:1; } }
         @keyframes slideInRight { from { opacity:0; transform:translateX(36px); } to { opacity:1; transform:translateX(0); } }
         @keyframes slideInLeft  { from { opacity:0; transform:translateX(-36px); } to { opacity:1; transform:translateX(0); } }
-        @keyframes slideUp    { from { transform:translateY(100%); } to { transform:translateY(0); } }
-        @keyframes spin       { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+        @keyframes slideUp     { from { transform:translateY(100%); } to { transform:translateY(0); } }
+        @keyframes spin        { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
       `}</style>
     </div>
   )
