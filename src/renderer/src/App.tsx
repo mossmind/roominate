@@ -626,25 +626,28 @@ function StagePanel({ stage, isActive, isUnlocked, isDone, note, onNote, onCompl
 
 // ── Factory Detail ─────────────────────────────────────────────────────────
 function FactoryDetail({ task, category, onCategoryChange, onBack }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void }) {
+  const isMobile = useIsMobile();
   const uc = urgColor(task.due_on); const ul = urgLabel(task.due_on); const dl = daysLeft(task.due_on);
   const catCfg = category ? CATEGORIES[category] : null;
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ background: C.brown, borderBottom: b(2, C.brown), padding: "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: 16 }}>
-        <button onClick={onBack} style={{ background: C.peach, border: b(2, C.white), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.brown, cursor: "pointer" }}>← Back</button>
+      <div style={{ background: C.brown, borderBottom: b(2, C.brown), padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap" }}>
+        <button onClick={onBack} style={{ background: C.peach, border: b(2, C.white), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.brown, cursor: "pointer", flexShrink: 0 }}>← Back</button>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
-            {category === "factory" && <OutsideIcon width={20} height={20} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
-            {category === "creative" && <InsideIcon width={20} height={20} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 16 : 24, fontWeight: 600, color: C.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
+            {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
+            {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
             {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{task.due_on}</div>}
             {ul && <div style={{ background: uc, border: b(1.5, C.white), borderRadius: 20, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: dl !== null && dl <= 0 ? C.white : C.brown }}>{ul}</div>}
           </div>
         </div>
-        <div style={{ flexShrink: 0 }}><CategoryToggle value={category} onChange={onCategoryChange} size="normal" /></div>
-        <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>Asana ↗</button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+          <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
+          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
+        </div>
       </div>
       <div className="graph-bg" style={{ flex: 1, overflowY: "auto", padding: 40 }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
@@ -799,6 +802,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
 
 // ── Project Detail ─────────────────────────────────────────────────────────
 function ProjectDetail({ task, category, onCategoryChange, onBack, session, onStartSession, onTogglePause, onReset }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void; session?: Session; onStartSession?: () => void; onTogglePause?: () => void; onReset?: () => void }) {
+  const isMobile = useIsMobile();
   const KEY = "workflow_" + task.gid;
   const MORNING_KEY = "morning_prayer_" + task.gid;
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -873,63 +877,75 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
         </div>
       )}
       <div style={{ height: 4, background: catCfg ? catCfg.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
-      <div style={{ background: C.brown, borderBottom: b(2, C.brown), padding: "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: 16 }}>
-        <button onClick={onBack} style={{ background: C.peach, border: b(2, C.white), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.brown, cursor: "pointer" }}>← Back</button>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ fontFamily: FONT, fontSize: 18, fontWeight: 900, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.name}</div>
-            {category === "factory" && <OutsideIcon width={20} height={20} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
-            {category === "creative" && <InsideIcon width={20} height={20} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
+      <div style={{ background: C.brown, borderBottom: b(2, C.brown), padding: isMobile ? "8px 12px" : "14px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: isMobile ? 6 : 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 16 }}>
+          <button onClick={onBack} style={{ background: C.peach, border: b(2, C.white), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.brown, cursor: "pointer", flexShrink: 0 }}>← Back</button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ fontFamily: FONT, fontSize: isMobile ? 14 : 18, fontWeight: 900, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.name}</div>
+              {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
+              {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
+            </div>
+            {!isMobile && <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
+              {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{task.due_on}</div>}
+              {ul && <div style={{ background: uc, border: b(1.5, C.white), borderRadius: 20, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: dl !== null && dl <= 0 ? C.white : C.brown }}>{ul}</div>}
+            </div>}
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
-            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{task.due_on}</div>}
-            {ul && <div style={{ background: uc, border: b(1.5, C.white), borderRadius: 20, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: dl !== null && dl <= 0 ? C.white : C.brown }}>{ul}</div>}
-          </div>
+          {!isMobile && <>
+            <button onClick={() => { if (window.confirm("Reset the creative process? All notes and progress will be cleared.")) handleReset(); }} style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)", border: b(2, "rgba(255,255,255,0.2)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>↺ Reset</button>
+            <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>Asana ↗</button>
+          </>}
+          {isMobile && <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <button onClick={() => { if (window.confirm("Reset progress?")) handleReset(); }} style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)", border: b(1.5, "rgba(255,255,255,0.2)"), borderRadius: 8, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↺</button>
+            {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(1.5, "rgba(255,255,255,0.3)"), borderRadius: 8, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↗</button>}
+          </div>}
         </div>
-        <button onClick={() => { if (window.confirm("Reset the creative process? All notes and progress will be cleared.")) handleReset(); }} style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)", border: b(2, "rgba(255,255,255,0.2)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>↺ Reset</button>
-        <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>Asana ↗</button>
       </div>
       {/* Timed Session Banner */}
-      <div style={{ background: "rgba(20,18,28,0.9)", borderBottom: "1px solid rgba(255,255,255,0.1)", padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, minHeight: 52 }}>
+      <div style={{ background: "rgba(20,18,28,0.9)", borderBottom: "1px solid rgba(255,255,255,0.1)", padding: isMobile ? "8px 12px" : "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 8, minHeight: 44 }}>
         {sessionState ? (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ color: C.white, display: "flex", alignItems: "center" }}>
-                <StageIcon stage={STAGES[sessionState.stageIndex]} size={22} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <div style={{ color: C.white, display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <StageIcon stage={STAGES[sessionState.stageIndex]} size={isMobile ? 16 : 22} />
               </div>
-              <div>
-                <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.3)", letterSpacing: 0.5, marginBottom: 1 }}>
+              <div style={{ minWidth: 0 }}>
+                {!isMobile && <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.3)", letterSpacing: 0.5, marginBottom: 1 }}>
                   {sessionState.done ? "Session Complete" : `Stage ${sessionState.stageIndex + 1} of ${STAGES.length} — ${sessionState.paused ? "Paused" : "Active"}`}
-                </div>
-                <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 900, color: C.white }}>
+                </div>}
+                <div style={{ fontFamily: FONT, fontSize: isMobile ? 12 : 14, fontWeight: 900, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {sessionState.done ? "All stages complete" : STAGES[sessionState.stageIndex].label}
                 </div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {!sessionState.done && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              {!sessionState.done && !isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                   <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: 0.5 }}>next stage in</div>
                   <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 900, color: sessionState.paused ? "rgba(255,255,255,0.4)" : C.white, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{daysLabel(sessionState.remainingSecs)}</div>
                 </div>
               )}
+              {!sessionState.done && isMobile && (
+                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 900, color: sessionState.paused ? "rgba(255,255,255,0.4)" : C.white, fontVariantNumeric: "tabular-nums" }}>{daysLabel(sessionState.remainingSecs)}</div>
+              )}
               {sessionState.done
-                ? <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.main }}>✓ Process Complete</div>
-                : <button onClick={onTogglePause} style={{ background: sessionState.paused ? C.main : "rgba(255,255,255,0.1)", color: C.white, border: "none", borderRadius: 8, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
-                    {sessionState.paused ? "▶ Resume" : "⏸ Pause"}
+                ? <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.main }}>✓ Done</div>
+                : <button onClick={onTogglePause} style={{ background: sessionState.paused ? C.main : "rgba(255,255,255,0.1)", color: C.white, border: "none", borderRadius: 8, padding: isMobile ? "5px 10px" : "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+                    {sessionState.paused ? "▶" : "⏸"}{!isMobile && (sessionState.paused ? " Resume" : " Pause")}
                   </button>
               }
             </div>
           </>
         ) : (
           <>
-            {(() => { const [p, r, a] = getSessionDurations(Date.now(), task.due_on); return (
+            {!isMobile && (() => { const [p, r, a] = getSessionDurations(Date.now(), task.due_on); return (
               <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>
                 {task.due_on ? `Timed session: Prayer (${daysLabel(p)}) → Revelation (${daysLabel(r)}) → Action (${daysLabel(a)})` : 'No due date — set one in Asana to scale the session'}
               </div>
             ); })()}
+            {isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>Timed session</div>}
             {onStartSession && (
-              <button onClick={onStartSession} style={{ background: C.main, color: C.white, border: "none", borderRadius: 10, padding: "8px 22px", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer", flexShrink: 0, letterSpacing: 0.3 }}>
+              <button onClick={onStartSession} style={{ background: C.main, color: C.white, border: "none", borderRadius: 10, padding: isMobile ? "6px 16px" : "8px 22px", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer", flexShrink: 0, letterSpacing: 0.3 }}>
                 ▶ Start
               </button>
             )}
@@ -961,7 +977,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
         {/* Content area */}
         {showDescription ? (
           <div className="graph-bg" style={{ flex: 1, overflowY: "auto" }}>
-            <div style={{ padding: "52px 64px", maxWidth: 620, margin: "0 auto" }}>
+            <div style={{ padding: isMobile ? "24px 16px" : "52px 64px", maxWidth: 620, margin: "0 auto" }}>
               <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 900, color: C.peach, marginBottom: 32, lineHeight: 1.3 }}>{task.name}</div>
               <div style={{ width: 40, height: 3, background: C.main, borderRadius: 99, marginBottom: 32 }} />
               {task.notes ? (
@@ -1002,45 +1018,45 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
                 ) : (() => {
                   const stage = STAGES[viewingStageIdx];
                   if (stage.id === "prayer") return (
-                    <div style={{ display: "flex", height: "100%", minHeight: 0 }}>
-                      {/* Left: text content */}
-                      <div style={{ flex: 1, padding: "52px 56px", overflowY: "auto", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                        <div style={{ color: C.peach, marginBottom: 16 }}><StageIcon stage={stage} size={44} /></div>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
-                        <div style={{ width: 40, height: 3, background: C.coral, borderRadius: 99, marginBottom: 28 }} />
-                        <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 500, color: C.peach, lineHeight: 1.8, marginBottom: 24, opacity: 0.8 }}>{stage.prompt}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "italic", color: C.peach, opacity: 0.4, lineHeight: 1.6, marginBottom: 20 }}>"{stage.scripture}" — {stage.ref}</div>
+                    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "auto" : "100%", minHeight: 0, flex: 1 }}>
+                      {/* Text content */}
+                      <div style={{ flex: isMobile ? "none" : 1, padding: isMobile ? "24px 20px 16px" : "52px 56px", overflowY: isMobile ? "visible" : "auto", display: "flex", flexDirection: "column", justifyContent: isMobile ? "flex-start" : "center" }}>
+                        <div style={{ color: C.peach, marginBottom: 12 }}><StageIcon stage={stage} size={isMobile ? 28 : 44} /></div>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 28 : 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: isMobile ? 14 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
+                        <div style={{ width: 32, height: 3, background: C.coral, borderRadius: 99, marginBottom: isMobile ? 16 : 28 }} />
+                        <div style={{ fontFamily: FONT, fontSize: isMobile ? 13 : 14, fontWeight: 500, color: C.peach, lineHeight: 1.8, marginBottom: isMobile ? 12 : 24, opacity: 0.8 }}>{stage.prompt}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "italic", color: C.peach, opacity: 0.4, lineHeight: 1.6, marginBottom: isMobile ? 10 : 20 }}>"{stage.scripture}" — {stage.ref}</div>
                         <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.coral, letterSpacing: 1.5 }}>{stage.q}</div>
                       </div>
-                      {/* Right: full-height textarea */}
+                      {/* Textarea */}
                       <textarea value={notes[stage.id] || ""} onChange={e => setNote(stage.id, e.target.value)} placeholder="Write your thoughts here…"
-                        style={{ width: "55%", minWidth: 320, height: "100%", fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px", border: "none", borderLeft: `1.5px solid rgba(255,255,255,0.15)`, borderRadius: 0, padding: "52px 32px", resize: "none", outline: "none", boxSizing: "border-box", lineHeight: 1.7 }} />
+                        style={{ width: isMobile ? "100%" : "55%", minWidth: 0, height: isMobile ? 200 : "100%", fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px", border: "none", borderLeft: isMobile ? "none" : `1.5px solid rgba(255,255,255,0.15)`, borderTop: isMobile ? `1.5px solid rgba(255,255,255,0.15)` : "none", borderRadius: 0, padding: isMobile ? "16px 20px" : "52px 32px", resize: isMobile ? "vertical" : "none", outline: "none", boxSizing: "border-box", lineHeight: 1.7, flexShrink: 0 }} />
                     </div>
                   );
                   return (
-                    <div style={{ padding: "52px 64px", maxWidth: 620, margin: "0 auto" }}>
-                      <div style={{ color: C.peach, marginBottom: 16 }}><StageIcon stage={stage} size={44} /></div>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
-                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
-                      <div style={{ width: 40, height: 3, background: stage.id === "revelation" ? C.main : C.coral, borderRadius: 99, marginBottom: 28 }} />
+                    <div style={{ padding: isMobile ? "24px 16px" : "52px 64px", maxWidth: 620, margin: "0 auto" }}>
+                      <div style={{ color: C.peach, marginBottom: 12 }}><StageIcon stage={stage} size={isMobile ? 28 : 44} /></div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 28 : 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: isMobile ? 14 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
+                      <div style={{ width: 32, height: 3, background: stage.id === "revelation" ? C.main : C.coral, borderRadius: 99, marginBottom: isMobile ? 16 : 28 }} />
                       <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.coral, textTransform: "none", letterSpacing: 1.5, marginBottom: 10 }}>{stage.q}</div>
                       <textarea value={notes[stage.id] || ""} onChange={e => setNote(stage.id, e.target.value)} placeholder="Write your thoughts here…"
-                        style={{ width: "100%", maxWidth: 500, minHeight: 160, fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px)", backgroundSize: "20px 20px", border: `1.5px solid rgba(255,255,255,0.85)`, borderRadius: 0, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.7, display: "block" }} />
+                        style={{ width: "100%", maxWidth: isMobile ? "100%" : 500, minHeight: 160, fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px)", backgroundSize: "20px 20px", border: `1.5px solid rgba(255,255,255,0.85)`, borderRadius: 0, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.7, display: "block" }} />
                     </div>
                   );
                 })()}
               </div>
             )}
             {loaded && activeStage && STAGES.indexOf(activeStage) === viewingStageIdx && !showMorningLock && (
-              <div style={{ flexShrink: 0, background: activeStage.color, borderTop: b(2.5, C.brown), padding: "14px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-                <div>
-                  <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: activeStage.textColor, opacity: 0.65, textTransform: "none", letterSpacing: 0.5, marginBottom: 2 }}>Current Stage</div>
-                  <div style={{ fontFamily: FONT, fontSize: 15, fontWeight: 900, color: activeStage.textColor, display: "flex", alignItems: "center", gap: 6 }}><StageIcon stage={activeStage} size={15} /> {activeStage.label} <span style={{ fontWeight: 600, fontSize: 12, opacity: 0.7 }}>— {activeStage.sub}</span></div>
+              <div style={{ flexShrink: 0, background: activeStage.color, borderTop: b(2.5, C.brown), padding: isMobile ? "10px 14px" : "14px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  {!isMobile && <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: activeStage.textColor, opacity: 0.65, textTransform: "none", letterSpacing: 0.5, marginBottom: 2 }}>Current Stage</div>}
+                  <div style={{ fontFamily: FONT, fontSize: isMobile ? 12 : 15, fontWeight: 900, color: activeStage.textColor, display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}><StageIcon stage={activeStage} size={isMobile ? 12 : 15} /> {activeStage.label} {!isMobile && <span style={{ fontWeight: 600, fontSize: 12, opacity: 0.7 }}>— {activeStage.sub}</span>}</div>
                 </div>
                 <button onClick={() => completeStage(activeStage.id)}
-                  style={{ flexShrink: 0, background: "rgba(255,255,255,0.2)", color: activeStage.textColor, border: b(2, activeStage.textColor === C.white ? "rgba(255,255,255,0.5)" : "rgba(36,35,41,0.4)"), borderRadius: 12, padding: "12px 28px", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
-                  {activeStage.step === STAGES.length ? "🏆 Complete Action" : `Complete ${activeStage.label} →`}
+                  style={{ flexShrink: 0, background: "rgba(255,255,255,0.2)", color: activeStage.textColor, border: b(2, activeStage.textColor === C.white ? "rgba(255,255,255,0.5)" : "rgba(36,35,41,0.4)"), borderRadius: 12, padding: isMobile ? "8px 14px" : "12px 28px", fontFamily: FONT, fontSize: isMobile ? 12 : 13, fontWeight: 900, cursor: "pointer" }}>
+                  {activeStage.step === STAGES.length ? "🏆 Complete" : `Complete ${isMobile ? "" : activeStage.label + " "}→`}
                 </button>
               </div>
             )}
