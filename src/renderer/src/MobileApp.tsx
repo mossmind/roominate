@@ -13,6 +13,7 @@ import bgPhoto from './assets/bg.png'
 interface Task { gid: string; name: string; due_on: string | null; notes: string; url: string }
 type CategoryKey = 'factory' | 'creative' | null
 interface ImageCard { id: string; url: string; x: number; y: number; w: number }
+interface QuickTaskItem { id: string; text: string; done: boolean }
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const C = { main: '#606E4A', dark: '#1E1C26', light: '#FFFFFF' }
@@ -192,6 +193,97 @@ function MobileSettings({ onClose, onSaved }: { onClose: () => void; onSaved: (g
   )
 }
 
+// ── Create Panel ───────────────────────────────────────────────────────────
+function CreatePanel({ onCreate }: { onCreate: (name: string) => void }) {
+  const [name, setName] = useState('')
+  function submit() {
+    if (!name.trim()) return
+    onCreate(name.trim()); setName(''); haptic()
+  }
+  return (
+    <div style={{ padding: '28px 20px 20px' }}>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.light, marginBottom: 8 }}>New Project</div>
+      <div style={{ width: 28, height: 3, background: C.main, borderRadius: 99, marginBottom: 24 }} />
+      <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()}
+        placeholder="Project name…" autoFocus
+        style={{ width: '100%', fontFamily: FONT, fontSize: 14, color: C.light, background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '12px 14px', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+      <button onClick={submit}
+        style={{ width: '100%', background: C.main, color: C.light, border: 'none', borderRadius: 10, padding: '14px', fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>
+        Create
+      </button>
+    </div>
+  )
+}
+
+// ── Quick Tasks Panel ──────────────────────────────────────────────────────
+function QuickTasksPanel() {
+  const [items, setItems] = useState<QuickTaskItem[]>([])
+  const [input, setInput] = useState('')
+  useEffect(() => {
+    storageGet('quick_tasks').then(v => {
+      if (v) try { setItems(JSON.parse(v as string)) } catch (_) {}
+    })
+  }, [])
+  async function persist(next: QuickTaskItem[]) { setItems(next); await storageSet('quick_tasks', JSON.stringify(next)) }
+  function add() { if (!input.trim()) return; persist([...items, { id: Date.now().toString(), text: input.trim(), done: false }]); setInput('') }
+  function toggle(id: string) { haptic(ImpactStyle.Light); persist(items.map(i => i.id === id ? { ...i, done: !i.done } : i)) }
+  function remove(id: string) { haptic(ImpactStyle.Heavy); persist(items.filter(i => i.id !== id)) }
+  const active = items.filter(i => !i.done); const done = items.filter(i => i.done)
+  return (
+    <div style={{ padding: '28px 20px 32px' }}>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.light, marginBottom: 8 }}>Quick Tasks</div>
+      <div style={{ width: 28, height: 3, background: C.main, borderRadius: 99, marginBottom: 20 }} />
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Add task…"
+          style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: C.light, background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '10px 12px', outline: 'none', minHeight: 44 }} />
+        <button onClick={add} style={{ background: C.main, color: C.light, border: 'none', borderRadius: 10, padding: '10px 16px', fontFamily: FONT, fontSize: 20, fontWeight: 300, cursor: 'pointer', minHeight: 44, lineHeight: 1 }}>+</button>
+      </div>
+      {active.length === 0 && done.length === 0 && (
+        <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', textAlign: 'center', paddingTop: 20 }}>No tasks yet</div>
+      )}
+      {active.map(item => (
+        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <button onClick={() => toggle(item.id)}
+            style={{ width: 22, height: 22, borderRadius: 6, border: '1.5px solid rgba(255,255,255,0.3)', background: 'transparent', flexShrink: 0, cursor: 'pointer' }} />
+          <span style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: C.light, lineHeight: 1.4 }}>{item.text}</span>
+          <button onClick={() => remove(item.id)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 18, cursor: 'pointer', padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}>×</button>
+        </div>
+      ))}
+      {done.length > 0 && (
+        <>
+          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', marginTop: 20, marginBottom: 8 }}>DONE</div>
+          {done.map(item => (
+            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <button onClick={() => toggle(item.id)}
+                style={{ width: 22, height: 22, borderRadius: 6, border: `1.5px solid ${C.main}`, background: C.main, flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.light, fontSize: 11, fontWeight: 700 }}>✓</button>
+              <span style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', lineHeight: 1.4 }}>{item.text}</span>
+              <button onClick={() => remove(item.id)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 18, cursor: 'pointer', padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}>×</button>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Prayer Panel ───────────────────────────────────────────────────────────
+function PrayerPanel({ onOpen }: { onOpen: () => void }) {
+  return (
+    <div style={{ padding: '28px 20px' }}>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.light, marginBottom: 8 }}>Prayer</div>
+      <div style={{ width: 28, height: 3, background: C.main, borderRadius: 99, marginBottom: 24 }} />
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontStyle: 'italic', color: 'rgba(255,255,255,0.65)', lineHeight: 1.85, marginBottom: 8 }}>
+        "Commit your work to the LORD, and your plans will be established."
+      </div>
+      <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 28 }}>Proverbs 16:3</div>
+      <button onClick={onOpen}
+        style={{ width: '100%', background: 'rgba(255,255,255,0.1)', color: C.light, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '14px', fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>
+        Begin Prayer →
+      </button>
+    </div>
+  )
+}
+
 // ── Touch Mood Board ───────────────────────────────────────────────────────
 function MobileMoodBoard({ taskGid }: { taskGid: string }) {
   const KEY = 'moodboard_' + taskGid
@@ -219,14 +311,13 @@ function MobileMoodBoard({ taskGid }: { taskGid: string }) {
     if (!urlInput.trim()) return
     const canvas = canvasRef.current
     const existing = imagesRef.current
-    // Stagger position so images don't stack
     const col = existing.length % 2; const row = Math.floor(existing.length / 2)
     const x = 16 + col * (IMG_DEFAULT_W + 12)
     const y = 16 + row * (IMG_DEFAULT_W + 40)
     const next = [...existing, { id: Date.now().toString(), url: urlInput.trim(), x, y, w: IMG_DEFAULT_W }]
     setImages(next); persist(next)
     setUrlInput(''); setShowInput(false)
-    _ = canvas // suppress unused warning
+    _ = canvas
   }
 
   function removeImage(id: string) {
@@ -235,7 +326,6 @@ function MobileMoodBoard({ taskGid }: { taskGid: string }) {
     setImages(next); persist(next)
   }
 
-  // Touch drag handlers
   function onImgTouchStart(e: React.TouchEvent, img: ImageCard) {
     e.stopPropagation()
     const t = e.touches[0]
@@ -259,12 +349,10 @@ function MobileMoodBoard({ taskGid }: { taskGid: string }) {
 
   if (!loaded) return null
 
-  // Calculate canvas minimum height from image positions
   const canvasH = Math.max(400, ...images.map(i => i.y + IMG_DEFAULT_W + 60))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Toolbar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(30,28,38,0.08)', flexShrink: 0, background: 'rgba(255,255,255,0.97)' }}>
         <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.dark, flex: 1 }}>Mood Board</div>
         <button onClick={() => { setShowInput(v => !v); haptic(ImpactStyle.Light) }}
@@ -279,7 +367,6 @@ function MobileMoodBoard({ taskGid }: { taskGid: string }) {
         </div>
       )}
 
-      {/* Draggable canvas */}
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'rgba(255,255,255,0.95)' }}>
         <div ref={canvasRef} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd}
           style={{ position: 'relative', width: '100%', minHeight: canvasH, backgroundImage: 'radial-gradient(circle, rgba(30,28,38,0.06) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
@@ -375,7 +462,6 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
   const isActive  = stage ? !done[stage.id] && (viewingIdx === 0 || !!done[STAGES[viewingIdx - 1].id]) : false
   const isRevelation = stage?.id === 'revelation'
 
-  // Swipe: left = next stage, right = prev stage
   const swipe = useSwipe(
     () => { const next = Math.min(viewingIdx + 1, STAGES.length - 1); if (next !== viewingIdx && (next === 0 || done[STAGES[next - 1].id])) navigate(next) },
     () => { const prev = Math.max(viewingIdx - 1, 0); if (prev !== viewingIdx) navigate(prev) },
@@ -396,7 +482,6 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
         </div>
       )}
 
-      {/* Header */}
       <div style={{ background: C.dark, paddingTop: 'env(safe-area-inset-top)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
           <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: 'pointer', minHeight: 44 }}>← Back</button>
@@ -408,7 +493,6 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
             <PrayerIcon width={18} height={18} />
           </button>
         </div>
-        {/* Stage strip */}
         <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 24px 12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           {STAGES.map((s, i) => {
             const unlocked = i === 0 || !!done[STAGES[i - 1].id]
@@ -423,7 +507,6 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
         </div>
       </div>
 
-      {/* Content — swipeable */}
       <div ref={contentRef} {...(isRevelation ? {} : swipe)}
         style={{ flex: 1, overflowY: isRevelation ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column' }}>
         <div key={slideKey} style={{ flex: 1, display: 'flex', flexDirection: 'column', animation: slideAnim }}>
@@ -468,7 +551,6 @@ function MobileProjectDetail({ task, category, onCategoryChange, onBack }: { tas
         </div>
       </div>
 
-      {/* Complete bar */}
       {loaded && stage && isActive && !showMorningLock && (
         <div style={{ flexShrink: 0, background: stage.color, padding: '14px 24px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))' } as React.CSSProperties}>
           <button onClick={() => completeStage(stage.id)}
@@ -506,7 +588,9 @@ function MobileFactoryDetail({ task, category, onCategoryChange, onBack }: { tas
               ? <div style={{ fontFamily: FONT, fontSize: 14, color: C.dark, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{task.notes}</div>
               : <div style={{ fontFamily: FONT, fontSize: 13, color: C.dark, opacity: 0.5, fontStyle: 'italic' }}>No description in Asana yet.</div>
             }
-            <button onClick={() => window.open(task.url, '_blank', 'noopener,noreferrer')} style={{ marginTop: 24, background: C.dark, color: C.light, border: 'none', borderRadius: 12, padding: '14px 0', width: '100%', fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Open in Asana ↗</button>
+            {task.url && (
+              <button onClick={() => window.open(task.url, '_blank', 'noopener,noreferrer')} style={{ marginTop: 24, background: C.dark, color: C.light, border: 'none', borderRadius: 12, padding: '14px 0', width: '100%', fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Open in Asana ↗</button>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
@@ -562,13 +646,23 @@ function MobileProjectCard({ task, progress: _progress, category, onOpen, onCate
 }
 
 // ── Mobile Home Screen ─────────────────────────────────────────────────────
-function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryChange, onSync, syncing, syncMsg, onSettings, onPrayer }: {
+type LeftTabId = 'create' | 'quicktasks' | 'prayer'
+
+function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryChange, onSync, syncing, syncMsg, onSettings, onPrayer, onCreateTask }: {
   tasks: Task[]; progresses: Record<string, number>; categories: Record<string, CategoryKey>
-  onOpen: (t: Task) => void; onCategoryChange: (gid: string, c: CategoryKey) => void; onSync: () => void; syncing: boolean; syncMsg: string | null; onSettings: () => void; onPrayer: () => void
+  onOpen: (t: Task) => void; onCategoryChange: (gid: string, c: CategoryKey) => void
+  onSync: () => void; syncing: boolean; syncMsg: string | null
+  onSettings: () => void; onPrayer: () => void; onCreateTask: (name: string) => void
 }) {
   const listRef   = useRef<HTMLDivElement>(null)
   const pullStart = useRef(0); const isPulling = useRef(false)
   const [pullDist, setPullDist] = useState(0)
+  const [activeTab, setActiveTab] = useState<LeftTabId | null>(null)
+
+  function toggleTab(tab: LeftTabId) {
+    haptic(ImpactStyle.Light)
+    setActiveTab(prev => prev === tab ? null : tab)
+  }
 
   function onListTouchStart(e: React.TouchEvent) {
     if ((listRef.current?.scrollTop ?? 1) === 0) { pullStart.current = e.touches[0].clientY; isPulling.current = true }
@@ -591,13 +685,22 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
     if (!list.length) return null
     return (
       <div key={label} style={{ marginBottom: 28 }}>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.light, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>{label}</span><span style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>({list.length})</span>
+        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 500, color: C.light, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>{label}</span>
+          <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>({list.length})</span>
         </div>
-        {list.map(t => <MobileProjectCard key={t.gid} task={t} progress={progresses[t.gid] || 0} category={categories[t.gid] || null} onOpen={onOpen} onCategoryChange={c => onCategoryChange(t.gid, c)} />)}
+        {list.map(t => (
+          <MobileProjectCard key={t.gid} task={t} progress={progresses[t.gid] || 0} category={categories[t.gid] || null} onOpen={onOpen} onCategoryChange={c => onCategoryChange(t.gid, c)} />
+        ))}
       </div>
     )
   }
+
+  const tabDefs: { id: LeftTabId; label: string; icon: React.ReactNode }[] = [
+    { id: 'create',     label: 'Create', icon: <span style={{ fontSize: 22, fontWeight: 300, lineHeight: 1, color: 'inherit' }}>+</span> },
+    { id: 'quicktasks', label: 'Tasks',  icon: <span style={{ fontSize: 16, lineHeight: 1, color: 'inherit' }}>☑</span> },
+    { id: 'prayer',     label: 'Prayer', icon: <PrayerIcon width={20} height={20} style={{ display: 'block' }} /> },
+  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -606,11 +709,13 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.light, flex: 1 }}>MossMind</div>
           {syncMsg && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith('✓') ? C.main : '#e05c5c' }}>{syncMsg}</div>}
-          <button onClick={onSync} disabled={syncing} style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: syncing ? 'not-allowed' : 'pointer', minHeight: 44 }}>{syncing ? '…' : '↻'}</button>
-          <button onClick={onPrayer} style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 }}><PrayerIcon width={18} height={18} /></button>
-          <button onClick={onSettings} style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 12px', fontFamily: FONT, fontSize: 15, color: C.light, cursor: 'pointer', minHeight: 44 }}>⚙</button>
+          <button onClick={onSync} disabled={syncing}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 14px', fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.light, cursor: syncing ? 'not-allowed' : 'pointer', minHeight: 44 }}>
+            {syncing ? '…' : '↻'}
+          </button>
+          <button onClick={onSettings}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 12px', fontFamily: FONT, fontSize: 15, color: C.light, cursor: 'pointer', minHeight: 44 }}>⚙</button>
         </div>
-        {/* Pull-to-refresh indicator */}
         {pullDist > 0 && (
           <div style={{ display: 'flex', justifyContent: 'center', height: pullDist, alignItems: 'center', overflow: 'hidden', transition: 'height 0.1s' }}>
             <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.4)', animation: pullDist > 40 ? 'spin 0.6s linear infinite' : 'none' }}>↻</div>
@@ -618,18 +723,59 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
         )}
       </div>
 
-      {/* List */}
-      <div ref={listRef} onTouchStart={onListTouchStart} onTouchMove={onListTouchMove} onTouchEnd={onListTouchEnd}
-        style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}>
-        {tasks.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.6 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.light, marginBottom: 8 }}>No tasks yet</div>
-            <div style={{ fontFamily: FONT, fontSize: 13, color: C.light, opacity: 0.6 }}>Add your Asana token in Settings, then tap Sync</div>
-          </div>
-        ) : (
-          <>{renderGroup('In Progress', inProgress)}{renderGroup('Ready to Start', notStarted)}{renderGroup('Completed', completed)}</>
-        )}
+      {/* Body: left tab strip + sliding panel + cards */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+
+        {/* Left tab strip */}
+        <div style={{ width: 52, flexShrink: 0, background: 'rgba(18,16,26,0.98)', display: 'flex', flexDirection: 'column', paddingTop: 12, borderRight: '1px solid rgba(255,255,255,0.06)', zIndex: 10, gap: 2 }}>
+          {tabDefs.map(tab => (
+            <button key={tab.id} onClick={() => toggleTab(tab.id)}
+              style={{
+                width: 52, height: 80, background: activeTab === tab.id ? 'rgba(96,110,74,0.2)' : 'transparent',
+                border: 'none', borderLeft: activeTab === tab.id ? `3px solid ${C.main}` : '3px solid transparent',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'center', gap: 6,
+                color: activeTab === tab.id ? C.main : 'rgba(255,255,255,0.4)',
+                transition: 'all 0.2s',
+              }}>
+              {tab.icon}
+              <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, letterSpacing: '0.02em', lineHeight: 1 }}>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Sliding panel — covers cards area when open */}
+        <div style={{
+          position: 'absolute', left: 52, top: 0, right: 0, bottom: 0,
+          transform: activeTab ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+          background: 'rgba(22,20,30,0.98)',
+          zIndex: 8,
+          overflowY: 'auto',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          {activeTab === 'create'     && <CreatePanel onCreate={name => { onCreateTask(name); setActiveTab(null) }} />}
+          {activeTab === 'quicktasks' && <QuickTasksPanel />}
+          {activeTab === 'prayer'     && <PrayerPanel onOpen={() => { setActiveTab(null); onPrayer() }} />}
+        </div>
+
+        {/* Cards column */}
+        <div ref={listRef} onTouchStart={onListTouchStart} onTouchMove={onListTouchMove} onTouchEnd={onListTouchEnd}
+          style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}>
+          {tasks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.6 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.light, marginBottom: 8 }}>No projects yet</div>
+              <div style={{ fontFamily: FONT, fontSize: 13, color: C.light, opacity: 0.6 }}>Tap + Create or add your Asana token in Settings</div>
+            </div>
+          ) : (
+            <>
+              {renderGroup('In Progress', inProgress)}
+              {renderGroup('Ready to Start', notStarted)}
+              {renderGroup('Completed', completed)}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -637,10 +783,11 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
 
 // ── Main Mobile App ────────────────────────────────────────────────────────
 export default function MobileApp() {
-  const [tasks, setTasks]       = useState<Task[]>([])
-  const [openTask, setOpenTask] = useState<Task | null>(null)
-  const [syncing, setSyncing]   = useState(false)
-  const [syncMsg, setSyncMsg]   = useState<string | null>(null)
+  const [tasks, setTasks]         = useState<Task[]>([])
+  const [localTasks, setLocalTasks] = useState<Task[]>([])
+  const [openTask, setOpenTask]   = useState<Task | null>(null)
+  const [syncing, setSyncing]     = useState(false)
+  const [syncMsg, setSyncMsg]     = useState<string | null>(null)
   const [progresses, setProgresses] = useState<Record<string, number>>({})
   const [categories, setCategories] = useState<Record<string, CategoryKey>>({})
   const [showSettings, setShowSettings] = useState(false)
@@ -650,6 +797,9 @@ export default function MobileApp() {
 
   useEffect(() => {
     if (hasFetched.current) return; hasFetched.current = true
+    storageGet('local_tasks').then(v => {
+      if (v) try { setLocalTasks(JSON.parse(v as string)) } catch (_) {}
+    })
     storageGet('asana_section_gids').then(v => {
       let gids = DEFAULT_SECTION_GIDS
       if (v) try { const p = typeof v === 'string' ? JSON.parse(v) : v; if (Array.isArray(p)) gids = p } catch (_) {}
@@ -673,12 +823,21 @@ export default function MobileApp() {
     setSyncing(false); setTimeout(() => setSyncMsg(null), 3000)
   }
 
+  async function createLocalTask(name: string) {
+    const task: Task = { gid: 'local_' + Date.now(), name, due_on: null, notes: '', url: '' }
+    const next = [...localTasks, task]
+    setLocalTasks(next)
+    await storageSet('local_tasks', JSON.stringify(next))
+  }
+
   async function updateCategory(gid: string, cat: CategoryKey) {
     setCategories(prev => ({ ...prev, [gid]: cat }))
     await storageSet('category_' + gid, cat ?? '')
   }
 
   function handleBack() { setOpenTask(null); syncTasks() }
+
+  const allTasks = [...localTasks, ...tasks]
 
   return (
     <div style={{ position: 'fixed', inset: 0, fontFamily: FONT, overflow: 'hidden' }}>
@@ -691,9 +850,19 @@ export default function MobileApp() {
             ? <MobileProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={c => updateCategory(openTask.gid, c)} onBack={handleBack} />
             : <MobileFactoryDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={c => updateCategory(openTask.gid, c)} onBack={handleBack} />
         ) : (
-          <MobileHomeScreen tasks={tasks} progresses={progresses} categories={categories} onOpen={setOpenTask}
+          <MobileHomeScreen
+            tasks={allTasks}
+            progresses={progresses}
+            categories={categories}
+            onOpen={setOpenTask}
             onCategoryChange={(gid, c) => updateCategory(gid, c)}
-            onSync={() => syncTasks()} syncing={syncing} syncMsg={syncMsg} onSettings={() => setShowSettings(true)} onPrayer={() => setShowPrayer(true)} />
+            onSync={() => syncTasks()}
+            syncing={syncing}
+            syncMsg={syncMsg}
+            onSettings={() => setShowSettings(true)}
+            onPrayer={() => setShowPrayer(true)}
+            onCreateTask={createLocalTask}
+          />
         )}
       </div>
       <style>{`

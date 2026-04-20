@@ -4,8 +4,11 @@ import { Capacitor } from '@capacitor/core'
 import App from './App'
 import MobileApp from './MobileApp'
 
-const isMobile = Capacitor.isNativePlatform()
-const isWeb = !isMobile && !(typeof window !== 'undefined' && !!(window as any).storage)
+const isNative = Capacitor.isNativePlatform()
+const isElectron = typeof window !== 'undefined' && !!(window as any).storage
+const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 768
+const isMobile = isNative || isMobileViewport
+const isWeb = !isNative && !isElectron
 
 function PasswordGate({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState(false)
@@ -69,7 +72,7 @@ function PasswordGate({ children }: { children: React.ReactNode }) {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     {isMobile
-      ? <MobileApp />
+      ? isWeb ? <PasswordGate><MobileApp /></PasswordGate> : <MobileApp />
       : isWeb
         ? <PasswordGate><App /></PasswordGate>
         : <App />
