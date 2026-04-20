@@ -723,59 +723,66 @@ function MobileHomeScreen({ tasks, progresses, categories, onOpen, onCategoryCha
         )}
       </div>
 
-      {/* Body: left tab strip + sliding panel + cards */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden', position: 'relative' }}>
-
-        {/* Left tab strip */}
-        <div style={{ width: 52, flexShrink: 0, background: 'rgba(18,16,26,0.98)', display: 'flex', flexDirection: 'column', paddingTop: 12, borderRight: '1px solid rgba(255,255,255,0.06)', zIndex: 10, gap: 2 }}>
-          {tabDefs.map(tab => (
-            <button key={tab.id} onClick={() => toggleTab(tab.id)}
-              style={{
-                width: 52, height: 80, background: activeTab === tab.id ? 'rgba(96,110,74,0.2)' : 'transparent',
-                border: 'none', borderLeft: activeTab === tab.id ? `3px solid ${C.main}` : '3px solid transparent',
-                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                justifyContent: 'center', gap: 6,
-                color: activeTab === tab.id ? C.main : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.2s',
-              }}>
-              {tab.icon}
-              <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, letterSpacing: '0.02em', lineHeight: 1 }}>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Sliding panel — overflow:hidden wrapper clips the transform on Safari */}
-        <div style={{ position: 'absolute', left: 52, top: 0, right: 0, bottom: 0, overflow: 'hidden', zIndex: 8, pointerEvents: activeTab ? 'auto' : 'none' }}>
-          <div style={{
-            position: 'absolute', inset: 0,
-            transform: activeTab ? 'translateX(0)' : 'translateX(100%)',
-            transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-            background: 'rgba(22,20,30,0.98)',
-            overflowY: 'auto',
-          }}>
-            {activeTab === 'create'     && <CreatePanel onCreate={name => { onCreateTask(name); setActiveTab(null) }} />}
-            {activeTab === 'quicktasks' && <QuickTasksPanel />}
-            {activeTab === 'prayer'     && <PrayerPanel onOpen={() => { setActiveTab(null); onPrayer() }} />}
+      {/* Cards list */}
+      <div ref={listRef} onTouchStart={onListTouchStart} onTouchMove={onListTouchMove} onTouchEnd={onListTouchEnd}
+        style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px 16px' }}>
+        {tasks.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.6 }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.light, marginBottom: 8 }}>No projects yet</div>
+            <div style={{ fontFamily: FONT, fontSize: 13, color: C.light, opacity: 0.6 }}>Tap + Create or add your Asana token in Settings</div>
           </div>
-        </div>
+        ) : (
+          <>
+            {renderGroup('In Progress', inProgress)}
+            {renderGroup('Ready to Start', notStarted)}
+            {renderGroup('Completed', completed)}
+          </>
+        )}
+      </div>
 
-        {/* Cards column */}
-        <div ref={listRef} onTouchStart={onListTouchStart} onTouchMove={onListTouchMove} onTouchEnd={onListTouchEnd}
-          style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px 16px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}>
-          {tasks.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.6 }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.light, marginBottom: 8 }}>No projects yet</div>
-              <div style={{ fontFamily: FONT, fontSize: 13, color: C.light, opacity: 0.6 }}>Tap + Create or add your Asana token in Settings</div>
-            </div>
-          ) : (
-            <>
-              {renderGroup('In Progress', inProgress)}
-              {renderGroup('Ready to Start', notStarted)}
-              {renderGroup('Completed', completed)}
-            </>
-          )}
+      {/* Slide-up panel */}
+      <div style={{
+        flexShrink: 0,
+        overflow: 'hidden',
+        maxHeight: activeTab ? '48vh' : 0,
+        transition: 'max-height 0.28s cubic-bezier(0.4,0,0.2,1)',
+        background: 'rgba(22,20,30,0.98)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <div style={{ height: '48vh', overflowY: 'auto' }}>
+          {activeTab === 'create'     && <CreatePanel onCreate={name => { onCreateTask(name); setActiveTab(null) }} />}
+          {activeTab === 'quicktasks' && <QuickTasksPanel />}
+          {activeTab === 'prayer'     && <PrayerPanel onOpen={() => { setActiveTab(null); onPrayer() }} />}
         </div>
+      </div>
+
+      {/* Bottom tab bar */}
+      <div style={{
+        flexShrink: 0,
+        display: 'flex',
+        background: 'rgba(18,16,26,0.98)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}>
+        {tabDefs.map(tab => (
+          <button key={tab.id} onClick={() => toggleTab(tab.id)}
+            style={{
+              flex: 1,
+              padding: '10px 8px 12px',
+              background: 'transparent',
+              border: 'none',
+              borderTop: activeTab === tab.id ? `2px solid ${C.main}` : '2px solid transparent',
+              cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+              color: activeTab === tab.id ? C.main : 'rgba(255,255,255,0.4)',
+              transition: 'color 0.2s',
+              minHeight: 56,
+            }}>
+            {tab.icon}
+            <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, letterSpacing: '0.03em' }}>{tab.label}</span>
+          </button>
+        ))}
       </div>
     </div>
   )

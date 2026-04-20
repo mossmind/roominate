@@ -6,8 +6,7 @@ import MobileApp from './MobileApp'
 
 const isNative = Capacitor.isNativePlatform()
 const isElectron = typeof window !== 'undefined' && !!(window as any).storage
-const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 768
-const isMobile = isNative || isMobileViewport
+const isMobile = isNative
 const isWeb = !isNative && !isElectron
 
 function PasswordGate({ children }: { children: React.ReactNode }) {
@@ -72,7 +71,7 @@ function PasswordGate({ children }: { children: React.ReactNode }) {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     {isMobile
-      ? isWeb ? <PasswordGate><MobileApp /></PasswordGate> : <MobileApp />
+      ? <MobileApp />
       : isWeb
         ? <PasswordGate><App /></PasswordGate>
         : <App />
