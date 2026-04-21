@@ -882,7 +882,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
           <button onClick={onBack} style={{ background: C.peach, border: b(2, C.white), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.brown, cursor: "pointer", flexShrink: 0 }}>← Back</button>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ fontFamily: FONT, fontSize: isMobile ? 14 : 18, fontWeight: 900, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.name}</div>
+              <div style={{ fontFamily: FONT, fontSize: isMobile ? 14 : 18, fontWeight: 900, color: C.white, whiteSpace: isMobile ? "normal" : "nowrap", overflow: isMobile ? "visible" : "hidden", textOverflow: isMobile ? "unset" : "ellipsis" }}>{task.name}</div>
               {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
               {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
             </div>
