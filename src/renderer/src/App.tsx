@@ -999,7 +999,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
             {loaded && viewingStageIdx === 1 ? (
               <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen />
             ) : (
-              <div className="graph-bg" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+              <div className="graph-bg" style={{ flex: 1, overflowY: isMobile && !showDescription && viewingStageIdx === 0 ? "hidden" : "auto", display: "flex", flexDirection: "column" }}>
                 {!loaded ? (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: FONT, fontSize: 14, color: C.peach, opacity: 0.3 }}>Loading…</div>
                 ) : viewingStageIdx >= STAGES.length ? (
@@ -1018,20 +1018,20 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
                 ) : (() => {
                   const stage = STAGES[viewingStageIdx];
                   if (stage.id === "prayer") return (
-                    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "auto" : "100%", minHeight: 0, flex: 1 }}>
+                    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100%", minHeight: 0, flex: 1 }}>
                       {/* Text content */}
-                      <div style={{ flex: isMobile ? "none" : 1, padding: isMobile ? "24px 20px 16px" : "52px 56px", overflowY: isMobile ? "visible" : "auto", display: "flex", flexDirection: "column", justifyContent: isMobile ? "flex-start" : "center" }}>
-                        <div style={{ color: C.peach, marginBottom: 12 }}><StageIcon stage={stage} size={isMobile ? 28 : 44} /></div>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 28 : 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: isMobile ? 14 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
-                        <div style={{ width: 32, height: 3, background: C.coral, borderRadius: 99, marginBottom: isMobile ? 16 : 28 }} />
-                        <div style={{ fontFamily: FONT, fontSize: isMobile ? 13 : 14, fontWeight: 500, color: C.peach, lineHeight: 1.8, marginBottom: isMobile ? 12 : 24, opacity: 0.8 }}>{stage.prompt}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "italic", color: C.peach, opacity: 0.4, lineHeight: 1.6, marginBottom: isMobile ? 10 : 20 }}>"{stage.scripture}" — {stage.ref}</div>
+                      <div style={{ flex: isMobile ? "none" : 1, flexShrink: 0, padding: isMobile ? "20px 20px 12px" : "52px 56px", overflowY: isMobile ? "visible" : "auto", display: "flex", flexDirection: "column", justifyContent: isMobile ? "flex-start" : "center" }}>
+                        <div style={{ color: C.peach, marginBottom: 10 }}><StageIcon stage={stage} size={isMobile ? 24 : 44} /></div>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 24 : 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: isMobile ? 10 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
+                        <div style={{ width: 32, height: 3, background: C.coral, borderRadius: 99, marginBottom: isMobile ? 12 : 28 }} />
+                        <div style={{ fontFamily: FONT, fontSize: isMobile ? 13 : 14, fontWeight: 500, color: C.peach, lineHeight: 1.8, marginBottom: isMobile ? 8 : 24, opacity: 0.8 }}>{stage.prompt}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "italic", color: C.peach, opacity: 0.4, lineHeight: 1.6, marginBottom: isMobile ? 6 : 20 }}>"{stage.scripture}" — {stage.ref}</div>
                         <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.coral, letterSpacing: 1.5 }}>{stage.q}</div>
                       </div>
-                      {/* Textarea */}
+                      {/* Textarea — fills remaining height */}
                       <textarea value={notes[stage.id] || ""} onChange={e => setNote(stage.id, e.target.value)} placeholder="Write your thoughts here…"
-                        style={{ width: isMobile ? "100%" : "55%", minWidth: 0, height: isMobile ? 200 : "100%", fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px", border: "none", borderLeft: isMobile ? "none" : `1.5px solid rgba(255,255,255,0.15)`, borderTop: isMobile ? `1.5px solid rgba(255,255,255,0.15)` : "none", borderRadius: 0, padding: isMobile ? "16px 20px" : "52px 32px", resize: isMobile ? "vertical" : "none", outline: "none", boxSizing: "border-box", lineHeight: 1.7, flexShrink: 0 }} />
+                        style={{ width: isMobile ? "100%" : "55%", minWidth: 0, flex: isMobile ? 1 : "none", height: isMobile ? "auto" : "100%", minHeight: isMobile ? 120 : 0, fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px", border: "none", borderLeft: isMobile ? "none" : `1.5px solid rgba(255,255,255,0.15)`, borderTop: isMobile ? `1.5px solid rgba(255,255,255,0.15)` : "none", borderRadius: 0, padding: isMobile ? "16px 20px" : "52px 32px", resize: "none", outline: "none", boxSizing: "border-box", lineHeight: 1.7 }} />
                     </div>
                   );
                   return (
