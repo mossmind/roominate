@@ -74,6 +74,16 @@ async function anthropicFetch(messages: unknown[], system: string): Promise<stri
   return data.content?.[0]?.text ?? ''
 }
 
+export const files = {
+  open: async (): Promise<{ filePath: string; fileName: string; ext: string; dataUrl: string | null } | null> => {
+    if (isElectron) return (window as any).files.open()
+    return null
+  },
+  openPath: async (filePath: string): Promise<void> => {
+    if (isElectron) return (window as any).files.openPath(filePath)
+  },
+}
+
 export const ai = {
   generateMindMap: async (brief: string, taskName: string): Promise<{ nodes: unknown[]; edges: unknown[] }> => {
     if (isElectron) return (window as any).anthropic.generate(brief, taskName)

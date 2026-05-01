@@ -15,3 +15,8 @@ contextBridge.exposeInMainWorld('anthropic', {
   generate: (brief: string, taskName: string) => ipcRenderer.invoke('anthropic:generate', { brief, taskName }),
   prayer: (taskName: string, taskNotes: string) => ipcRenderer.invoke('anthropic:prayer', { taskName, taskNotes }),
 })
+
+contextBridge.exposeInMainWorld('files', {
+  open: () => ipcRenderer.invoke('file:open'),
+  openPath: (filePath: string) => ipcRenderer.invoke('file:openPath', filePath),
+})

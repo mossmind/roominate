@@ -1,5 +1,6 @@
-import { app, shell, BrowserWindow, ipcMain, net } from 'electron'
-import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain, net, dialog } from 'electron'
+import { join, basename, extname } from 'path'
+import { readFileSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import Store from 'electron-store'
 
@@ -208,6 +209,27 @@ Return ONLY valid JSON, no markdown:
       req.write(body)
       req.end()
     })
+  })
+
+  // ── File: open dialog ────────────────────────────────────────────────────
+  ipcMain.handle('file:open', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openFile'] })
+    if (result.canceled || !result.filePaths.length) return null
+    const filePath = result.filePaths[0]
+    const fileName = basename(filePath)
+    const ext = extname(filePath).toLowerCase().replace('.', '')
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
+    if (imageExts.includes(ext)) {
+      const data = readFileSync(filePath)
+      const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext === 'jpg' ? 'jpeg' : ext}`
+      return { filePath, fileName, ext, dataUrl: `data:${mime};base64,${data.toString('base64')}` }
+    }
+    return { filePath, fileName, ext, dataUrl: null }
+  })
+
+  // ── File: open in default app ────────────────────────────────────────────
+  ipcMain.handle('file:openPath', async (_, filePath: string) => {
+    await shell.openPath(filePath)
   })
 
   createWindow()

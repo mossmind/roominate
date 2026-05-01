@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, Fragment } from "react";
-import { storage as platformStorage, asana as platformAsana, ai as platformAI } from './lib/platform';
+import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles } from './lib/platform';
 import prayerVideo from './assets/Prayer Motion 1.mp4';
 import bgPhoto from './assets/bg2.png';
 import PrayerIcon from './assets/icons/prayer.svg?react';
@@ -307,7 +307,7 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
 
 // ── Mind Map ──────────────────────────────────────────────────────────────
 type MindNodeType = 'central' | 'vibe' | 'person' | 'nextstep' | 'thought'
-interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType; icon?: string; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
+interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType; icon?: string; filePath?: string; fileName?: string; fileExt?: string; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
 
 const ICON_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   prayer: PrayerIcon, pot: InsideIcon, outside: OutsideIcon, uncat: UncatIcon,
@@ -360,6 +360,17 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   async function save(n: MindNode[], e: MindEdge[]) { try { await storageSet(KEY, JSON.stringify({ nodes: n, edges: e })); } catch (_) {} }
 
   const [showIconPicker, setShowIconPicker] = useState(false);
+
+  async function addFileNode() {
+    const result = await platformFiles.open()
+    if (!result) return
+    const id = Date.now().toString()
+    const isImage = !!result.dataUrl
+    const n: MindNode = isImage
+      ? { id, type: 'image', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 200, text: result.fileName, url: result.dataUrl!, filePath: result.filePath, fileName: result.fileName, fileExt: result.ext }
+      : { id, type: 'text', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 180, text: '', url: '', filePath: result.filePath, fileName: result.fileName, fileExt: result.ext }
+    const u = [...nodes, n]; setNodes(u); save(u, edges);
+  }
 
   function addIconNode(iconKey: string) {
     const id = Date.now().toString();
@@ -527,12 +538,32 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             {hasLabel && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
           </div>
 
-          {node.type === 'image' ? (
-            <div style={{ padding: '6px 6px 10px' }}>
+          {node.filePath && !node.url ? (
+            // Non-image local file (PDF, doc, etc.)
+            <div onMouseDown={e => e.stopPropagation()} style={{ padding: '12px 10px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>
+                  {node.fileExt === 'pdf' ? '📄' : ['mp4','mov','avi'].includes(node.fileExt ?? '') ? '🎬' : ['mp3','wav','aac'].includes(node.fileExt ?? '') ? '🎵' : ['doc','docx'].includes(node.fileExt ?? '') ? '📝' : '📁'}
+                </span>
+                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: C.peach, wordBreak: 'break-all', lineHeight: 1.35 }}>{node.fileName}</div>
+              </div>
+              <button onMouseDown={e => e.stopPropagation()} onClick={() => platformFiles.openPath(node.filePath!)}
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '5px 0', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: C.peach, cursor: 'pointer', width: '100%' }}>
+                Open ↗
+              </button>
+            </div>
+          ) : node.type === 'image' ? (
+            <div style={{ padding: '6px 6px 6px', position: 'relative' }}>
               <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = 'rgba(255,255,255,0.04)'; }} />
+              {node.filePath && (
+                <button onMouseDown={e => e.stopPropagation()} onClick={() => platformFiles.openPath(node.filePath!)}
+                  style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 0, padding: '3px 8px', fontFamily: FONT, fontSize: 9, fontWeight: 700, color: C.white, cursor: 'pointer' }}>
+                  Open ↗
+                </button>
+              )}
               {editingId === node.id
-                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 8, fontFamily: FONT, fontSize: 11, background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)', outline: 'none', color: 'rgba(255,255,255,0.45)', boxSizing: 'border-box' }} />
-                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 8, fontFamily: FONT, fontSize: 11, color: node.text ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
+                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 6, fontFamily: FONT, fontSize: 11, background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)', outline: 'none', color: 'rgba(255,255,255,0.45)', boxSizing: 'border-box' }} />
+                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 6, fontFamily: FONT, fontSize: 11, color: node.text ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
             </div>
           ) : (
             <div style={{ padding: '10px 10px 8px' }}>
@@ -593,7 +624,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
         <button onClick={() => addTextNode()} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Note</button>
         <button onClick={() => { setShowIconPicker(v => !v); setShowImgInput(false); }} style={{ background: showIconPicker ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: `1.5px solid ${showIconPicker ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Icon</button>
-        <button onClick={() => { setShowImgInput(v => !v); setShowIconPicker(false); }} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Image</button>
+        <button onClick={() => { setShowImgInput(v => !v); setShowIconPicker(false); }} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Image URL</button>
+        <button onClick={addFileNode} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ File</button>
         <button onClick={() => { setConnectMode(v => !v); setConnecting(null); }} style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: `1.5px solid ${connectMode ? C.coral : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
           {connectMode ? (connecting ? '→ 2nd' : '→ 1st') : '⤢ Link'}
         </button>
