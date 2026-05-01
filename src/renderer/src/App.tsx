@@ -299,11 +299,12 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
 }
 
 // ── Mind Map ──────────────────────────────────────────────────────────────
-type MindNodeType = 'vibe' | 'person' | 'nextstep' | 'thought'
+type MindNodeType = 'central' | 'vibe' | 'person' | 'nextstep' | 'thought'
 interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
 interface MindEdge { id: string; from: string; to: string }
 
 const NODE_TYPE_STYLES: Record<MindNodeType, { bg: string; label: string; prefix: string; italic?: boolean }> = {
+  central:  { bg: '#657946', label: '',          prefix: ''  },
   vibe:     { bg: '#8A9E6A', label: 'Vibe',      prefix: '✦' },
   person:   { bg: '#C4956A', label: 'Person',    prefix: '◉' },
   nextstep: { bg: '#B85C4A', label: 'Next Step', prefix: '→' },
@@ -370,7 +371,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       if (!result || !Array.isArray(result.nodes) || !Array.isArray(result.edges)) {
         throw new Error('Unexpected response shape from AI');
       }
-      const VALID_NODE_TYPES = new Set<string>(['vibe', 'person', 'nextstep', 'thought']);
+      const VALID_NODE_TYPES = new Set<string>(['central', 'vibe', 'person', 'nextstep', 'thought']);
       let n = (result.nodes as MindNode[]).map(nd => {
         const raw = (nd.nodeType as string | undefined)?.toLowerCase().replace(/[_\s-]/g, '') ?? '';
         const nodeType = VALID_NODE_TYPES.has(raw) ? raw as MindNodeType : undefined;
@@ -479,17 +480,19 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
     const ntStyle = node.nodeType ? NODE_TYPE_STYLES[node.nodeType] : null;
     const cardColor = node.color || (ntStyle?.bg) || C.mid;
     const isNextStep = node.nodeType === 'nextstep';
+    const isCentral = node.nodeType === 'central';
+    const hasLabel = ntStyle && ntStyle.label;
     return (
       <div key={node.id}
         ref={el => { if (el) nodeHeights.current[node.id] = el.offsetHeight; }}
         className="mind-node"
         style={{ position: 'absolute', left: node.x, top: node.y, width: node.w, zIndex: dragging?.id === node.id ? 100 : 1 }}
         onClick={() => { if (connectMode) handleNodeClick(node.id); }}>
-        <div style={{ background: cardColor, border: `${isNextStep ? '2px' : '1px'} solid ${isFirst ? C.coral : isNextStep ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : isNextStep ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+        <div style={{ background: cardColor, border: `${isCentral ? '2px' : isNextStep ? '2px' : '1px'} solid ${isFirst ? C.coral : isCentral ? 'rgba(255,255,255,0.5)' : isNextStep ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : isCentral ? '0 6px 32px rgba(0,0,0,0.6)' : isNextStep ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
           {/* Type label + drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
-            style={{ height: ntStyle ? 'auto' : 5, background: ntStyle ? 'rgba(0,0,0,0.25)' : cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: ntStyle ? '5px 8px 4px' : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
-            {ntStyle && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
+            style={{ height: hasLabel ? 'auto' : 5, background: hasLabel ? 'rgba(0,0,0,0.25)' : cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: hasLabel ? '5px 8px 4px' : isCentral ? 0 : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
+            {hasLabel && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
           </div>
 
           {node.type === 'image' ? (
@@ -503,7 +506,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             <div style={{ padding: '10px 10px 8px' }}>
               <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder={node.nodeType === 'vibe' ? 'describe the feeling…' : node.nodeType === 'person' ? 'who is this for…' : node.nodeType === 'nextstep' ? 'the one next move…' : 'type here…'}
                 onMouseDown={e => e.stopPropagation()}
-                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: node.nodeType === 'nextstep' ? 44 : 52, fontFamily: FONT, fontSize: node.nodeType === 'nextstep' ? 14 : 12, fontWeight: node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'none', lineHeight: 1.6, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: 0.9, padding: 0 }} />
+                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: isCentral ? 36 : node.nodeType === 'nextstep' ? 44 : 52, fontFamily: isCentral ? FONT_DISPLAY : FONT, fontSize: isCentral ? 16 : node.nodeType === 'nextstep' ? 14 : 12, fontWeight: isCentral ? 700 : node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: C.white, resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: isCentral ? 1 : 0.9, padding: 0, textAlign: isCentral ? 'center' : 'left' }} />
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>

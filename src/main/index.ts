@@ -117,21 +117,24 @@ app.whenReady().then(() => {
 Project: "${taskName}"
 Brief: "${brief || '(no brief provided)'}"
 
-Create 8-12 nodes. This person thinks in feelings/vibes and people — not task lists. Surface ONE clear next step.
+Create 9-13 nodes with this exact structure:
 
-Node types and when to use them:
-- "vibe" — 2-3 nodes: the feeling, mood, or aesthetic this project must have. Sensory, evocative language.
-- "person" — 1-2 nodes: who this is for, or who matters to making it real.
-- "thought" — remaining nodes: anything else worth capturing (questions, constraints, ideas).
+1. ONE central node (nodeType: "central") — the project name, placed at the canvas center (~340, 230), width 200.
+2. 2-3 "vibe" nodes — the feeling/mood this project must have.
+3. 1-2 "person" nodes — who it's for or who matters.
+4. 3-4 "thought" nodes — questions, constraints, ideas.
 
-Each node needs a "nodeType" field set to one of: "vibe", "person", "thought".
-Colors by type: vibe="#8A9E6A", person="#C4956A", thought="#5B7FA8"
-Node text = max 6 words. Honest and specific to this project.
+Linking rules (STRICT):
+- Exactly ONE vibe node links to the central node. All other vibe nodes link to that first vibe node.
+- Exactly ONE person node links to the central node. All other person nodes link to that first person node.
+- Exactly ONE thought node links to the central node. All other thought nodes link to that first thought node.
+- No node links directly to central except the first of each category.
 
-Canvas 680×460. Spread nodes naturally — vibes clustered mid-left, people mid-right, thoughts lower.
+Colors: central="#657946", vibe="#8A9E6A", person="#C4956A", thought="#5B7FA8"
+Node text = max 6 words. Canvas 680×460. Spread each category cluster away from center.
 
 Return ONLY valid JSON, no markdown:
-{"nodes":[{"id":"1","type":"text","nodeType":"vibe","x":100,"y":120,"w":160,"text":"warm and handcrafted","url":"","color":"#7B6557"}],"edges":[{"id":"e1","from":"1","to":"2"}]}`
+{"nodes":[{"id":"c","type":"text","nodeType":"central","x":270,"y":190,"w":200,"text":"${taskName}","url":"","color":"#657946"},{"id":"v1","type":"text","nodeType":"vibe","x":80,"y":100,"w":160,"text":"warm and tactile","url":"","color":"#8A9E6A"}],"edges":[{"id":"e1","from":"v1","to":"c"}]}`
 
     return new Promise<unknown>((resolve, reject) => {
       const body = JSON.stringify({
