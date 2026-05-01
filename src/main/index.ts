@@ -125,7 +125,7 @@ Node types and when to use them:
 - "thought" — remaining nodes: anything else worth capturing (questions, constraints, ideas).
 
 Each node needs a "nodeType" field set to one of: "vibe", "person", "thought".
-Colors by type: vibe="#7B6557", person="#2E3B2F", thought="#454449"
+Colors by type: vibe="#8A9E6A", person="#C4956A", thought="#5B7FA8"
 Node text = max 6 words. Honest and specific to this project.
 
 Canvas 680×460. Spread nodes naturally — vibes clustered mid-left, people mid-right, thoughts lower.

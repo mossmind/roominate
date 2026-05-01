@@ -304,10 +304,10 @@ interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType
 interface MindEdge { id: string; from: string; to: string }
 
 const NODE_TYPE_STYLES: Record<MindNodeType, { bg: string; label: string; prefix: string; italic?: boolean }> = {
-  vibe:     { bg: '#7B6557', label: 'Vibe',      prefix: '✦' },
-  person:   { bg: '#2E3B2F', label: 'Person',    prefix: '◉' },
+  vibe:     { bg: '#8A9E6A', label: 'Vibe',      prefix: '✦' },
+  person:   { bg: '#C4956A', label: 'Person',    prefix: '◉' },
   nextstep: { bg: '#B85C4A', label: 'Next Step', prefix: '→' },
-  thought:  { bg: '#454449', label: 'Thought',   prefix: '·' },
+  thought:  { bg: '#5B7FA8', label: 'Thought',   prefix: '·' },
 }
 
 function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }: { taskGid: string; taskName?: string; taskNotes?: string; fullscreen?: boolean }) {
