@@ -8,6 +8,13 @@ import OutsideIcon from './assets/icons/Outside.svg?react';
 import UncatIcon from './assets/icons/uncat.svg?react';
 import MossIcon from './assets/icons/moss.svg?react';
 import Sqig1Icon from './assets/icons/Sqig1.svg?react';
+import CacIcon from './assets/icons/Cac.svg?react';
+import CanIcon from './assets/icons/Can.svg?react';
+import InsideRawIcon from './assets/icons/Inside.svg?react';
+import LanIcon from './assets/icons/Lan.svg?react';
+import LifIcon from './assets/icons/Lif.svg?react';
+import MumIcon from './assets/icons/Mum.svg?react';
+import Sqig2Icon from './assets/icons/Sqig2.svg?react';
 import prayerMusic from './assets/Prayer Motion Music 1.mp3';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -300,7 +307,14 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
 
 // ── Mind Map ──────────────────────────────────────────────────────────────
 type MindNodeType = 'central' | 'vibe' | 'person' | 'nextstep' | 'thought'
-interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
+interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType; icon?: string; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
+
+const ICON_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
+  prayer: PrayerIcon, pot: InsideIcon, outside: OutsideIcon, uncat: UncatIcon,
+  moss: MossIcon, sqig1: Sqig1Icon, sqig2: Sqig2Icon,
+  cac: CacIcon, can: CanIcon, inside: InsideRawIcon,
+  lan: LanIcon, lif: LifIcon, mum: MumIcon,
+}
 interface MindEdge { id: string; from: string; to: string }
 
 const NODE_TYPE_STYLES: Record<MindNodeType, { bg: string; label: string; prefix: string; italic?: boolean }> = {
@@ -344,6 +358,14 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   }, [taskGid]);
 
   async function save(n: MindNode[], e: MindEdge[]) { try { await storageSet(KEY, JSON.stringify({ nodes: n, edges: e })); } catch (_) {} }
+
+  const [showIconPicker, setShowIconPicker] = useState(false);
+
+  function addIconNode(iconKey: string) {
+    const id = Date.now().toString();
+    const n: MindNode = { id, type: 'text', icon: iconKey, x: 80 + Math.random() * 320, y: 80 + Math.random() * 200, w: 90, text: '', url: '', color: C.mid };
+    const u = [...nodes, n]; setNodes(u); save(u, edges);
+  }
 
   function addTextNode(nodeType?: MindNodeType) {
     const id = Date.now().toString();
@@ -495,7 +517,19 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             {hasLabel && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
           </div>
 
-          {node.type === 'image' ? (
+          {node.icon && ICON_MAP[node.icon] ? (() => {
+            const IconComp = ICON_MAP[node.icon];
+            return (
+              <div style={{ padding: '10px 8px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <IconComp width={44} height={44} style={{ color: C.peach, display: 'block', flexShrink: 0 }} />
+                {editingId === node.id
+                  ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', fontFamily: FONT, fontSize: 10, background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.2)', outline: 'none', color: C.peach, boxSizing: 'border-box', textAlign: 'center' }} />
+                  : node.text
+                    ? <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(255,255,255,0.6)', cursor: 'text', textAlign: 'center', lineHeight: 1.3 }}>{node.text}</div>
+                    : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(255,255,255,0.2)', cursor: 'text' }}>label…</div>}
+              </div>
+            );
+          })() : node.type === 'image' ? (
             <div style={{ padding: '6px 6px 10px' }}>
               <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = 'rgba(255,255,255,0.04)'; }} />
               {editingId === node.id
@@ -559,7 +593,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         })}
         <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
         <button onClick={() => addTextNode()} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Note</button>
-        <button onClick={() => setShowImgInput(v => !v)} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Image</button>
+        <button onClick={() => { setShowIconPicker(v => !v); setShowImgInput(false); }} style={{ background: showIconPicker ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: `1.5px solid ${showIconPicker ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Icon</button>
+        <button onClick={() => { setShowImgInput(v => !v); setShowIconPicker(false); }} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Image</button>
         <button onClick={() => { setConnectMode(v => !v); setConnecting(null); }} style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: `1.5px solid ${connectMode ? C.coral : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
           {connectMode ? (connecting ? '→ 2nd' : '→ 1st') : '⤢ Link'}
         </button>
@@ -568,6 +603,20 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
           {generating ? 'Generating…' : '✦ AI'}
         </button>
       </div>
+      {/* Icon picker row */}
+      {showIconPicker && (
+        <div style={{ padding: '8px 14px 10px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          {Object.entries(ICON_MAP).map(([key, IconComp]) => (
+            <button key={key} onClick={() => { addIconNode(key); setShowIconPicker(false); }}
+              title={key}
+              style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.peach, padding: 0, transition: 'background 0.15s, border-color 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.4)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)'; }}>
+              <IconComp width={20} height={20} />
+            </button>
+          ))}
+        </div>
+      )}
       {/* Image input row */}
       {showImgInput && (
         <div style={{ padding: '6px 14px 8px', display: 'flex', gap: 8, alignItems: 'center' }}>
