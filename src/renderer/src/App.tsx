@@ -485,8 +485,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <div style={{ background: cardColor, border: `${isNextStep ? '2px' : '1px'} solid ${isFirst ? C.coral : isNextStep ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : isNextStep ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
           {/* Type label + drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
-            style={{ height: ntStyle ? 'auto' : 5, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: ntStyle ? '5px 8px 2px' : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
-            {ntStyle && <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.55)', letterSpacing: 0.5 }}>{ntStyle.prefix} {ntStyle.label.toUpperCase()}</span>}
+            style={{ height: ntStyle ? 'auto' : 5, background: ntStyle ? 'rgba(0,0,0,0.25)' : cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: ntStyle ? '5px 8px 4px' : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
+            {ntStyle && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
           </div>
 
           {node.type === 'image' ? (
