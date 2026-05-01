@@ -120,19 +120,18 @@ Brief: "${brief || '(no brief provided)'}"
 Create 8-12 nodes. This person thinks in feelings/vibes and people — not task lists. Surface ONE clear next step.
 
 Node types and when to use them:
-- "nextstep" — exactly ONE node: the single clearest first move. Bold, specific, actionable. This is the most important node.
 - "vibe" — 2-3 nodes: the feeling, mood, or aesthetic this project must have. Sensory, evocative language.
 - "person" — 1-2 nodes: who this is for, or who matters to making it real.
 - "thought" — remaining nodes: anything else worth capturing (questions, constraints, ideas).
 
-Each node needs a "nodeType" field set to one of: "nextstep", "vibe", "person", "thought".
-Colors by type: nextstep="#B85C4A", vibe="#7B6557", person="#2E3B2F", thought="#454449"
+Each node needs a "nodeType" field set to one of: "vibe", "person", "thought".
+Colors by type: vibe="#7B6557", person="#2E3B2F", thought="#454449"
 Node text = max 6 words. Honest and specific to this project.
 
-Canvas 680×460. Spread nodes naturally — nextstep near center-top (around y:80), vibes clustered mid-left, people mid-right, thoughts lower.
+Canvas 680×460. Spread nodes naturally — vibes clustered mid-left, people mid-right, thoughts lower.
 
 Return ONLY valid JSON, no markdown:
-{"nodes":[{"id":"1","type":"text","nodeType":"nextstep","x":260,"y":80,"w":220,"text":"the one first move","url":"","color":"#B85C4A"}],"edges":[{"id":"e1","from":"1","to":"2"}]}`
+{"nodes":[{"id":"1","type":"text","nodeType":"vibe","x":100,"y":120,"w":160,"text":"warm and handcrafted","url":"","color":"#7B6557"}],"edges":[{"id":"e1","from":"1","to":"2"}]}`
 
     return new Promise<unknown>((resolve, reject) => {
       const body = JSON.stringify({
