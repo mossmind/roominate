@@ -299,10 +299,41 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
 }
 
 // ── Mind Map ──────────────────────────────────────────────────────────────
-interface MindNode { id: string; type: 'text' | 'image'; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
+type MindNodeType = 'vibe' | 'person' | 'nextstep' | 'thought'
+interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
 interface MindEdge { id: string; from: string; to: string }
 
-function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }: { taskGid: string; taskName?: string; taskNotes?: string; fullscreen?: boolean }) {
+const NODE_TYPE_STYLES: Record<MindNodeType, { bg: string; label: string; prefix: string; italic?: boolean }> = {
+  vibe:     { bg: '#7B6557', label: 'Vibe',      prefix: '✦' },
+  person:   { bg: '#2E3B2F', label: 'Person',    prefix: '◉' },
+  nextstep: { bg: '#B85C4A', label: 'Next Step', prefix: '→' },
+  thought:  { bg: '#454449', label: 'Thought',   prefix: '·' },
+}
+
+async function parkThoughtOnProject(targetGid: string, text: string) {
+  const key = 'mindmap_' + targetGid
+  let nodes: MindNode[] = []
+  let edges: MindEdge[] = []
+  try {
+    const raw = await platformStorage.get(key) as string | null
+    if (raw) { const d = JSON.parse(raw); nodes = d.nodes || []; edges = d.edges || [] }
+  } catch (_) {}
+  const node: MindNode = {
+    id: Date.now().toString(),
+    type: 'text',
+    nodeType: 'thought',
+    x: 60 + Math.random() * 300,
+    y: 60 + Math.random() * 200,
+    w: 180,
+    text,
+    url: '',
+    color: NODE_TYPE_STYLES.thought.bg,
+  }
+  nodes = [...nodes, node]
+  await platformStorage.set(key, JSON.stringify({ nodes, edges }))
+}
+
+function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false, projects = [] }: { taskGid: string; taskName?: string; taskNotes?: string; fullscreen?: boolean; projects?: Task[] }) {
   const KEY = "mindmap_" + taskGid;
   const [nodes, setNodes] = useState<MindNode[]>([]);
   const [edges, setEdges] = useState<MindEdge[]>([]);
@@ -336,11 +367,24 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
   async function save(n: MindNode[], e: MindEdge[]) { try { await storageSet(KEY, JSON.stringify({ nodes: n, edges: e })); } catch (_) {} }
 
-  function addTextNode() {
+  const [parkItOpen, setParkItOpen] = useState(false);
+  const [parkItText, setParkItText] = useState('');
+  const [parkItTarget, setParkItTarget] = useState('');
+
+  function addTextNode(nodeType?: MindNodeType) {
     const id = Date.now().toString();
-    const n: MindNode = { id, type: 'text', x: 60 + Math.random() * 300, y: 60 + Math.random() * 200, w: 160, text: '', url: '' };
+    const style = nodeType ? NODE_TYPE_STYLES[nodeType] : null;
+    const n: MindNode = { id, type: 'text', nodeType, x: 60 + Math.random() * 300, y: 60 + Math.random() * 200, w: nodeType === 'nextstep' ? 220 : 160, text: '', url: '', color: style?.bg };
     const u = [...nodes, n]; setNodes(u); save(u, edges); setEditingId(id);
   }
+
+  async function submitParkIt() {
+    if (!parkItText.trim() || !parkItTarget) return;
+    await parkThoughtOnProject(parkItTarget, parkItText.trim());
+    setParkItText(''); setParkItTarget(''); setParkItOpen(false);
+  }
+
+  const otherProjects = projects.filter(p => p.gid !== taskGid);
 
   function addImageNode() {
     if (!urlInput.trim()) return;
@@ -460,19 +504,25 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
     </svg>
   );
 
+  const nextStepNode = nodes.find(n => n.nodeType === 'nextstep' && n.text.trim())
+
   const nodeEls = nodes.map(node => {
     const isFirst = connecting === node.id;
-    const cardColor = node.color || C.mid;
+    const ntStyle = node.nodeType ? NODE_TYPE_STYLES[node.nodeType] : null;
+    const cardColor = node.color || (ntStyle?.bg) || C.mid;
+    const isNextStep = node.nodeType === 'nextstep';
     return (
       <div key={node.id}
         ref={el => { if (el) nodeHeights.current[node.id] = el.offsetHeight; }}
         className="mind-node"
         style={{ position: 'absolute', left: node.x, top: node.y, width: node.w, zIndex: dragging?.id === node.id ? 100 : 1 }}
         onClick={() => { if (connectMode) handleNodeClick(node.id); }}>
-        <div style={{ background: cardColor, border: `1px solid ${isFirst ? C.coral : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
-          {/* Color strip — drag handle */}
+        <div style={{ background: cardColor, border: `${isNextStep ? '2px' : '1px'} solid ${isFirst ? C.coral : isNextStep ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : isNextStep ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+          {/* Type label + drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
-            style={{ height: 5, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab' }} />
+            style={{ height: ntStyle ? 'auto' : 5, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: ntStyle ? '5px 8px 2px' : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
+            {ntStyle && <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.55)', letterSpacing: 0.5 }}>{ntStyle.prefix} {ntStyle.label.toUpperCase()}</span>}
+          </div>
 
           {node.type === 'image' ? (
             <div style={{ padding: '6px 6px 10px' }}>
@@ -483,9 +533,9 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             </div>
           ) : (
             <div style={{ padding: '10px 10px 8px' }}>
-              <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder="type here…"
+              <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder={node.nodeType === 'vibe' ? 'describe the feeling…' : node.nodeType === 'person' ? 'who is this for…' : node.nodeType === 'nextstep' ? 'the one next move…' : 'type here…'}
                 onMouseDown={e => e.stopPropagation()}
-                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: 52, fontFamily: FONT, fontSize: 12, fontWeight: 500, background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'none', lineHeight: 1.6, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: 0.85, padding: 0 }} />
+                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: node.nodeType === 'nextstep' ? 44 : 52, fontFamily: FONT, fontSize: node.nodeType === 'nextstep' ? 14 : 12, fontWeight: node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: C.peach, resize: 'none', lineHeight: 1.6, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: 0.9, padding: 0 }} />
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>
@@ -524,24 +574,56 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   });
 
   const toolbar = (
-    <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, background: C.mid, flexWrap: 'wrap' }}>
-      <button onClick={addTextNode} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 0, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>+ Note</button>
-      <button onClick={() => setShowImgInput(v => !v)} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 0, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>+ Image</button>
-      <button onClick={() => { setConnectMode(v => !v); setConnecting(null); }} style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: `1.5px solid ${connectMode ? C.coral : 'rgba(255,255,255,0.3)'}`, borderRadius: 0, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-        {connectMode ? (connecting ? '→ click 2nd node' : '→ click 1st node') : '⤢ Connect'}
-      </button>
-      <div style={{ flex: 1 }} />
-      <button onClick={generate} disabled={generating} style={{ background: generating ? 'rgba(101,121,70,0.4)' : C.main, color: C.white, border: `1.5px solid ${C.main}`, borderRadius: 0, padding: '5px 14px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: generating ? 'default' : 'pointer', opacity: generating ? 0.7 : 1, letterSpacing: 0.3 }}>
-        {generating ? 'Generating…' : '✦ AI Generate'}
-      </button>
-      {genError && <span style={{ fontFamily: 'monospace', fontSize: 10, color: C.coral, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={genError}>{genError}</span>}
+    <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: C.mid, flexShrink: 0 }}>
+      {/* Row 1: typed node buttons */}
+      <div style={{ padding: '8px 14px 4px', display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        {(['vibe', 'person', 'nextstep', 'thought'] as MindNodeType[]).map(nt => {
+          const s = NODE_TYPE_STYLES[nt]
+          return (
+            <button key={nt} onClick={() => addTextNode(nt)}
+              style={{ background: s.bg, color: 'rgba(255,255,255,0.9)', border: '1.5px solid rgba(255,255,255,0.25)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3 }}>
+              {s.prefix} {s.label}
+            </button>
+          )
+        })}
+        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
+        <button onClick={() => addTextNode()} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Note</button>
+        <button onClick={() => setShowImgInput(v => !v)} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Image</button>
+        <button onClick={() => { setConnectMode(v => !v); setConnecting(null); }} style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: `1.5px solid ${connectMode ? C.coral : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+          {connectMode ? (connecting ? '→ 2nd' : '→ 1st') : '⤢ Link'}
+        </button>
+        <div style={{ flex: 1 }} />
+        {otherProjects.length > 0 && (
+          <button onClick={() => { setParkItOpen(v => !v); setParkItTarget(otherProjects[0]?.gid || '') }}
+            style={{ background: parkItOpen ? 'rgba(239,153,130,0.3)' : 'rgba(255,255,255,0.08)', color: C.coral, border: `1.5px solid ${parkItOpen ? C.coral : 'rgba(239,153,130,0.4)'}`, borderRadius: 0, padding: '4px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3 }}>
+            ⊕ Park It
+          </button>
+        )}
+        <button onClick={generate} disabled={generating} style={{ background: generating ? 'rgba(101,121,70,0.4)' : C.main, color: C.white, border: `1.5px solid ${C.main}`, borderRadius: 0, padding: '4px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', opacity: generating ? 0.7 : 1 }}>
+          {generating ? 'Generating…' : '✦ AI'}
+        </button>
+      </div>
+      {/* Park It panel */}
+      {parkItOpen && otherProjects.length > 0 && (
+        <div style={{ padding: '10px 14px 12px', background: 'rgba(239,153,130,0.08)', borderTop: '1px solid rgba(239,153,130,0.2)', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.coral, letterSpacing: 0.5, flexShrink: 0 }}>PARK IT →</div>
+          <input autoFocus value={parkItText} onChange={e => setParkItText(e.target.value)} onKeyDown={e => e.key === 'Enter' && submitParkIt()} placeholder="What just came to mind?" style={{ fontFamily: FONT, fontSize: 12, color: C.peach, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '5px 10px', outline: 'none', flex: 1, minWidth: 160 }} />
+          <select value={parkItTarget} onChange={e => setParkItTarget(e.target.value)} style={{ fontFamily: FONT, fontSize: 11, color: C.peach, background: C.dark, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '5px 8px', outline: 'none', flexShrink: 0, maxWidth: 180 }}>
+            {otherProjects.map(p => <option key={p.gid} value={p.gid}>{p.name}</option>)}
+          </select>
+          <button onClick={submitParkIt} disabled={!parkItText.trim()} style={{ background: parkItText.trim() ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: 'none', borderRadius: 0, padding: '5px 14px', fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: parkItText.trim() ? 'pointer' : 'default', flexShrink: 0 }}>Done</button>
+          <button onClick={() => { setParkItOpen(false); setParkItText(''); }} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 14, cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}>✕</button>
+        </div>
+      )}
+      {/* Image input row */}
       {showImgInput && (
-        <>
-          <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus style={{ fontFamily: 'monospace', fontSize: 11, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 0, padding: '5px 10px', outline: 'none', color: C.peach, width: 200 }} />
+        <div style={{ padding: '6px 14px 8px', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus style={{ fontFamily: 'monospace', fontSize: 11, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 0, padding: '5px 10px', outline: 'none', color: C.peach, flex: 1 }} />
           <button onClick={addImageNode} style={{ background: C.main, color: C.white, border: 'none', borderRadius: 0, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
           <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.4)', border: 'none', fontSize: 13, cursor: 'pointer', padding: '0 4px' }}>✕</button>
-        </>
+        </div>
       )}
+      {genError && <div style={{ padding: '0 14px 6px', fontFamily: 'monospace', fontSize: 10, color: C.coral }}>{genError}</div>}
     </div>
   );
 
@@ -551,8 +633,15 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       <div style={{ position: 'relative', minWidth: 2400, minHeight: 2000 }}>
       {edgeSvg}
       {loaded && nodes.length === 0 && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.18)' }}>Add notes and images — connect ideas freely</div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', gap: 14 }}>
+          <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.18)' }}>Get it out of your head — vibes, people, next step</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {(['vibe', 'person', 'nextstep'] as MindNodeType[]).map(nt => (
+              <div key={nt} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.12)', padding: '3px 8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {NODE_TYPE_STYLES[nt].prefix} {NODE_TYPE_STYLES[nt].label}
+              </div>
+            ))}
+          </div>
         </div>
       )}
       {nodeEls}
@@ -563,6 +652,12 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: fullscreen ? 1 : undefined, border: fullscreen ? 'none' : '1.5px solid rgba(255,255,255,0.15)', marginTop: fullscreen ? 0 : 16 }}>
       {toolbar}
+      {nextStepNode && (
+        <div style={{ background: NODE_TYPE_STYLES.nextstep.bg, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.65)', letterSpacing: 1, flexShrink: 0 }}>NEXT STEP</span>
+          <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: C.white, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextStepNode.text}</span>
+        </div>
+      )}
       {canvas}
     </div>
   );
@@ -801,7 +896,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
 }
 
 // ── Project Detail ─────────────────────────────────────────────────────────
-function ProjectDetail({ task, category, onCategoryChange, onBack, session, onStartSession, onTogglePause, onReset }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void; session?: Session; onStartSession?: () => void; onTogglePause?: () => void; onReset?: () => void }) {
+function ProjectDetail({ task, category, onCategoryChange, onBack, session, onStartSession, onTogglePause, onReset, projects = [] }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void; session?: Session; onStartSession?: () => void; onTogglePause?: () => void; onReset?: () => void; projects?: Task[] }) {
   const isMobile = useIsMobile();
   const KEY = "workflow_" + task.gid;
   const MORNING_KEY = "morning_prayer_" + task.gid;
@@ -997,7 +1092,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
           <>
             {/* Revelation = fullscreen mood board */}
             {loaded && viewingStageIdx === 1 ? (
-              <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen />
+              <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen projects={projects} />
             ) : (
               <div className="graph-bg" style={{ flex: 1, overflowY: isMobile && !showDescription && viewingStageIdx === 0 ? "hidden" : "auto", display: "flex", flexDirection: "column" }}>
                 {!loaded ? (
@@ -1641,7 +1736,7 @@ export default function App() {
                 );
                 if (openTask) return (
                   categories[openTask.gid] === "factory"
-                    ? <ProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} session={sessions[openTask.gid]} onStartSession={() => startSession(openTask.gid)} onTogglePause={() => togglePauseSession(openTask.gid)} onReset={() => resetSession(openTask.gid)} />
+                    ? <ProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} session={sessions[openTask.gid]} onStartSession={() => startSession(openTask.gid)} onTogglePause={() => togglePauseSession(openTask.gid)} onReset={() => resetSession(openTask.gid)} projects={projects} />
                     : <FactoryDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
                 );
                 return (
