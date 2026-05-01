@@ -310,30 +310,7 @@ const NODE_TYPE_STYLES: Record<MindNodeType, { bg: string; label: string; prefix
   thought:  { bg: '#454449', label: 'Thought',   prefix: '·' },
 }
 
-async function parkThoughtOnProject(targetGid: string, text: string) {
-  const key = 'mindmap_' + targetGid
-  let nodes: MindNode[] = []
-  let edges: MindEdge[] = []
-  try {
-    const raw = await platformStorage.get(key) as string | null
-    if (raw) { const d = JSON.parse(raw); nodes = d.nodes || []; edges = d.edges || [] }
-  } catch (_) {}
-  const node: MindNode = {
-    id: Date.now().toString(),
-    type: 'text',
-    nodeType: 'thought',
-    x: 60 + Math.random() * 300,
-    y: 60 + Math.random() * 200,
-    w: 180,
-    text,
-    url: '',
-    color: NODE_TYPE_STYLES.thought.bg,
-  }
-  nodes = [...nodes, node]
-  await platformStorage.set(key, JSON.stringify({ nodes, edges }))
-}
-
-function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false, projects = [] }: { taskGid: string; taskName?: string; taskNotes?: string; fullscreen?: boolean; projects?: Task[] }) {
+function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }: { taskGid: string; taskName?: string; taskNotes?: string; fullscreen?: boolean }) {
   const KEY = "mindmap_" + taskGid;
   const [nodes, setNodes] = useState<MindNode[]>([]);
   const [edges, setEdges] = useState<MindEdge[]>([]);
@@ -367,24 +344,12 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false, p
 
   async function save(n: MindNode[], e: MindEdge[]) { try { await storageSet(KEY, JSON.stringify({ nodes: n, edges: e })); } catch (_) {} }
 
-  const [parkItOpen, setParkItOpen] = useState(false);
-  const [parkItText, setParkItText] = useState('');
-  const [parkItTarget, setParkItTarget] = useState('');
-
   function addTextNode(nodeType?: MindNodeType) {
     const id = Date.now().toString();
     const style = nodeType ? NODE_TYPE_STYLES[nodeType] : null;
     const n: MindNode = { id, type: 'text', nodeType, x: 60 + Math.random() * 300, y: 60 + Math.random() * 200, w: nodeType === 'nextstep' ? 220 : 160, text: '', url: '', color: style?.bg };
     const u = [...nodes, n]; setNodes(u); save(u, edges); setEditingId(id);
   }
-
-  async function submitParkIt() {
-    if (!parkItText.trim() || !parkItTarget) return;
-    await parkThoughtOnProject(parkItTarget, parkItText.trim());
-    setParkItText(''); setParkItTarget(''); setParkItOpen(false);
-  }
-
-  const otherProjects = projects.filter(p => p.gid !== taskGid);
 
   function addImageNode() {
     if (!urlInput.trim()) return;
@@ -405,10 +370,10 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false, p
       if (!result || !Array.isArray(result.nodes) || !Array.isArray(result.edges)) {
         throw new Error('Unexpected response shape from AI');
       }
-      let n = (result.nodes as MindNode[]).map(nd => ({
-        ...nd,
-        color: MIND_COLORS.includes(nd.color ?? '') ? nd.color : MIND_COLORS[Math.floor(Math.random() * MIND_COLORS.length)],
-      }));
+      let n = (result.nodes as MindNode[]).map(nd => {
+        const ntStyle = nd.nodeType ? NODE_TYPE_STYLES[nd.nodeType as MindNodeType] : null;
+        return { ...nd, color: ntStyle ? ntStyle.bg : (nd.color ?? C.mid) };
+      });
       const e = result.edges as MindEdge[];
       // Scale and center the layout to fit the visible canvas
       if (n.length > 0 && canvasRef.current) {
@@ -593,28 +558,10 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false, p
           {connectMode ? (connecting ? '→ 2nd' : '→ 1st') : '⤢ Link'}
         </button>
         <div style={{ flex: 1 }} />
-        {otherProjects.length > 0 && (
-          <button onClick={() => { setParkItOpen(v => !v); setParkItTarget(otherProjects[0]?.gid || '') }}
-            style={{ background: parkItOpen ? 'rgba(239,153,130,0.3)' : 'rgba(255,255,255,0.08)', color: C.coral, border: `1.5px solid ${parkItOpen ? C.coral : 'rgba(239,153,130,0.4)'}`, borderRadius: 0, padding: '4px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3 }}>
-            ⊕ Park It
-          </button>
-        )}
         <button onClick={generate} disabled={generating} style={{ background: generating ? 'rgba(101,121,70,0.4)' : C.main, color: C.white, border: `1.5px solid ${C.main}`, borderRadius: 0, padding: '4px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', opacity: generating ? 0.7 : 1 }}>
           {generating ? 'Generating…' : '✦ AI'}
         </button>
       </div>
-      {/* Park It panel */}
-      {parkItOpen && otherProjects.length > 0 && (
-        <div style={{ padding: '10px 14px 12px', background: 'rgba(239,153,130,0.08)', borderTop: '1px solid rgba(239,153,130,0.2)', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.coral, letterSpacing: 0.5, flexShrink: 0 }}>PARK IT →</div>
-          <input autoFocus value={parkItText} onChange={e => setParkItText(e.target.value)} onKeyDown={e => e.key === 'Enter' && submitParkIt()} placeholder="What just came to mind?" style={{ fontFamily: FONT, fontSize: 12, color: C.peach, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '5px 10px', outline: 'none', flex: 1, minWidth: 160 }} />
-          <select value={parkItTarget} onChange={e => setParkItTarget(e.target.value)} style={{ fontFamily: FONT, fontSize: 11, color: C.peach, background: C.dark, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '5px 8px', outline: 'none', flexShrink: 0, maxWidth: 180 }}>
-            {otherProjects.map(p => <option key={p.gid} value={p.gid}>{p.name}</option>)}
-          </select>
-          <button onClick={submitParkIt} disabled={!parkItText.trim()} style={{ background: parkItText.trim() ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: 'none', borderRadius: 0, padding: '5px 14px', fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: parkItText.trim() ? 'pointer' : 'default', flexShrink: 0 }}>Done</button>
-          <button onClick={() => { setParkItOpen(false); setParkItText(''); }} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 14, cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}>✕</button>
-        </div>
-      )}
       {/* Image input row */}
       {showImgInput && (
         <div style={{ padding: '6px 14px 8px', display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -896,7 +843,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
 }
 
 // ── Project Detail ─────────────────────────────────────────────────────────
-function ProjectDetail({ task, category, onCategoryChange, onBack, session, onStartSession, onTogglePause, onReset, projects = [] }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void; session?: Session; onStartSession?: () => void; onTogglePause?: () => void; onReset?: () => void; projects?: Task[] }) {
+function ProjectDetail({ task, category, onCategoryChange, onBack, session, onStartSession, onTogglePause, onReset }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void; session?: Session; onStartSession?: () => void; onTogglePause?: () => void; onReset?: () => void }) {
   const isMobile = useIsMobile();
   const KEY = "workflow_" + task.gid;
   const MORNING_KEY = "morning_prayer_" + task.gid;
@@ -1092,7 +1039,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
           <>
             {/* Revelation = fullscreen mood board */}
             {loaded && viewingStageIdx === 1 ? (
-              <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen projects={projects} />
+              <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen />
             ) : (
               <div className="graph-bg" style={{ flex: 1, overflowY: isMobile && !showDescription && viewingStageIdx === 0 ? "hidden" : "auto", display: "flex", flexDirection: "column" }}>
                 {!loaded ? (
@@ -1736,7 +1683,7 @@ export default function App() {
                 );
                 if (openTask) return (
                   categories[openTask.gid] === "factory"
-                    ? <ProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} session={sessions[openTask.gid]} onStartSession={() => startSession(openTask.gid)} onTogglePause={() => togglePauseSession(openTask.gid)} onReset={() => resetSession(openTask.gid)} projects={projects} />
+                    ? <ProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} session={sessions[openTask.gid]} onStartSession={() => startSession(openTask.gid)} onTogglePause={() => togglePauseSession(openTask.gid)} onReset={() => resetSession(openTask.gid)} />
                     : <FactoryDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
                 );
                 return (

@@ -112,25 +112,27 @@ app.whenReady().then(() => {
     const apiKey = store.get('anthropic_key') as string | undefined
     if (!apiKey) throw new Error('No Anthropic API key set. Add it in Settings.')
 
-    const prompt = `You are an ADHD coach helping break down a creative project into a mind map.
+    const prompt = `You are an ADHD coach helping a creative professional externalize a project into a mind map.
 
 Project: "${taskName}"
 Brief: "${brief || '(no brief provided)'}"
 
-Create 8-12 nodes that help someone with ADHD get started and stay focused.
+Create 8-12 nodes. This person thinks in feelings/vibes and people — not task lists. Surface ONE clear next step.
 
-Rules:
-- Central node = what "done" looks like in plain language
-- 3-4 cluster nodes = main areas of work
-- Leaf nodes = concrete next actions OR open questions
-- ONE node must say "Start Here →" — the single best first step
-- Node text = max 5 words, energising and concrete
-- Colors: central="#657946", clusters="#454449", actions="#242329", start/questions="#EF9982"
+Node types and when to use them:
+- "nextstep" — exactly ONE node: the single clearest first move. Bold, specific, actionable. This is the most important node.
+- "vibe" — 2-3 nodes: the feeling, mood, or aesthetic this project must have. Sensory, evocative language.
+- "person" — 1-2 nodes: who this is for, or who matters to making it real.
+- "thought" — remaining nodes: anything else worth capturing (questions, constraints, ideas).
 
-Canvas 680×460. Central node near (300,210). Clusters at distance ~170px. Leaves near their cluster.
+Each node needs a "nodeType" field set to one of: "nextstep", "vibe", "person", "thought".
+Colors by type: nextstep="#B85C4A", vibe="#7B6557", person="#2E3B2F", thought="#454449"
+Node text = max 6 words. Honest and specific to this project.
+
+Canvas 680×460. Spread nodes naturally — nextstep near center-top (around y:80), vibes clustered mid-left, people mid-right, thoughts lower.
 
 Return ONLY valid JSON, no markdown:
-{"nodes":[{"id":"1","type":"text","x":300,"y":210,"w":160,"text":"core outcome","url":"","color":"#657946"}],"edges":[{"id":"e1","from":"1","to":"2"}]}`
+{"nodes":[{"id":"1","type":"text","nodeType":"nextstep","x":260,"y":80,"w":220,"text":"the one first move","url":"","color":"#B85C4A"}],"edges":[{"id":"e1","from":"1","to":"2"}]}`
 
     return new Promise<unknown>((resolve, reject) => {
       const body = JSON.stringify({
