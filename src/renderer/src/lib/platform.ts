@@ -78,8 +78,8 @@ export const ai = {
   generateMindMap: async (brief: string, taskName: string): Promise<{ nodes: unknown[]; edges: unknown[] }> => {
     if (isElectron) return (window as any).anthropic.generate(brief, taskName)
     const text = await anthropicFetch(
-      [{ role: 'user', content: `Project: ${taskName}\n\nBrief: ${brief}\n\nGenerate a mind map as JSON with "nodes" (array of {id, type:"text", x, y, w, text, color?}) and "edges" (array of {id, from, to}). Lay out all nodes within a 800x600 bounding box (x: 0-800, y: 0-600). Node w should be 140-180. Space nodes evenly. For color, you MUST only use one of these exact hex values: "#242329", "#454449", "#2E3B2F", "#3D5A3E", "#657946", "#8A9E6A", "#7B6557", "#C4956A", "#EF9982", "#B85C4A", "#8B7BA8", "#5B7FA8". Return only valid JSON, no markdown.` }],
-      'You are a creative thinking assistant. Output only valid JSON, no markdown.'
+      [{ role: 'user', content: `Project: ${taskName}\n\nBrief: ${brief || '(no brief provided)'}\n\nCreate 8-12 mind map nodes. This person thinks in feelings/vibes and people — not task lists. Surface ONE clear next step.\n\nNode types — set "nodeType" on every node:\n- "nextstep" — exactly ONE node: the single clearest first move. Specific and actionable.\n- "vibe" — 2-3 nodes: the feeling, mood, or aesthetic this project must have.\n- "person" — 1-2 nodes: who this is for, or who matters to making it real.\n- "thought" — remaining nodes: questions, constraints, ideas.\n\nColors: nextstep="#B85C4A", vibe="#7B6557", person="#2E3B2F", thought="#454449"\nNode text = max 6 words. Canvas 680x460. nextstep near top (y~80), vibes mid-left, people mid-right, thoughts lower.\n\nReturn ONLY valid JSON, no markdown:\n{"nodes":[{"id":"1","type":"text","nodeType":"nextstep","x":260,"y":80,"w":220,"text":"the one first move","url":"","color":"#B85C4A"}],"edges":[{"id":"e1","from":"1","to":"2"}]}` }],
+      'You are an ADHD coach and creative thinking assistant. Output only valid JSON, no markdown.'
     )
     const json = JSON.parse(text.replace(/```json|```/g, '').trim())
     return json
