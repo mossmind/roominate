@@ -510,26 +510,24 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         className="mind-node"
         style={{ position: 'absolute', left: node.x, top: node.y, width: node.w, zIndex: dragging?.id === node.id ? 100 : 1 }}
         onClick={() => { if (connectMode) handleNodeClick(node.id); }}>
+
+        {node.icon && ICON_MAP[node.icon] ? (() => {
+          const IconComp = ICON_MAP[node.icon];
+          return (
+            <div onMouseDown={e => onMD(e, node.id)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, cursor: connectMode ? 'crosshair' : 'grab', color: C.peach }}>
+              <IconComp width={node.w - 8} height={node.w - 8} style={{ display: 'block' }} />
+            </div>
+          );
+        })() : (
         <div style={{ background: cardColor, border: `${isCentral ? '2px' : isNextStep ? '2px' : '1px'} solid ${isFirst ? C.coral : isCentral ? 'rgba(255,255,255,0.5)' : isNextStep ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : isCentral ? '0 6px 32px rgba(0,0,0,0.6)' : isNextStep ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
           {/* Type label + drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
-            style={{ height: hasLabel ? 'auto' : 5, background: hasLabel ? 'rgba(0,0,0,0.25)' : cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: hasLabel ? '5px 8px 4px' : isCentral ? 0 : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
+            style={{ height: hasLabel ? 'auto' : 5, background: hasLabel ? 'rgba(0,0,0,0.25)' : cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: hasLabel ? '5px 8px 4px' : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
             {hasLabel && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
           </div>
 
-          {node.icon && ICON_MAP[node.icon] ? (() => {
-            const IconComp = ICON_MAP[node.icon];
-            return (
-              <div style={{ padding: '10px 8px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <IconComp width={44} height={44} style={{ color: C.peach, display: 'block', flexShrink: 0 }} />
-                {editingId === node.id
-                  ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', fontFamily: FONT, fontSize: 10, background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.2)', outline: 'none', color: C.peach, boxSizing: 'border-box', textAlign: 'center' }} />
-                  : node.text
-                    ? <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(255,255,255,0.6)', cursor: 'text', textAlign: 'center', lineHeight: 1.3 }}>{node.text}</div>
-                    : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(255,255,255,0.2)', cursor: 'text' }}>label…</div>}
-              </div>
-            );
-          })() : node.type === 'image' ? (
+          {node.type === 'image' ? (
             <div style={{ padding: '6px 6px 10px' }}>
               <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = 'rgba(255,255,255,0.04)'; }} />
               {editingId === node.id
@@ -559,6 +557,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             </div>
           )}
         </div>
+        )}
         {/* Width resize handle */}
         <div onMouseDown={e => { e.stopPropagation(); setResizing({ id: node.id, startW: node.w, startX: e.clientX }); }}
           className="node-resize"
