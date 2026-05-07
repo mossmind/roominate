@@ -783,8 +783,10 @@ function PrayerField({ taskGid }: { taskGid: string }) {
     if (!didLongPress.current) { e.stopPropagation(); openView(prayer) }
   }
 
+  const PRAYER_ICONS = [CacIcon, CanIcon, InsideRawIcon, LanIcon, LifIcon, MossIcon, MumIcon, OutsideIcon, InsideIcon, PrayerIcon, Sqig1Icon, Sqig2Icon, UncatIcon]
+  function prayerIcon(p: Prayer) { const n = parseInt(p.id, 10) || p.id.charCodeAt(0); return PRAYER_ICONS[n % PRAYER_ICONS.length] }
   function prayerOpacity(p: Prayer) { return Math.max(0.45, 1 - ((Date.now() - p.createdAt) / (1000 * 60 * 60 * 24 * 180)) * 0.55) }
-  function prayerFontSize(p: Prayer) { return 12 + Math.min(p.revisits * 0.8, 6) }
+  function prayerIconSize(p: Prayer) { return 22 + Math.min(p.revisits * 1.5, 10) }
   function isOld(p: Prayer) { return (Date.now() - p.createdAt) / 86400000 > 30 && p.revisits <= 1 }
 
   return (
@@ -794,31 +796,20 @@ function PrayerField({ taskGid }: { taskGid: string }) {
         backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
         backgroundSize: '28px 28px' }}>
 
-      {/* Cloud wisps */}
-      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '35%', pointerEvents: 'none', opacity: 0.07 }} viewBox="0 0 800 160" preserveAspectRatio="xMidYMid slice">
-        <ellipse cx="130" cy="55" rx="85" ry="22" fill="#F2EAD3" /><ellipse cx="175" cy="44" rx="58" ry="16" fill="#F2EAD3" />
-        <ellipse cx="490" cy="75" rx="105" ry="26" fill="#F2EAD3" /><ellipse cx="535" cy="62" rx="72" ry="18" fill="#F2EAD3" />
-        <ellipse cx="710" cy="38" rx="62" ry="15" fill="#F2EAD3" />
-      </svg>
-
-      {/* Horizon */}
-      <div style={{ position: 'absolute', left: 0, right: 0, top: '80%', height: 1, background: 'rgba(242,234,211,0.1)', pointerEvents: 'none' }} />
-
-      {/* Grass tufts */}
-      <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 36, pointerEvents: 'none', opacity: 0.18 }} viewBox="0 0 800 36" preserveAspectRatio="xMidYMax slice">
-        {Array.from({ length: 45 }, (_, i) => { const x = i * 19 + Math.sin(i * 7.3) * 6; const h = 7 + Math.sin(i * 3.7) * 4; return <line key={i} x1={x} y1={36} x2={x + Math.sin(i * 2.1) * 3} y2={36 - h} stroke="#8A9E6A" strokeWidth="1.2" /> })}
-      </svg>
-
       {/* Prayer nodes */}
       {loaded && prayers.map(prayer => {
         const old = isOld(prayer)
-        const color = prayer.isMarked ? '#B8651F' : '#D4A574'
+        const Icon = prayerIcon(prayer)
+        const iconSize = prayerIconSize(prayer)
+        const opacity = prayerOpacity(prayer)
+        const textColor = prayer.isMarked ? '#B8651F' : 'rgba(255,255,255,0.75)'
         return old
           ? <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
-              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', width: 7, height: 7, borderRadius: '50%', background: color, opacity: prayerOpacity(prayer), cursor: 'pointer' }} />
+              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.35)', opacity, cursor: 'pointer' }} />
           : <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
-              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', opacity: prayerOpacity(prayer), cursor: 'pointer', maxWidth: 160, textAlign: 'center', userSelect: 'none' }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: prayerFontSize(prayer), fontStyle: 'italic', fontWeight: 500, color, lineHeight: 1.35, whiteSpace: 'nowrap' }}>{prayer.title}</div>
+              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', opacity, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, userSelect: 'none', maxWidth: 90 }}>
+              <Icon width={iconSize} height={iconSize} style={{ color: prayer.isMarked ? '#B8651F' : 'white', flexShrink: 0 }} />
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 10, fontStyle: 'italic', fontWeight: 500, color: textColor, lineHeight: 1.3, textAlign: 'center', wordBreak: 'break-word' }}>{prayer.title}</div>
             </div>
       })}
 
