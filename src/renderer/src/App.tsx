@@ -360,16 +360,38 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   async function save(n: MindNode[], e: MindEdge[]) { try { await storageSet(KEY, JSON.stringify({ nodes: n, edges: e })); } catch (_) {} }
 
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function addFileNode() {
     const result = await platformFiles.open()
-    if (!result) return
-    const id = Date.now().toString()
-    const isImage = !!result.dataUrl
-    const n: MindNode = isImage
-      ? { id, type: 'image', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 200, text: result.fileName, url: result.dataUrl!, filePath: result.filePath, fileName: result.fileName, fileExt: result.ext }
-      : { id, type: 'text', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 180, text: '', url: '', filePath: result.filePath, fileName: result.fileName, fileExt: result.ext }
-    const u = [...nodes, n]; setNodes(u); save(u, edges);
+    if (result) {
+      const id = Date.now().toString()
+      const isImage = !!result.dataUrl
+      const n: MindNode = isImage
+        ? { id, type: 'image', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 200, text: result.fileName, url: result.dataUrl!, filePath: result.filePath, fileName: result.fileName, fileExt: result.ext }
+        : { id, type: 'text', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 180, text: '', url: '', filePath: result.filePath, fileName: result.fileName, fileExt: result.ext }
+      const u = [...nodes, n]; setNodes(u); save(u, edges);
+    } else {
+      fileInputRef.current?.click()
+    }
+  }
+
+  function handleWebFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+    const imageExts = ['jpg','jpeg','png','gif','webp','svg']
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      const id = Date.now().toString()
+      const n: MindNode = imageExts.includes(ext)
+        ? { id, type: 'image', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 200, text: file.name, url: dataUrl, fileName: file.name, fileExt: ext }
+        : { id, type: 'text', x: 80 + Math.random() * 280, y: 80 + Math.random() * 180, w: 180, text: '', url: dataUrl, fileName: file.name, fileExt: ext }
+      const u = [...nodes, n]; setNodes(u); save(u, edges);
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
   }
 
   function addIconNode(iconKey: string) {
@@ -538,8 +560,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             {hasLabel && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
           </div>
 
-          {node.filePath && !node.url ? (
-            // Non-image local file (PDF, doc, etc.)
+          {node.fileName && node.type !== 'image' ? (
+            // Non-image file (PDF, doc, etc.) — local path (Electron) or dataUrl (web)
             <div onMouseDown={e => e.stopPropagation()} style={{ padding: '12px 10px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>
@@ -547,7 +569,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
                 </span>
                 <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: C.peach, wordBreak: 'break-all', lineHeight: 1.35 }}>{node.fileName}</div>
               </div>
-              <button onMouseDown={e => e.stopPropagation()} onClick={() => platformFiles.openPath(node.filePath!)}
+              <button onMouseDown={e => e.stopPropagation()}
+                onClick={() => node.filePath ? platformFiles.openPath(node.filePath) : window.open(node.url, '_blank')}
                 style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '5px 0', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: C.peach, cursor: 'pointer', width: '100%' }}>
                 Open ↗
               </button>
@@ -626,6 +649,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <button onClick={() => { setShowIconPicker(v => !v); setShowImgInput(false); }} style={{ background: showIconPicker ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: `1.5px solid ${showIconPicker ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Icon</button>
         <button onClick={() => { setShowImgInput(v => !v); setShowIconPicker(false); }} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Image URL</button>
         <button onClick={addFileNode} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ File</button>
+        <input ref={fileInputRef} type="file" onChange={handleWebFileSelect} style={{ display: 'none' }} />
         <button onClick={() => { setConnectMode(v => !v); setConnecting(null); }} style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: `1.5px solid ${connectMode ? C.coral : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
           {connectMode ? (connecting ? '→ 2nd' : '→ 1st') : '⤢ Link'}
         </button>
