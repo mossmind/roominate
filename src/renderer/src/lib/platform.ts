@@ -1,31 +1,70 @@
 /**
  * Platform abstraction — same API surface whether running in Electron or Capacitor.
  * Electron:  delegates to window.storage / window.asana (IPC bridge)
- * Mobile:    uses @capacitor/preferences for storage, fetch() for Asana
+ * Web:       uses IndexedDB for storage (handles large dataUrls from file uploads),
+ *            fetch() for Asana/AI
  */
 
-import { Preferences } from '@capacitor/preferences'
-
 const isElectron = typeof window !== 'undefined' && !!(window as any).storage
+
+// ── Web storage: IndexedDB wrapper ─────────────────────────────────────────
+// localStorage quota (~5MB) is too small for mind map nodes with embedded file dataUrls.
+
+function openDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('roominate_kv', 1)
+    req.onupgradeneeded = () => req.result.createObjectStore('kv')
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function idbGet(key: string): Promise<unknown> {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const req = db.transaction('kv', 'readonly').objectStore('kv').get(key)
+    req.onsuccess = () => resolve(req.result ?? null)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function idbSet(key: string, value: unknown): Promise<void> {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('kv', 'readwrite')
+    tx.objectStore('kv').put(value, key)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+async function idbDelete(key: string): Promise<void> {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('kv', 'readwrite')
+    tx.objectStore('kv').delete(key)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
 
 // ── Storage ────────────────────────────────────────────────────────────────
 
 export const storage = {
   get: async (key: string): Promise<unknown> => {
     if (isElectron) return (window as any).storage.get(key)
-    const { value } = await Preferences.get({ key })
-    return value ? JSON.parse(value) : null
+    return idbGet(key)
   },
 
   set: async (key: string, value: unknown): Promise<boolean> => {
     if (isElectron) return (window as any).storage.set(key, value)
-    await Preferences.set({ key, value: JSON.stringify(value) })
+    await idbSet(key, value)
     return true
   },
 
   delete: async (key: string): Promise<boolean> => {
     if (isElectron) return (window as any).storage.delete(key)
-    await Preferences.remove({ key })
+    await idbDelete(key)
     return true
   },
 }
