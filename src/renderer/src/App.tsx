@@ -367,6 +367,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   async function save(n: MindNode[], e: MindEdge[]) { try { await storageSet(KEY, JSON.stringify({ nodes: n, edges: e })); } catch (_) {} }
 
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function addFileNode() {
@@ -639,55 +640,87 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   });
 
   const toolbar = (
-    <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: C.mid, flexShrink: 0 }}>
-      {/* Row 1: typed node buttons */}
-      <div style={{ padding: '8px 14px 4px', display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+    <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: C.mid, flexShrink: 0 }}>
+      <div style={{ padding: '8px 12px', display: 'flex', gap: 6, alignItems: 'center' }}>
+        {/* Node type chips */}
         {(['vibe', 'person', 'nextstep', 'thought'] as MindNodeType[]).map(nt => {
           const s = NODE_TYPE_STYLES[nt]
           return (
             <button key={nt} onClick={() => addTextNode(nt)}
-              style={{ background: s.bg, color: 'rgba(255,255,255,0.9)', border: '1.5px solid rgba(255,255,255,0.25)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3 }}>
-              {s.prefix} {s.label}
+              style={{ background: s.bg, color: 'rgba(255,255,255,0.92)', border: 'none', borderRadius: 20, padding: '5px 13px', fontFamily: FONT, fontSize: 10, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3, transition: 'opacity 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+              {s.label}
             </button>
           )
         })}
-        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
-        <button onClick={() => addTextNode()} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Note</button>
-        <button onClick={() => { setShowIconPicker(v => !v); setShowImgInput(false); }} style={{ background: showIconPicker ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: `1.5px solid ${showIconPicker ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Icon</button>
-        <button onClick={() => { setShowImgInput(v => !v); setShowIconPicker(false); }} style={{ background: showImgInput ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ Image URL</button>
-        <button onClick={addFileNode} style={{ background: 'rgba(255,255,255,0.08)', color: C.peach, border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>+ File</button>
-        <input ref={fileInputRef} type="file" onChange={handleWebFileSelect} style={{ display: 'none' }} />
-        <button onClick={() => { setConnectMode(v => !v); setConnecting(null); }} style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.08)', color: C.white, border: `1.5px solid ${connectMode ? C.coral : 'rgba(255,255,255,0.2)'}`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
-          {connectMode ? (connecting ? '→ 2nd' : '→ 1st') : '⤢ Link'}
-        </button>
+
         <div style={{ flex: 1 }} />
-        <button onClick={generate} disabled={generating} style={{ background: generating ? 'rgba(101,121,70,0.4)' : C.main, color: C.white, border: `1.5px solid ${C.main}`, borderRadius: 0, padding: '4px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', opacity: generating ? 0.7 : 1 }}>
+
+        {/* + menu */}
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowAddMenu(v => !v)}
+            style={{ background: showAddMenu ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.07)', color: C.peach, border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20, width: 30, height: 28, fontFamily: FONT, fontSize: 16, fontWeight: 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>
+            +
+          </button>
+          {showAddMenu && (
+            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: C.dark, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '4px 0', zIndex: 100, minWidth: 130, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+              {[
+                { label: 'Note', action: () => { addTextNode(); setShowAddMenu(false) } },
+                { label: 'Icon', action: () => { setShowIconPicker(v => !v); setShowImgInput(false); setShowAddMenu(false) } },
+                { label: 'Image URL', action: () => { setShowImgInput(v => !v); setShowIconPicker(false); setShowAddMenu(false) } },
+                { label: 'File', action: () => { addFileNode(); setShowAddMenu(false) } },
+              ].map(item => (
+                <button key={item.label} onClick={item.action}
+                  style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '8px 16px', fontFamily: FONT, fontSize: 11, fontWeight: 600, color: C.peach, cursor: 'pointer', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <input ref={fileInputRef} type="file" onChange={handleWebFileSelect} style={{ display: 'none' }} />
+
+        {/* Link toggle */}
+        <button onClick={() => { setConnectMode(v => !v); setConnecting(null); setShowAddMenu(false) }}
+          style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.07)', color: C.white, border: connectMode ? `1px solid ${C.coral}` : '1px solid rgba(255,255,255,0.18)', borderRadius: 20, padding: '5px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+          {connectMode ? (connecting ? '→ pick 2nd' : '→ pick 1st') : '⤢ Link'}
+        </button>
+
+        {/* AI generate */}
+        <button onClick={generate} disabled={generating}
+          style={{ background: generating ? 'rgba(101,121,70,0.35)' : C.main, color: C.white, border: 'none', borderRadius: 20, padding: '5px 14px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', opacity: generating ? 0.6 : 1, transition: 'opacity 0.15s' }}>
           {generating ? 'Generating…' : '✦ AI'}
         </button>
       </div>
-      {/* Icon picker row */}
+
+      {/* Icon picker */}
       {showIconPicker && (
-        <div style={{ padding: '8px 14px 10px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ padding: '8px 12px 10px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           {Object.entries(ICON_MAP).map(([key, IconComp]) => (
-            <button key={key} onClick={() => { addIconNode(key); setShowIconPicker(false); }}
-              title={key}
-              style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.peach, padding: 0, transition: 'background 0.15s, border-color 0.15s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.4)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)'; }}>
-              <IconComp width={20} height={20} />
+            <button key={key} onClick={() => { addIconNode(key); setShowIconPicker(false); }} title={key}
+              style={{ width: 34, height: 34, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.peach, padding: 0, transition: 'background 0.12s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}>
+              <IconComp width={18} height={18} />
             </button>
           ))}
         </div>
       )}
-      {/* Image input row */}
+
+      {/* Image URL input */}
       {showImgInput && (
-        <div style={{ padding: '6px 14px 8px', display: 'flex', gap: 8, alignItems: 'center' }}>
-          <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus style={{ fontFamily: 'monospace', fontSize: 11, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 0, padding: '5px 10px', outline: 'none', color: C.peach, flex: 1 }} />
-          <button onClick={addImageNode} style={{ background: C.main, color: C.white, border: 'none', borderRadius: 0, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
-          <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.4)', border: 'none', fontSize: 13, cursor: 'pointer', padding: '0 4px' }}>✕</button>
+        <div style={{ padding: '6px 12px 8px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus
+            style={{ fontFamily: 'monospace', fontSize: 11, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '5px 10px', outline: 'none', color: C.peach, flex: 1 }} />
+          <button onClick={addImageNode} style={{ background: C.main, color: C.white, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+          <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.35)', border: 'none', fontSize: 14, cursor: 'pointer', padding: '0 2px' }}>✕</button>
         </div>
       )}
-      {genError && <div style={{ padding: '0 14px 6px', fontFamily: 'monospace', fontSize: 10, color: C.coral }}>{genError}</div>}
+
+      {genError && <div style={{ padding: '0 12px 6px', fontFamily: 'monospace', fontSize: 10, color: C.coral }}>{genError}</div>}
     </div>
   );
 
