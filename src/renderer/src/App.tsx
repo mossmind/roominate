@@ -16,6 +16,13 @@ import LifIcon from './assets/icons/Lif.svg?react';
 import MumIcon from './assets/icons/Mum.svg?react';
 import Sqig2Icon from './assets/icons/Sqig2.svg?react';
 import prayerMusic from './assets/Prayer Motion Music 1.mp3';
+import PrayBird1 from './assets/PrayIcon/SVG/Bird1.svg?react';
+import PrayBird2 from './assets/PrayIcon/SVG/Bird2.svg?react';
+import PrayBird3 from './assets/PrayIcon/SVG/Bird3.svg?react';
+import PrayStar1 from './assets/PrayIcon/SVG/Star1.svg?react';
+import PrayStar2 from './assets/PrayIcon/SVG/Star2.svg?react';
+import PrayStar3 from './assets/PrayIcon/SVG/Star3.svg?react';
+import PraySwirl from './assets/PrayIcon/SVG/Swirl.svg?react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 declare global {
@@ -783,10 +790,10 @@ function PrayerField({ taskGid }: { taskGid: string }) {
     if (!didLongPress.current) { e.stopPropagation(); openView(prayer) }
   }
 
-  const PRAYER_ICONS = [CacIcon, CanIcon, InsideRawIcon, LanIcon, LifIcon, MossIcon, MumIcon, OutsideIcon, InsideIcon, PrayerIcon, Sqig1Icon, Sqig2Icon, UncatIcon]
+  const PRAYER_ICONS = [PrayBird1, PrayBird2, PrayBird3, PrayStar1, PrayStar2, PrayStar3, PraySwirl]
   function prayerIcon(p: Prayer) { const n = parseInt(p.id, 10) || p.id.charCodeAt(0); return PRAYER_ICONS[n % PRAYER_ICONS.length] }
   function prayerOpacity(p: Prayer) { return Math.max(0.45, 1 - ((Date.now() - p.createdAt) / (1000 * 60 * 60 * 24 * 180)) * 0.55) }
-  function prayerIconSize(p: Prayer) { return 22 + Math.min(p.revisits * 1.5, 10) }
+  function prayerIconSize(p: Prayer) { return 32 + Math.min(p.revisits * 1.5, 10) }
   function isOld(p: Prayer) { return (Date.now() - p.createdAt) / 86400000 > 30 && p.revisits <= 1 }
 
   return (
@@ -809,7 +816,7 @@ function PrayerField({ taskGid }: { taskGid: string }) {
           : <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
               style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', opacity, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, userSelect: 'none', maxWidth: 90 }}>
               <Icon width={iconSize} height={iconSize} style={{ color: prayer.isMarked ? '#B8651F' : 'white', flexShrink: 0 }} />
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 10, fontStyle: 'italic', fontWeight: 500, color: textColor, lineHeight: 1.3, textAlign: 'center', wordBreak: 'break-word' }}>{prayer.title}</div>
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: textColor, lineHeight: 1.3, textAlign: 'center', wordBreak: 'break-word' }}>{prayer.title}</div>
             </div>
       })}
 
