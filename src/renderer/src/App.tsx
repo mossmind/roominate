@@ -720,6 +720,148 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   );
 }
 
+// ── Prayer Field ───────────────────────────────────────────────────────────
+interface Prayer {
+  id: string; projectId: string; x: number; y: number
+  title: string; body: string; createdAt: number; isMarked: boolean; revisits: number
+}
+
+function PrayerField({ taskGid }: { taskGid: string }) {
+  const [prayers, setPrayers] = useState<Prayer[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [composing, setComposing] = useState<{ px: number; py: number; pct: { x: number; y: number } } | null>(null)
+  const [composerTitle, setComposerTitle] = useState('')
+  const [composerBody, setComposerBody] = useState('')
+  const [openPrayer, setOpenPrayer] = useState<Prayer | null>(null)
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressId = useRef<string | null>(null)
+  const didLongPress = useRef(false)
+  const PKEY = `prayers_${taskGid}`
+
+  useEffect(() => {
+    storageGet(PKEY).then(data => {
+      if (data) { try { setPrayers(JSON.parse(data as string)) } catch {} }
+      setLoaded(true)
+    })
+  }, [taskGid])
+
+  function save(ps: Prayer[]) { setPrayers(ps); storageSet(PKEY, JSON.stringify(ps)).catch(() => {}) }
+
+  function handleCanvasClick(e: React.MouseEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest('[data-prayer]')) return
+    if (!canvasRef.current) return
+    const rect = canvasRef.current.getBoundingClientRect()
+    const rawX = e.clientX - rect.left
+    const rawY = e.clientY - rect.top
+    const jitter = () => (Math.random() - 0.5) * 30
+    setComposing({ px: Math.max(10, Math.min(rawX + jitter(), rect.width - 220)), py: Math.max(10, Math.min(rawY + jitter(), rect.height - 180)), pct: { x: rawX / rect.width, y: rawY / rect.height } })
+    setComposerTitle(''); setComposerBody('')
+  }
+
+  function submitComposer() {
+    if (!composing || !composerTitle.trim()) return
+    save([...prayers, { id: Date.now().toString(), projectId: taskGid, x: composing.pct.x, y: composing.pct.y, title: composerTitle.trim(), body: composerBody.trim(), createdAt: Date.now(), isMarked: false, revisits: 0 }])
+    setComposing(null)
+  }
+
+  function openView(prayer: Prayer) {
+    const updated = prayers.map(p => p.id === prayer.id ? { ...p, revisits: p.revisits + 1 } : p)
+    save(updated)
+    setOpenPrayer(updated.find(p => p.id === prayer.id) ?? prayer)
+  }
+
+  function toggleMark(id: string) { save(prayers.map(p => p.id === id ? { ...p, isMarked: !p.isMarked } : p)) }
+
+  function onPMD(id: string) {
+    didLongPress.current = false
+    longPressId.current = id
+    longPressTimer.current = setTimeout(() => { didLongPress.current = true; toggleMark(id) }, 500)
+  }
+  function onPMU(e: React.MouseEvent, prayer: Prayer) {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    if (!didLongPress.current) { e.stopPropagation(); openView(prayer) }
+  }
+
+  function prayerOpacity(p: Prayer) { return Math.max(0.45, 1 - ((Date.now() - p.createdAt) / (1000 * 60 * 60 * 24 * 180)) * 0.55) }
+  function prayerFontSize(p: Prayer) { return 12 + Math.min(p.revisits * 0.8, 6) }
+  function isOld(p: Prayer) { return (Date.now() - p.createdAt) / 86400000 > 30 && p.revisits <= 1 }
+
+  return (
+    <div ref={canvasRef} onClick={handleCanvasClick}
+      style={{ position: 'relative', width: '100%', height: '100%', minHeight: 400, overflow: 'hidden', cursor: 'crosshair',
+        background: 'rgba(36,35,41,0.95)',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+        backgroundSize: '28px 28px' }}>
+
+      {/* Cloud wisps */}
+      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '35%', pointerEvents: 'none', opacity: 0.07 }} viewBox="0 0 800 160" preserveAspectRatio="xMidYMid slice">
+        <ellipse cx="130" cy="55" rx="85" ry="22" fill="#F2EAD3" /><ellipse cx="175" cy="44" rx="58" ry="16" fill="#F2EAD3" />
+        <ellipse cx="490" cy="75" rx="105" ry="26" fill="#F2EAD3" /><ellipse cx="535" cy="62" rx="72" ry="18" fill="#F2EAD3" />
+        <ellipse cx="710" cy="38" rx="62" ry="15" fill="#F2EAD3" />
+      </svg>
+
+      {/* Horizon */}
+      <div style={{ position: 'absolute', left: 0, right: 0, top: '80%', height: 1, background: 'rgba(242,234,211,0.1)', pointerEvents: 'none' }} />
+
+      {/* Grass tufts */}
+      <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 36, pointerEvents: 'none', opacity: 0.18 }} viewBox="0 0 800 36" preserveAspectRatio="xMidYMax slice">
+        {Array.from({ length: 45 }, (_, i) => { const x = i * 19 + Math.sin(i * 7.3) * 6; const h = 7 + Math.sin(i * 3.7) * 4; return <line key={i} x1={x} y1={36} x2={x + Math.sin(i * 2.1) * 3} y2={36 - h} stroke="#8A9E6A" strokeWidth="1.2" /> })}
+      </svg>
+
+      {/* Prayer nodes */}
+      {loaded && prayers.map(prayer => {
+        const old = isOld(prayer)
+        const color = prayer.isMarked ? '#B8651F' : '#D4A574'
+        return old
+          ? <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
+              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', width: 7, height: 7, borderRadius: '50%', background: color, opacity: prayerOpacity(prayer), cursor: 'pointer' }} />
+          : <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
+              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', opacity: prayerOpacity(prayer), cursor: 'pointer', maxWidth: 160, textAlign: 'center', userSelect: 'none' }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: prayerFontSize(prayer), fontStyle: 'italic', fontWeight: 500, color, lineHeight: 1.35, whiteSpace: 'nowrap' }}>{prayer.title}</div>
+            </div>
+      })}
+
+      {/* Empty state */}
+      {loaded && prayers.length === 0 && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: 'italic', color: 'rgba(242,234,211,0.12)', textAlign: 'center' }}>tap anywhere to place a prayer</div>
+        </div>
+      )}
+
+      {/* Composer */}
+      {composing && (
+        <div data-prayer="true" onClick={e => e.stopPropagation()}
+          style={{ position: 'absolute', left: composing.px, top: composing.py, width: 210, background: 'rgba(28,28,24,0.97)', border: '1px solid rgba(242,234,211,0.18)', padding: '14px 14px 12px', zIndex: 10 }}>
+          <input autoFocus value={composerTitle} onChange={e => setComposerTitle(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') submitComposer(); if (e.key === 'Escape') setComposing(null) }}
+            placeholder="prayer title…"
+            style={{ width: '100%', fontFamily: FONT_DISPLAY, fontSize: 13, fontStyle: 'italic', color: '#F2EAD3', background: 'transparent', border: 'none', borderBottom: '1px solid rgba(242,234,211,0.18)', outline: 'none', paddingBottom: 6, marginBottom: 10, boxSizing: 'border-box' }} />
+          <textarea value={composerBody} onChange={e => setComposerBody(e.target.value)} placeholder="write more… (optional)" rows={3}
+            style={{ width: '100%', fontFamily: FONT, fontSize: 11, color: 'rgba(242,234,211,0.55)', background: 'transparent', border: 'none', outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.6, marginBottom: 10 }} />
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button onClick={() => setComposing(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(242,234,211,0.3)', fontFamily: FONT, fontSize: 10, cursor: 'pointer', padding: 0 }}>cancel</button>
+            <button onClick={submitComposer} style={{ background: '#D4A574', border: 'none', color: '#1e1f1a', fontFamily: FONT, fontSize: 10, fontWeight: 800, padding: '4px 12px', cursor: 'pointer' }}>place</button>
+          </div>
+        </div>
+      )}
+
+      {/* Prayer detail overlay */}
+      {openPrayer && (
+        <div data-prayer="true" onClick={() => setOpenPrayer(null)}
+          style={{ position: 'absolute', inset: 0, background: 'rgba(28,28,24,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(28,28,24,0.98)', border: '1px solid rgba(242,234,211,0.14)', padding: '32px 36px', maxWidth: 400, width: '88%' }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontStyle: 'italic', fontWeight: 500, color: openPrayer.isMarked ? '#B8651F' : '#D4A574', marginBottom: 14, lineHeight: 1.35 }}>{openPrayer.title}</div>
+            {openPrayer.body && <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(242,234,211,0.7)', lineHeight: 1.85, marginBottom: 20, whiteSpace: 'pre-wrap' }}>{openPrayer.body}</div>}
+            <div style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(242,234,211,0.22)', marginBottom: 20 }}>{new Date(openPrayer.createdAt).toLocaleDateString()} · visited {openPrayer.revisits}×</div>
+            <button onClick={() => setOpenPrayer(null)} style={{ background: 'transparent', border: '1px solid rgba(242,234,211,0.18)', color: 'rgba(242,234,211,0.45)', fontFamily: FONT, fontSize: 10, fontWeight: 700, padding: '6px 16px', cursor: 'pointer' }}>close</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Stage Icon helper ──────────────────────────────────────────────────────
 function StageIcon({ stage, size }: { stage: typeof STAGES[number]; size: number }) {
   if (stage.id === "prayer") return <PrayerIcon width={size} height={size} style={{ display: "block" }} />;
@@ -1169,23 +1311,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
                   </div>
                 ) : (() => {
                   const stage = STAGES[viewingStageIdx];
-                  if (stage.id === "prayer") return (
-                    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100%", minHeight: 0, flex: 1 }}>
-                      {/* Text content */}
-                      <div style={{ flex: isMobile ? "none" : 1, flexShrink: 0, padding: isMobile ? "20px 20px 12px" : "52px 56px", overflowY: isMobile ? "visible" : "auto", display: "flex", flexDirection: "column", justifyContent: isMobile ? "flex-start" : "center" }}>
-                        <div style={{ color: C.peach, marginBottom: 10 }}><StageIcon stage={stage} size={isMobile ? 24 : 44} /></div>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 24 : 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: isMobile ? 10 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
-                        <div style={{ width: 32, height: 3, background: C.coral, borderRadius: 99, marginBottom: isMobile ? 12 : 28 }} />
-                        <div style={{ fontFamily: FONT, fontSize: isMobile ? 13 : 14, fontWeight: 500, color: C.peach, lineHeight: 1.8, marginBottom: isMobile ? 8 : 24, opacity: 0.8 }}>{stage.prompt}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "italic", color: C.peach, opacity: 0.4, lineHeight: 1.6, marginBottom: isMobile ? 6 : 20 }}>"{stage.scripture}" — {stage.ref}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.coral, letterSpacing: 1.5 }}>{stage.q}</div>
-                      </div>
-                      {/* Textarea — fills remaining height */}
-                      <textarea value={notes[stage.id] || ""} onChange={e => setNote(stage.id, e.target.value)} placeholder="Write your thoughts here…"
-                        style={{ width: isMobile ? "100%" : "55%", minWidth: 0, flex: isMobile ? 1 : "none", height: isMobile ? "auto" : "100%", minHeight: isMobile ? 120 : 0, fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px", border: "none", borderLeft: isMobile ? "none" : `1.5px solid rgba(255,255,255,0.15)`, borderTop: isMobile ? `1.5px solid rgba(255,255,255,0.15)` : "none", borderRadius: 0, padding: isMobile ? "16px 20px" : "52px 32px", resize: "none", outline: "none", boxSizing: "border-box", lineHeight: 1.7 }} />
-                    </div>
-                  );
+                  if (stage.id === "prayer") return <PrayerField taskGid={task.gid} />;
                   return (
                     <div style={{ padding: isMobile ? "24px 16px" : "52px 64px", maxWidth: 620, margin: "0 auto" }}>
                       <div style={{ color: C.peach, marginBottom: 12 }}><StageIcon stage={stage} size={isMobile ? 28 : 44} /></div>
