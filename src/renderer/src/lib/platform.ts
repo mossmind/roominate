@@ -5,7 +5,7 @@
  *            fetch() for Asana/AI
  */
 
-const isElectron = typeof window !== 'undefined' && !!(window as any).storage
+export const isElectron = typeof window !== 'undefined' && !!(window as any).storage
 
 // ── Web storage: IndexedDB wrapper ─────────────────────────────────────────
 // localStorage quota (~5MB) is too small for mind map nodes with embedded file dataUrls.
@@ -80,21 +80,6 @@ interface AsanaApiTask {
   completed: boolean
 }
 
-async function asanaFetch(path: string, pat: string): Promise<unknown> {
-  const res = await fetch(`https://app.asana.com/api/1.0${path}`, {
-    headers: { Authorization: `Bearer ${pat}`, Accept: 'application/json' },
-  })
-  const json = await res.json()
-  if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
-  return json
-}
-
-async function getPat(): Promise<string> {
-  const pat = await storage.get('asana_pat') as string | null
-  if (!pat) throw new Error('No Asana token set. Go to Settings and add your Asana Personal Access Token.')
-  return pat
-}
-
 // ── AI ─────────────────────────────────────────────────────────────────────
 
 async function anthropicFetch(messages: unknown[], system: string): Promise<string> {
@@ -151,21 +136,25 @@ export const ai = {
 export const asana = {
   fetchSections: async (projectGid: string): Promise<{ gid: string; name: string }[]> => {
     if (isElectron) return (window as any).asana.fetchSections(projectGid)
-    const pat = await getPat()
-    const json = await asanaFetch(`/projects/${projectGid}/sections?opt_fields=gid,name&limit=100`, pat) as any
+    const res = await fetch(`/api/asana/projects/${projectGid}/sections?opt_fields=gid,name&limit=100`)
+    const json = await res.json() as any
+    if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
+    if (json.error) throw new Error(json.error)
     return json.data ?? []
   },
 
   fetchTasks: async (sectionGid: string): Promise<AsanaApiTask[]> => {
     if (isElectron) return (window as any).asana.fetchTasks(sectionGid)
-    const pat = await getPat()
     const all: AsanaApiTask[] = []
     let offset: string | undefined
 
     do {
-      let path = `/sections/${sectionGid}/tasks?opt_fields=gid,name,due_on,notes,permalink_url,completed&limit=100`
+      let path = `/api/asana/sections/${sectionGid}/tasks?opt_fields=gid,name,due_on,notes,permalink_url,completed&limit=100`
       if (offset) path += `&offset=${encodeURIComponent(offset)}`
-      const json = await asanaFetch(path, pat) as any
+      const res = await fetch(path)
+      const json = await res.json() as any
+      if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
+      if (json.error) throw new Error(json.error)
       all.push(...(json.data ?? []))
       offset = json.next_page?.offset
     } while (offset)

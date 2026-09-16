@@ -73,6 +73,28 @@ app.post('/api/anthropic', (req, res, next) => {
   }
 });
 
+// ── Asana proxy (auth required) ─────────────────────────────────────────────
+
+app.get('/api/asana/*', (req, res, next) => {
+  if (!isAuthenticated(req)) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}, async (req, res) => {
+  const pat = process.env.ASANA_PAT;
+  if (!pat) return res.status(500).json({ error: 'ASANA_PAT not set on server' });
+  const asanaPath = req.params[0];
+  const qs = new URLSearchParams(req.query).toString();
+  const url = `https://app.asana.com/api/1.0/${asanaPath}${qs ? '?' + qs : ''}`;
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/json' },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Static files (auth required) ────────────────────────────────────────────
 
 app.use((req, res, next) => {

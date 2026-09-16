@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, Fragment } from "react";
-import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles } from './lib/platform';
+import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles, isElectron } from './lib/platform';
 import prayerVideo from './assets/Prayer Motion 1.mp4';
 import bgPhoto from './assets/bg2.png';
 import PrayerIcon from './assets/icons/prayer.svg?react';
@@ -205,8 +205,10 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
   }
 
   async function save() {
-    await storageSet("asana_pat", pat.trim());
-    await storageSet("anthropic_key", anthropicKey.trim());
+    if (isElectron) {
+      await storageSet("asana_pat", pat.trim());
+      await storageSet("anthropic_key", anthropicKey.trim());
+    }
     await storageSet("asana_section_gids", JSON.stringify(selectedGids));
     await storageSet("quick_task_section_gid", quickTaskGid);
     setSaved(true);
@@ -219,19 +221,29 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
       <div style={{ background: C.peach, border: b(3, C.brown), borderRadius: 24, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ fontFamily: FONT, fontSize: 20, fontWeight: 900, color: C.brown, marginBottom: 6 }}>Settings</div>
 
-        <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="1/…"
-            style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: b(2), borderRadius: 10, padding: "10px 14px", outline: "none", background: C.white, color: C.brown, boxSizing: "border-box" }} />
-          <button onClick={loadSections} disabled={!pat.trim() || loadingSections}
-            style={{ background: C.blue, color: C.white, border: b(2, C.brown), borderRadius: 10, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", flexShrink: 0 }}>
-            {loadingSections ? "Loading…" : "Load Sections"}
-          </button>
-        </div>
-
-        <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Anthropic API Key (for AI mind maps)</div>
-        <input type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…"
-          style={{ width: "100%", fontFamily: FONT, fontSize: 13, border: b(2), borderRadius: 10, padding: "10px 14px", outline: "none", background: C.white, color: C.brown, boxSizing: "border-box", marginBottom: 20 }} />
+        {isElectron ? (
+          <>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="1/…"
+                style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: b(2), borderRadius: 10, padding: "10px 14px", outline: "none", background: C.white, color: C.brown, boxSizing: "border-box" }} />
+              <button onClick={loadSections} disabled={!pat.trim() || loadingSections}
+                style={{ background: C.blue, color: C.white, border: b(2, C.brown), borderRadius: 10, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", flexShrink: 0 }}>
+                {loadingSections ? "Loading…" : "Load Sections"}
+              </button>
+            </div>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Anthropic API Key (for AI mind maps)</div>
+            <input type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…"
+              style={{ width: "100%", fontFamily: FONT, fontSize: 13, border: b(2), borderRadius: 10, padding: "10px 14px", outline: "none", background: C.white, color: C.brown, boxSizing: "border-box", marginBottom: 20 }} />
+          </>
+        ) : (
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            <button onClick={loadSections} disabled={loadingSections}
+              style={{ background: C.blue, color: C.white, border: b(2, C.brown), borderRadius: 10, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              {loadingSections ? "Loading…" : "Load Sections"}
+            </button>
+          </div>
+        )}
 
         <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 8 }}>
           Sections to sync ({selectedGids.length} selected)

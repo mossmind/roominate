@@ -3,3 +3,5 @@ dist/
 out/
 .DS_Store
 *.local
+*.tsbuildinfo
+electron.vite.config.*.mjs
