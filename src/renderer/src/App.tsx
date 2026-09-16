@@ -1599,6 +1599,7 @@ export default function App() {
   const [dragOverCat, setDragOverCat] = useState<CategoryKey | undefined>(undefined);
   const [showCreate, setShowCreate] = useState(false);
   const hasFetched = useRef(false);
+  const syncInFlight = useRef(false);
   const isMobile = useIsMobile();
   const [mobileTab, setMobileTab] = useState<'create' | 'tasks' | 'prayer' | null>(null);
   const [mobileCreateName, setMobileCreateName] = useState('');
@@ -1630,6 +1631,11 @@ export default function App() {
       });
     }
   }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => { syncTasks(); }, 60000);
+    return () => clearInterval(id);
+  }, [sectionGids, quickTaskSectionGid]);
 
   async function loadProgresses(tasks: Task[]) {
     const p: Record<string, number> = {};
@@ -1717,6 +1723,8 @@ export default function App() {
   }
 
   async function syncTasks(overrideGids?: string[]) {
+    if (syncInFlight.current) return;
+    syncInFlight.current = true;
     setSyncing(true); setSyncMsg(null);
     const gids = Array.isArray(overrideGids) && overrideGids.length > 0
       ? overrideGids
@@ -1736,6 +1744,7 @@ export default function App() {
       setSyncMsg("⚠ " + (e instanceof Error ? e.message.slice(0, 80) : String(e)));
     }
     syncQuickTasks();
+    syncInFlight.current = false;
     setSyncing(false); setTimeout(() => setSyncMsg(null), 5000);
   }
 
