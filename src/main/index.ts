@@ -118,20 +118,22 @@ app.whenReady().then(() => {
 Project: "${taskName}"
 Brief: "${brief || '(no brief provided)'}"
 
-Create 9-13 nodes with this exact structure:
+Create 11-16 nodes with this exact structure:
 
 1. ONE central node (nodeType: "central") — the project name, placed at the canvas center (~340, 230), width 200.
 2. 2-3 "vibe" nodes — the feeling/mood this project must have.
 3. 1-2 "person" nodes — who it's for or who matters.
-4. 3-4 "thought" nodes — questions, constraints, ideas.
+4. 2-3 "visual" nodes — concrete visual/creative cues pulled from the brief: colors, imagery, textures, material or style references — anything that hints at what the graphics should actually look like. Leave this category out if the brief truly has no visual cues to draw on.
+5. 3-4 "thought" nodes — questions, constraints, ideas.
 
 Linking rules (STRICT):
 - Exactly ONE vibe node links to the central node. All other vibe nodes link to that first vibe node.
 - Exactly ONE person node links to the central node. All other person nodes link to that first person node.
+- Exactly ONE visual node links to the central node. All other visual nodes link to that first visual node.
 - Exactly ONE thought node links to the central node. All other thought nodes link to that first thought node.
 - No node links directly to central except the first of each category.
 
-Colors: central="#657946", vibe="#8A9E6A", person="#C4956A", thought="#5B7FA8"
+Colors: central="#657946", vibe="#8A9E6A", person="#C4956A", visual="#8B7BA8", thought="#5B7FA8"
 Node text = max 6 words. Canvas 680×460. Spread each category cluster away from center.
 
 Return ONLY valid JSON, no markdown:

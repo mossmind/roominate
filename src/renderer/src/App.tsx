@@ -325,7 +325,7 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
 }
 
 // ── Mind Map ──────────────────────────────────────────────────────────────
-type MindNodeType = 'central' | 'vibe' | 'person' | 'nextstep' | 'thought'
+type MindNodeType = 'central' | 'vibe' | 'person' | 'visual' | 'nextstep' | 'thought'
 interface MindNode { id: string; type: 'text' | 'image'; nodeType?: MindNodeType; icon?: string; filePath?: string; fileName?: string; fileExt?: string; x: number; y: number; w: number; h?: number; text: string; url: string; color?: string }
 
 const ICON_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
@@ -340,6 +340,7 @@ const NODE_TYPE_STYLES: Record<MindNodeType, { bg: string; label: string; prefix
   central:  { bg: '#657946', label: '',          prefix: ''  },
   vibe:     { bg: '#8A9E6A', label: 'Vibe',      prefix: '✦' },
   person:   { bg: '#C4956A', label: 'Person',    prefix: '◉' },
+  visual:   { bg: '#8B7BA8', label: 'Visual',    prefix: '▢' },
   nextstep: { bg: '#B85C4A', label: 'Next Step', prefix: '→' },
   thought:  { bg: '#5B7FA8', label: 'Thought',   prefix: '·' },
 }
@@ -446,7 +447,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       if (!result || !Array.isArray(result.nodes) || !Array.isArray(result.edges)) {
         throw new Error('Unexpected response shape from AI');
       }
-      const VALID_NODE_TYPES = new Set<string>(['central', 'vibe', 'person', 'nextstep', 'thought']);
+      const VALID_NODE_TYPES = new Set<string>(['central', 'vibe', 'person', 'visual', 'nextstep', 'thought']);
       let n = (result.nodes as MindNode[]).map(nd => {
         const raw = (nd.nodeType as string | undefined)?.toLowerCase().replace(/[_\s-]/g, '') ?? '';
         const nodeType = VALID_NODE_TYPES.has(raw) ? raw as MindNodeType : undefined;
@@ -610,7 +611,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             </div>
           ) : (
             <div style={{ padding: '10px 10px 8px' }}>
-              <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder={node.nodeType === 'vibe' ? 'describe the feeling…' : node.nodeType === 'person' ? 'who is this for…' : node.nodeType === 'nextstep' ? 'the one next move…' : 'type here…'}
+              <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder={node.nodeType === 'vibe' ? 'describe the feeling…' : node.nodeType === 'person' ? 'who is this for…' : node.nodeType === 'visual' ? 'color, imagery, texture…' : node.nodeType === 'nextstep' ? 'the one next move…' : 'type here…'}
                 onMouseDown={e => e.stopPropagation()}
                 style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: isCentral ? 36 : node.nodeType === 'nextstep' ? 44 : 52, fontFamily: FONT, fontSize: isCentral ? 16 : node.nodeType === 'nextstep' ? 14 : 12, fontWeight: isCentral ? 700 : node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: C.white, resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: isCentral ? 1 : 0.9, padding: 0, textAlign: isCentral ? 'center' : 'left' }} />
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
@@ -655,7 +656,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
     <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: C.mid, flexShrink: 0 }}>
       <div style={{ padding: '8px 12px', display: 'flex', gap: 6, alignItems: 'center' }}>
         {/* Node type chips */}
-        {(['vibe', 'person', 'nextstep', 'thought'] as MindNodeType[]).map(nt => {
+        {(['vibe', 'person', 'visual', 'nextstep', 'thought'] as MindNodeType[]).map(nt => {
           const s = NODE_TYPE_STYLES[nt]
           return (
             <button key={nt} onClick={() => addTextNode(nt)}
