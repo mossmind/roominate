@@ -80,6 +80,13 @@ interface AsanaApiTask {
   completed: boolean
 }
 
+export interface AsanaComment {
+  gid: string
+  text: string
+  created_at: string
+  author: string | null
+}
+
 // ── AI ─────────────────────────────────────────────────────────────────────
 
 async function anthropicFetch(messages: unknown[], system: string): Promise<string> {
@@ -160,5 +167,16 @@ export const asana = {
     } while (offset)
 
     return all
+  },
+
+  fetchComments: async (taskGid: string): Promise<AsanaComment[]> => {
+    if (isElectron) return (window as any).asana.fetchComments(taskGid)
+    const res = await fetch(`/api/asana/tasks/${taskGid}/stories?opt_fields=text,created_at,type,created_by.name&limit=100`)
+    const json = await res.json() as any
+    if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
+    if (json.error) throw new Error(json.error)
+    return (json.data ?? [])
+      .filter((s: any) => s.type === 'comment' && s.text)
+      .map((s: any) => ({ gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }))
   },
 }

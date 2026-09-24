@@ -108,6 +108,35 @@ app.whenReady().then(() => {
     return all
   })
 
+  // ── Asana: comments on a task ────────────────────────────────────────────
+  ipcMain.handle('asana:fetchComments', async (_, taskGid: string) => {
+    const pat = store.get('asana_pat') as string | undefined
+    if (!pat) throw new Error('No Asana token set.')
+    return new Promise((resolve, reject) => {
+      const url = `https://app.asana.com/api/1.0/tasks/${taskGid}/stories?opt_fields=text,created_at,type,created_by.name&limit=100`
+      const req = net.request({ method: 'GET', url })
+      req.setHeader('Authorization', `Bearer ${pat}`)
+      req.setHeader('Accept', 'application/json')
+      let data = ''
+      req.on('response', (res) => {
+        res.on('data', (chunk) => (data += chunk.toString()))
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data)
+            if (json.errors) reject(new Error(json.errors[0]?.message || 'Asana API error'))
+            else resolve(
+              (json.data ?? [])
+                .filter((s: any) => s.type === 'comment' && s.text)
+                .map((s: any) => ({ gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }))
+            )
+          } catch { reject(new Error('Invalid response from Asana')) }
+        })
+      })
+      req.on('error', reject)
+      req.end()
+    })
+  })
+
   // ── Anthropic: generate mind map ─────────────────────────────────────────
   ipcMain.handle('anthropic:generate', async (_, { brief, taskName }: { brief: string; taskName: string }) => {
     const apiKey = store.get('anthropic_key') as string | undefined

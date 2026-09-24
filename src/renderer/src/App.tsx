@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, Fragment } from "react";
-import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles, isElectron } from './lib/platform';
+import { useState, useEffect, useRef } from "react";
+import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles, isElectron, type AsanaComment } from './lib/platform';
 import prayerVideo from './assets/Prayer Motion 1.mp4';
 import bgPhoto from './assets/bg2.png';
 import PrayerIcon from './assets/icons/prayer.svg?react';
@@ -35,6 +35,7 @@ declare global {
     asana: {
       fetchTasks: (sectionGid: string) => Promise<AsanaApiTask[]>
       fetchSections: (projectGid: string) => Promise<{ gid: string; name: string }[]>
+      fetchComments: (taskGid: string) => Promise<AsanaComment[]>
     }
   }
 }
@@ -110,44 +111,6 @@ const CATEGORIES = {
 } as const;
 
 type CategoryKey = keyof typeof CATEGORIES | null;
-
-const STAGES = [
-  { id: "prayer",     step: 1, emoji: "🙏", label: "Prayer",     sub: "Open the Door",  color: C.dark,   textColor: C.light, locked: false, prompt: "Before anything else — invite God in. This isn't the backup plan, it's the first move.", scripture: "Behold, I stand at the door and knock.", ref: "Rev 3:20", q: "What are you asking God to unveil through this project?", reward: "Door Unlocked" },
-  { id: "revelation", step: 2, emoji: "✨", label: "Revelation", sub: "Mood Board",     color: C.main,   textColor: C.light, locked: true,  prompt: "Vision before execution. Build your mood board — collect images, colors, textures that speak the truth this project must say.", scripture: "The revelation of Jesus Christ, which God gave him to show his servants.", ref: "Rev 1:1", q: "What does this project look, feel, and sound like?", reward: "Vision Captured" },
-  { id: "action",     step: 3, emoji: "🚪", label: "Action",     sub: "Walk Through",  color: C.dark,   textColor: C.light, locked: true,  prompt: "God opens the door. You walk through. First brushstroke is obedience. Starting is worship.", scripture: "I have set before you an open door, which no one is able to shut.", ref: "Rev 3:8", q: "What is the single next move? Do it now — that step is yours.", reward: "Action Taken" },
-];
-
-// ── Timed Session ──────────────────────────────────────────────────────────
-// Total session = actual time from startedAt until end of due date.
-// Distributed as Prayer 10% / Revelation 30% / Action 60%
-function getSessionDurations(startedAt: number, due_on: string | null): [number, number, number] {
-  const dueTs = due_on ? new Date(due_on + 'T23:59:59').getTime() : null;
-  const total = dueTs ? Math.max(dueTs - startedAt, 60) : 7 * 86400 * 1000; // fallback: 7 days
-  return [Math.round(total / 1000 * 0.1), Math.round(total / 1000 * 0.3), Math.round(total / 1000 * 0.6)];
-}
-
-function daysLabel(secs: number) {
-  const s = Math.max(secs, 0);
-  const d = s / 86400;
-  if (d >= 1) return `${Math.round(d)}d`;
-  const h = s / 3600;
-  if (h >= 1) return `${Math.round(h)}h`;
-  return `${Math.round(s / 60)}m`;
-}
-
-interface Session { startedAt: number; pausedAt?: number }
-
-function getSessionState(session: Session, due_on: string | null, now = Date.now()): { stageIndex: number; remainingSecs: number; done: boolean; paused: boolean } {
-  const effectiveNow = session.pausedAt ?? now;
-  const durations = getSessionDurations(session.startedAt, due_on);
-  const elapsed = Math.floor((effectiveNow - session.startedAt) / 1000);
-  let acc = 0;
-  for (let i = 0; i < durations.length; i++) {
-    acc += durations[i];
-    if (elapsed < acc) return { stageIndex: i, remainingSecs: acc - elapsed, done: false, paused: !!session.pausedAt };
-  }
-  return { stageIndex: durations.length - 1, remainingSecs: 0, done: true, paused: !!session.pausedAt };
-}
 
 interface Task {
   gid: string
@@ -816,248 +779,6 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   );
 }
 
-// ── Prayer Field ───────────────────────────────────────────────────────────
-interface Prayer {
-  id: string; projectId: string; x: number; y: number
-  title: string; body: string; createdAt: number; isMarked: boolean; revisits: number
-}
-
-function PrayerField({ taskGid }: { taskGid: string }) {
-  const [prayers, setPrayers] = useState<Prayer[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [composing, setComposing] = useState<{ px: number; py: number; pct: { x: number; y: number } } | null>(null)
-  const [composerTitle, setComposerTitle] = useState('')
-  const [composerBody, setComposerBody] = useState('')
-  const [openPrayer, setOpenPrayer] = useState<Prayer | null>(null)
-  const canvasRef = useRef<HTMLDivElement>(null)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const longPressId = useRef<string | null>(null)
-  const didLongPress = useRef(false)
-  const PKEY = `prayers_${taskGid}`
-
-  useEffect(() => {
-    storageGet(PKEY).then(data => {
-      if (data) { try { setPrayers(JSON.parse(data as string)) } catch {} }
-      setLoaded(true)
-    })
-  }, [taskGid])
-
-  function save(ps: Prayer[]) { setPrayers(ps); storageSet(PKEY, JSON.stringify(ps)).catch(() => {}) }
-
-  function handleCanvasClick(e: React.MouseEvent<HTMLDivElement>) {
-    if ((e.target as HTMLElement).closest('[data-prayer]')) return
-    if (!canvasRef.current) return
-    const rect = canvasRef.current.getBoundingClientRect()
-    const rawX = e.clientX - rect.left
-    const rawY = e.clientY - rect.top
-    const jitter = () => (Math.random() - 0.5) * 30
-    setComposing({ px: Math.max(10, Math.min(rawX + jitter(), rect.width - 220)), py: Math.max(10, Math.min(rawY + jitter(), rect.height - 180)), pct: { x: rawX / rect.width, y: rawY / rect.height } })
-    setComposerTitle(''); setComposerBody('')
-  }
-
-  function submitComposer() {
-    if (!composing || !composerTitle.trim()) return
-    save([...prayers, { id: Date.now().toString(), projectId: taskGid, x: composing.pct.x, y: composing.pct.y, title: composerTitle.trim(), body: composerBody.trim(), createdAt: Date.now(), isMarked: false, revisits: 0 }])
-    setComposing(null)
-  }
-
-  function openView(prayer: Prayer) {
-    const updated = prayers.map(p => p.id === prayer.id ? { ...p, revisits: p.revisits + 1 } : p)
-    save(updated)
-    setOpenPrayer(updated.find(p => p.id === prayer.id) ?? prayer)
-  }
-
-  function toggleMark(id: string) { save(prayers.map(p => p.id === id ? { ...p, isMarked: !p.isMarked } : p)) }
-
-  function onPMD(id: string) {
-    didLongPress.current = false
-    longPressId.current = id
-    longPressTimer.current = setTimeout(() => { didLongPress.current = true; toggleMark(id) }, 500)
-  }
-  function onPMU(e: React.MouseEvent, prayer: Prayer) {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current)
-    if (!didLongPress.current) { e.stopPropagation(); openView(prayer) }
-  }
-
-  const PRAYER_ICONS = [PrayBird1, PrayBird2, PrayBird3, PrayStar1, PrayStar2, PrayStar3, PraySwirl]
-  function prayerIcon(p: Prayer) { const n = parseInt(p.id, 10) || p.id.charCodeAt(0); return PRAYER_ICONS[n % PRAYER_ICONS.length] }
-  function prayerOpacity(p: Prayer) { return Math.max(0.45, 1 - ((Date.now() - p.createdAt) / (1000 * 60 * 60 * 24 * 180)) * 0.55) }
-  function prayerIconSize(p: Prayer) { return 32 + Math.min(p.revisits * 1.5, 10) }
-  function isOld(p: Prayer) { return (Date.now() - p.createdAt) / 86400000 > 30 && p.revisits <= 1 }
-
-  return (
-    <div ref={canvasRef} onClick={handleCanvasClick} className="board-canvas"
-      style={{ position: 'relative', width: '100%', height: '100%', minHeight: 400, overflow: 'hidden', cursor: 'crosshair' }}>
-
-      {/* Prayer nodes */}
-      {loaded && prayers.map(prayer => {
-        const old = isOld(prayer)
-        const Icon = prayerIcon(prayer)
-        const iconSize = prayerIconSize(prayer)
-        const opacity = prayerOpacity(prayer)
-        const textColor = prayer.isMarked ? '#95470F' : T.inkMuted
-        return old
-          ? <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
-              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', width: 6, height: 6, borderRadius: '50%', background: T.inkMuted, opacity, cursor: 'pointer' }} />
-          : <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
-              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', opacity, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, userSelect: 'none', maxWidth: 90 }}>
-              <Icon width={iconSize} height={iconSize} style={{ color: prayer.isMarked ? '#95470F' : T.ink, flexShrink: 0 }} />
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: textColor, lineHeight: 1.3, textAlign: 'center', wordBreak: 'break-word' }}>{prayer.title}</div>
-            </div>
-      })}
-
-      {/* Empty state */}
-      {loaded && prayers.length === 0 && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: 'italic', color: T.inkMuted, textAlign: 'center' }}>tap anywhere to place a prayer</div>
-        </div>
-      )}
-
-      {/* Composer */}
-      {composing && (
-        <div data-prayer="true" onClick={e => e.stopPropagation()}
-          style={{ position: 'absolute', left: composing.px, top: composing.py, width: 210, background: T.surface, border: tb(1.5, T.border), borderRadius: T.radiusSm, padding: '14px 14px 12px', zIndex: 10, boxShadow: '0 4px 16px rgba(34,32,29,0.15)' }}>
-          <input autoFocus value={composerTitle} onChange={e => setComposerTitle(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') submitComposer(); if (e.key === 'Escape') setComposing(null) }}
-            placeholder="prayer title…"
-            style={{ width: '100%', fontFamily: FONT_DISPLAY, fontSize: 13, fontStyle: 'italic', color: T.ink, background: 'transparent', border: 'none', borderBottom: `1px solid ${T.borderMuted}`, outline: 'none', paddingBottom: 6, marginBottom: 10, boxSizing: 'border-box' }} />
-          <textarea value={composerBody} onChange={e => setComposerBody(e.target.value)} placeholder="write more… (optional)" rows={3}
-            style={{ width: '100%', fontFamily: FONT, fontSize: 11, color: T.inkMuted, background: 'transparent', border: 'none', outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.6, marginBottom: 10 }} />
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button onClick={() => setComposing(null)} style={{ background: 'transparent', border: 'none', color: T.inkMuted, fontFamily: FONT, fontSize: 10, cursor: 'pointer', padding: 0 }}>cancel</button>
-            <button onClick={submitComposer} style={{ background: T.ink, border: 'none', borderRadius: T.radiusSm, color: T.surface, fontFamily: FONT, fontSize: 10, fontWeight: 800, padding: '4px 12px', cursor: 'pointer' }}>place</button>
-          </div>
-        </div>
-      )}
-
-      {/* Prayer detail overlay */}
-      {openPrayer && (
-        <div data-prayer="true" onClick={() => setOpenPrayer(null)}
-          style={{ position: 'absolute', inset: 0, background: 'rgba(34,32,29,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: T.surface, border: tb(2), borderRadius: T.radius, padding: '32px 36px', maxWidth: 400, width: '88%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontStyle: 'italic', fontWeight: 500, color: openPrayer.isMarked ? '#95470F' : T.ink, marginBottom: 14, lineHeight: 1.35 }}>{openPrayer.title}</div>
-            {openPrayer.body && <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.85, marginBottom: 20, whiteSpace: 'pre-wrap' }}>{openPrayer.body}</div>}
-            <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, marginBottom: 20 }}>{new Date(openPrayer.createdAt).toLocaleDateString()} · visited {openPrayer.revisits}×</div>
-            <button onClick={() => setOpenPrayer(null)} style={{ background: 'transparent', border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, color: T.inkMuted, fontFamily: FONT, fontSize: 10, fontWeight: 700, padding: '6px 16px', cursor: 'pointer' }}>close</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Stage Icon helper ──────────────────────────────────────────────────────
-function StageIcon({ stage, size }: { stage: typeof STAGES[number]; size: number }) {
-  if (stage.id === "prayer") return <PrayerIcon width={size} height={size} style={{ display: "block" }} />;
-  if (stage.id === "revelation") return <Sqig1Icon width={size} height={size} style={{ display: "block" }} />;
-  return <span style={{ fontSize: size, lineHeight: 1 }}>{stage.emoji}</span>;
-}
-
-// ── Stage Panel ────────────────────────────────────────────────────────────
-function StagePanel({ stage, isActive, isUnlocked, isDone, note, onNote, onComplete, taskGid, taskName = '', taskNotes = '' }: {
-  stage: typeof STAGES[number]; isActive: boolean; isUnlocked: boolean; isDone: boolean;
-  note: string; onNote: (v: string) => void; onComplete: () => void; taskGid: string;
-  taskName?: string; taskNotes?: string;
-}) {
-  const locked = !isUnlocked;
-  return (
-    <div style={{ border: b(2.5, isActive ? C.brown : "rgba(36,35,41,0.2)"), borderRadius: 18, overflow: "hidden", opacity: locked ? 0.45 : 1, transition: "opacity 0.4s, transform 0.4s", transform: isActive ? "scale(1)" : "scale(0.98)" }}>
-      <div style={{ background: locked ? "rgba(36,35,41,0.3)" : stage.color, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{ fontSize: 32, lineHeight: 1 }}>{locked ? "🔒" : <StageIcon stage={stage} size={32} />}</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: locked ? "#999" : stage.textColor, opacity: 0.7, textTransform: "none", letterSpacing: 0.5 }}>Stage {stage.step} of {STAGES.length}</div>
-            {isDone && <div style={{ background: "rgba(255,255,255,0.3)", borderRadius: 20, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: stage.textColor }}>✓ {stage.reward}</div>}
-            {locked && <div style={{ background: "rgba(0,0,0,0.1)", borderRadius: 20, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "#666" }}>LOCKED</div>}
-          </div>
-          <div style={{ fontFamily: FONT, fontSize: 18, fontWeight: 900, color: locked ? "#999" : stage.textColor, lineHeight: 1.1, marginTop: 2 }}>{stage.label} <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.7 }}>— {stage.sub}</span></div>
-        </div>
-      </div>
-      {!locked && (
-        <>
-          <div style={{ background: "rgba(255,255,255,0.6)", padding: "14px 20px", borderBottom: b(1.5, "rgba(36,35,41,0.1)") }}>
-            <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: C.brown, lineHeight: 1.7, marginBottom: 10 }}>{stage.prompt}</div>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "italic", color: C.brown, opacity: 0.6, lineHeight: 1.5 }}>"{stage.scripture}" — {stage.ref}</div>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.85)", padding: "14px 20px" }}>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>{stage.q}</div>
-            <textarea value={note || ""} onChange={e => onNote(e.target.value)} placeholder="Write your thoughts here…" disabled={isDone}
-              style={{ width: "100%", minHeight: 80, fontFamily: FONT, fontSize: 13, color: C.brown, background: isDone ? "rgba(0,0,0,0.04)" : C.white, border: b(2, "rgba(36,35,41,0.25)"), borderRadius: 10, padding: "10px 12px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.7 }} />
-            {stage.id === "revelation" && <MindMap taskGid={taskGid} taskName={taskName} taskNotes={taskNotes} />}
-            {!isDone && isActive && (
-              <button onClick={onComplete} style={{ marginTop: 12, width: "100%", background: stage.color, color: stage.textColor, border: b(2.5, C.brown), borderRadius: 12, padding: "14px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer", letterSpacing: 0.5 }}>
-                {stage.step === STAGES.length ? "🏆 Complete Action" : `Complete ${stage.label} → Unlock ${STAGES[stage.step].label} →`}
-              </button>
-            )}
-            {isDone && <div style={{ marginTop: 10, textAlign: "center", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.green, opacity: 0.8 }}>✓ {stage.reward}</div>}
-          </div>
-        </>
-      )}
-      {locked && (
-        <div style={{ background: "rgba(200,200,200,0.3)", padding: "20px", textAlign: "center" }}>
-          <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: "#888" }}>Complete the previous stage to unlock</div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Factory Detail ─────────────────────────────────────────────────────────
-function FactoryDetail({ task, category, onCategoryChange, onBack }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void }) {
-  const isMobile = useIsMobile();
-  const uc = urgColorLight(task.due_on); const ul = urgLabel(task.due_on);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ background: T.surface, borderBottom: tb(2), padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap" }}>
-        <button onClick={onBack} style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 16 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
-            {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.outside }} />}
-            {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.inside }} />}
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
-            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
-            {ul && <div style={{ color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-          <CategoryToggle value={category} onChange={onCategoryChange} size="small" tone="onLight" />
-          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
-        </div>
-      </div>
-      <div className="board-canvas" style={{ flex: 1, overflowY: "auto", padding: 40 }}>
-        <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          {category === "creative" ? (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-                <InsideIcon width={36} height={36} style={{ color: T.inside }} />
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: T.ink }}>Inside Task</div>
-              </div>
-              {task.notes
-                ? <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{task.notes}</div>
-                : <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic" }}>No description in Asana yet.</div>
-              }
-              <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ marginTop: 28, background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "12px 28px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Open in Asana ↗</button>
-            </>
-          ) : (
-            <>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><UncatIcon width={64} height={64} style={{ color: T.uncat }} /></div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600, color: T.ink, marginBottom: 10, textAlign: "center" }}>Uncategorized</div>
-              <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.inkMuted, lineHeight: 1.7, marginBottom: 24, textAlign: "center" }}>
-                Mark this task as Inside to view its description, or Outside to run it through the creative process.
-              </div>
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "14px 32px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer" }}>Open in Asana ↗</button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Morning Prayer Lock ─────────────────────────────────────────────────────
 const FALLBACK_PRAYER = { prompt: "Commit your work to the LORD, and your plans will be established.", scripture: "Commit your work to the LORD, and your plans will be established.", ref: "Proverbs 16:3" };
 
@@ -1178,268 +899,94 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
   );
 }
 
-// ── Project Detail ─────────────────────────────────────────────────────────
-function ProjectDetail({ task, category, onCategoryChange, onBack, session, onStartSession, onTogglePause, onReset }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void; session?: Session; onStartSession?: () => void; onTogglePause?: () => void; onReset?: () => void }) {
+// ── Task Detail ───────────────────────────────────────────────────────────
+// Every task opens here — just a Brief (Asana description + comments) and a Mind Map.
+function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void }) {
   const isMobile = useIsMobile();
-  const KEY = "workflow_" + task.gid;
-  const MORNING_KEY = "morning_prayer_" + task.gid;
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [done, setDone] = useState<Record<string, boolean>>({});
-  const [loaded, setLoaded] = useState(false);
-  const [celebrate, setCelebrate] = useState<typeof STAGES[number] | null>(null);
-  const [showMorningLock, setShowMorningLock] = useState(false);
-  const [viewingStageIdx, setViewingStageIdx] = useState(0);
-  const [showDescription, setShowDescription] = useState(false);
-  const initialViewSet = useRef(false);
-  const [sessionNow, setSessionNow] = useState(Date.now());
-  useEffect(() => {
-    if (!session || session.pausedAt) return;
-    const id = setInterval(() => setSessionNow(Date.now()), 60000);
-    return () => clearInterval(id);
-  }, [session]);
-  const sessionState = session ? getSessionState(session, task.due_on, sessionNow) : null;
+  const [tab, setTab] = useState<"brief" | "mindmap">("brief");
+  const [comments, setComments] = useState<AsanaComment[] | null>(null);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const uc = urgColorLight(task.due_on); const ul = urgLabel(task.due_on);
 
   useEffect(() => {
-    initialViewSet.current = false;
-    storageGet(KEY).then(async r => {
-      let loadedDone: Record<string, boolean> = {};
-      if (r) { try { const d = JSON.parse(r); setNotes(d.notes || {}); loadedDone = d.done || {}; setDone(loadedDone); } catch (_) {} }
-      setLoaded(true);
-      if (!initialViewSet.current) {
-        initialViewSet.current = true;
-        const activeIdx = STAGES.findIndex((s, i) => { const pd = i === 0 || !!loadedDone[STAGES[i - 1].id]; return pd && !loadedDone[s.id]; });
-        setViewingStageIdx(activeIdx >= 0 ? activeIdx : STAGES.length);
-      }
-      const today = new Date().toISOString().split("T")[0];
-      try { const last = await storageGet(MORNING_KEY); if (last !== today) setShowMorningLock(true); } catch (_) { setShowMorningLock(true); }
-    }).catch(() => setLoaded(true));
+    setComments(null); setCommentsError(null);
+    platformAsana.fetchComments(task.gid).then(setComments).catch(e => setCommentsError(e instanceof Error ? e.message : String(e)));
   }, [task.gid]);
 
-  async function save(n: Record<string, string>, d: Record<string, boolean>) { try { await storageSet(KEY, JSON.stringify({ notes: n, done: d })); } catch (_) {} }
-  function setNote(id: string, val: string) { const n = { ...notes, [id]: val }; setNotes(n); save(n, done); }
-  function handleReset() { setNotes({}); setDone({}); save({}, {}); onReset?.(); }
-  function completeStage(id: string) {
-    const d = { ...done, [id]: true }; setDone(d); save(notes, d);
-    const stage = STAGES.find(s => s.id === id)!;
-    setCelebrate(stage);
-    setTimeout(() => {
-      setCelebrate(null);
-      setViewingStageIdx(stage.step < STAGES.length ? stage.step : STAGES.length);
-    }, 2000);
-  }
-
-  async function handleMorningUnlock(prayerNote: string) {
-    const today = new Date().toISOString().split("T")[0];
-    await storageSet(MORNING_KEY, today);
-    if (prayerNote.trim() && !done["prayer"]) {
-      setNote("prayer", prayerNote.trim());
-    }
-    setShowMorningLock(false);
-  }
-
-  const doneCount = STAGES.filter(s => done[s.id]).length;
-  const activeStage = loaded ? STAGES.find((s, i) => { const prevDone = i === 0 || !!done[STAGES[i - 1].id]; return prevDone && !done[s.id]; }) : undefined;
-  const uc = urgColorLight(task.due_on); const ul = urgLabel(task.due_on);
-  const catCfg = category ? CATEGORIES[category] : null;
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
-      {showMorningLock && <MorningPrayerLock task={task} onUnlock={handleMorningUnlock} />}
-      {celebrate && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ background: celebrate.color, border: tb(3), borderRadius: T.radius, padding: "32px 48px", textAlign: "center", animation: "popIn 0.4s cubic-bezier(.34,1.56,.64,1)" }}>
-            <div style={{ fontSize: 56 }}><StageIcon stage={celebrate} size={56} /></div>
-            <div style={{ fontFamily: FONT, fontSize: 22, fontWeight: 900, color: celebrate.textColor, marginTop: 8 }}>{celebrate.reward}!</div>
-            {celebrate.step < STAGES.length && <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: celebrate.textColor, opacity: 0.8, marginTop: 4 }}>{STAGES[celebrate.step].label} unlocked →</div>}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div style={{ background: T.surface, borderBottom: tb(2), padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap" }}>
+        <button onClick={onBack} style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
+            {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.outside }} />}
+            {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.inside }} />}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
+            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
+            {ul && <div style={{ color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
           </div>
         </div>
-      )}
-      <div style={{ height: 4, background: catCfg ? catCfg.color : T.borderMuted, flexShrink: 0 }} />
-      <div style={{ background: T.surface, borderBottom: tb(2), padding: isMobile ? "8px 12px" : "14px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: isMobile ? 6 : 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 16 }}>
-          <button onClick={onBack} style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ fontFamily: FONT, fontSize: isMobile ? 14 : 18, fontWeight: 900, color: T.ink, whiteSpace: isMobile ? "normal" : "nowrap", overflow: isMobile ? "visible" : "hidden", textOverflow: isMobile ? "unset" : "ellipsis" }}>{task.name}</div>
-              {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.outside }} />}
-              {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.inside }} />}
-            </div>
-            {!isMobile && <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
-              {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
-              {ul && <div style={{ color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
-            </div>}
-          </div>
-          {!isMobile && <>
-            <button onClick={() => { if (window.confirm("Reset the creative process? All notes and progress will be cleared.")) handleReset(); }} title="Reset all progress" style={{ background: T.canvas, color: T.inkMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>↺ Reset</button>
-            <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>Asana ↗</button>
-          </>}
-          {isMobile && <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-            <button onClick={() => { if (window.confirm("Reset progress?")) handleReset(); }} title="Reset progress" style={{ background: T.canvas, color: T.inkMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↺</button>
-            {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} title="Open in Asana" style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↗</button>}
-          </div>}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+          <CategoryToggle value={category} onChange={onCategoryChange} size="small" tone="onLight" />
+          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
         </div>
       </div>
-      {/* Timed Session Banner */}
-      <div style={{ background: T.surfaceMuted, borderBottom: tb(1.5, T.borderMuted), padding: isMobile ? "8px 12px" : "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 8, minHeight: 44 }}>
-        {sessionState ? (
-          <>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <div style={{ color: T.ink, display: "flex", alignItems: "center", flexShrink: 0 }}>
-                <StageIcon stage={STAGES[sessionState.stageIndex]} size={isMobile ? 16 : 22} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                {!isMobile && <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5, marginBottom: 1 }}>
-                  {sessionState.done ? "Session Complete" : `Stage ${sessionState.stageIndex + 1} of ${STAGES.length} — ${sessionState.paused ? "Paused" : "Active"}`}
-                </div>}
-                <div style={{ fontFamily: FONT, fontSize: isMobile ? 12 : 14, fontWeight: 900, color: T.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {sessionState.done ? "All stages complete" : STAGES[sessionState.stageIndex].label}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              {!sessionState.done && !isMobile && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                  <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5 }}>next stage in</div>
-                  <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 900, color: sessionState.paused ? T.inkMuted : T.ink, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{daysLabel(sessionState.remainingSecs)}</div>
-                </div>
-              )}
-              {!sessionState.done && isMobile && (
-                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 900, color: sessionState.paused ? T.inkMuted : T.ink, fontVariantNumeric: "tabular-nums" }}>{daysLabel(sessionState.remainingSecs)}</div>
-              )}
-              {sessionState.done
-                ? <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.inside }}>✓ Done</div>
-                : <button onClick={onTogglePause} title={sessionState.paused ? "Resume session" : "Pause session"} style={{ background: sessionState.paused ? T.inside : T.surface, color: sessionState.paused ? T.surface : T.ink, border: tb(1.5, sessionState.paused ? T.inside : T.borderMuted), borderRadius: T.radiusSm, padding: isMobile ? "5px 10px" : "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
-                    {sessionState.paused ? "▶" : "⏸"}{!isMobile && (sessionState.paused ? " Resume" : " Pause")}
-                  </button>
-              }
-            </div>
-          </>
-        ) : (
-          <>
-            {!isMobile && (() => { const [p, r, a] = getSessionDurations(Date.now(), task.due_on); return (
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted }}>
-                {task.due_on ? `Timed session: Prayer (${daysLabel(p)}) → Revelation (${daysLabel(r)}) → Action (${daysLabel(a)})` : 'No due date — set one in Asana to scale the session'}
-              </div>
-            ); })()}
-            {isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted }}>Timed session</div>}
-            {onStartSession && (
-              <button onClick={onStartSession} style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: isMobile ? "6px 16px" : "8px 22px", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer", flexShrink: 0, letterSpacing: 0.3 }}>
-                ▶ Start
-              </button>
-            )}
-          </>
-        )}
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        {/* Step indicators — always visible */}
-        <div style={{ background: T.surface, borderBottom: tb(1.5, T.borderMuted), padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          {STAGES.slice(0, 2).map((s, i) => {
-            const isViewing = !showDescription && i === viewingStageIdx;
-            return (
-              <Fragment key={s.id}>
-                {i > 0 && <div style={{ width: 36, height: 2, background: T.borderMuted }} />}
-                <button onClick={() => { setShowDescription(false); setViewingStageIdx(i); }} title={s.label} aria-label={s.label}
-                  style={{ padding: 6, background: isViewing ? T.surfaceMuted : "transparent", border: "none", borderRadius: T.radiusSm, cursor: "pointer", opacity: isViewing ? 1 : 0.4, transition: "opacity 0.2s, background 0.2s", display: "flex", alignItems: "center", justifyContent: "center", color: T.ink }}>
-                  <StageIcon stage={s} size={28} />
-                </button>
-              </Fragment>
-            );
-          })}
-          <div style={{ width: 36, height: 2, background: T.borderMuted }} />
-          <button onClick={() => setShowDescription(v => !v)} title="View project brief" aria-pressed={showDescription}
-            style={{ padding: "4px 10px", background: showDescription ? T.surfaceMuted : "transparent", border: "none", borderRadius: 6, cursor: "pointer", opacity: showDescription ? 1 : 0.4, transition: "opacity 0.2s", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.ink, letterSpacing: 0.3 }}>
-            Brief
-          </button>
-        </div>
 
-        {/* Content area */}
-        {showDescription ? (
-          <div className="board-canvas" style={{ flex: 1, overflowY: "auto" }}>
-            <div style={{ padding: isMobile ? "24px 16px" : "52px 64px", maxWidth: 620, margin: "0 auto" }}>
-              <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 900, color: T.ink, marginBottom: 32, lineHeight: 1.3 }}>{task.name}</div>
-              <div style={{ width: 40, height: 3, background: T.inside, borderRadius: 99, marginBottom: 32 }} />
-              {task.notes ? (
-                <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 400, color: T.ink, lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{task.notes}</div>
-              ) : (
-                <div style={{ fontFamily: FONT, fontSize: 14, color: T.inkMuted }}>No description added in Asana yet.</div>
-              )}
-              {task.due_on && (
-                <div style={{ marginTop: 40, display: "inline-flex", alignItems: "center", gap: 10, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 18px" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5 }}>Due</span>
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: urgColorLight(task.due_on) }}>{task.due_on}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Revelation = fullscreen mood board */}
-            {loaded && viewingStageIdx === 1 ? (
-              <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen />
-            ) : (
-              <div className="board-canvas" style={{ flex: 1, overflowY: isMobile && !showDescription && viewingStageIdx === 0 ? "hidden" : "auto", display: "flex", flexDirection: "column" }}>
-                {!loaded ? (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: FONT, fontSize: 14, color: T.inkMuted }}>Loading…</div>
-                ) : viewingStageIdx >= STAGES.length ? (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: 48, textAlign: "center" }}>
-                    <div style={{ fontSize: 64, marginBottom: 20 }}>🏆</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 42, fontWeight: 600, color: T.ink, marginBottom: 8 }}>Faithfully Finished.</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 400, color: T.inkMuted, lineHeight: 1.7, marginBottom: 28 }}>Well done. The work is offered up.</div>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-                      {STAGES.map((s, i) => (
-                        <button key={s.id} onClick={() => setViewingStageIdx(i)} style={{ background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 16px", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, cursor: "pointer" }}>
-                          <StageIcon stage={s} size={14} /> {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (() => {
-                  const stage = STAGES[viewingStageIdx];
-                  if (stage.id === "prayer") return <PrayerField taskGid={task.gid} />;
-                  const stageAccent = stage.id === "revelation" ? T.inside : T.outside;
-                  return (
-                    <div style={{ padding: isMobile ? "24px 16px" : "52px 64px", maxWidth: 620, margin: "0 auto" }}>
-                      <div style={{ color: T.ink, marginBottom: 12 }}><StageIcon stage={stage} size={isMobile ? 28 : 44} /></div>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 28 : 42, fontWeight: 600, color: T.ink, marginBottom: 4 }}>{stage.label}</div>
-                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: T.inkMuted, letterSpacing: 0.5, marginBottom: isMobile ? 14 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
-                      <div style={{ width: 32, height: 3, background: stageAccent, borderRadius: 99, marginBottom: isMobile ? 16 : 28 }} />
-                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: stageAccent, textTransform: "none", letterSpacing: 1.5, marginBottom: 10 }}>{stage.q}</div>
-                      <textarea value={notes[stage.id] || ""} onChange={e => setNote(stage.id, e.target.value)} placeholder="Write your thoughts here…"
-                        style={{ width: "100%", maxWidth: isMobile ? "100%" : 500, minHeight: 160, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.7, display: "block" }} />
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-            {loaded && activeStage && STAGES.indexOf(activeStage) === viewingStageIdx && !showMorningLock && (
-              <div style={{ flexShrink: 0, background: activeStage.color, borderTop: tb(2.5), padding: isMobile ? "10px 14px" : "14px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <div style={{ minWidth: 0 }}>
-                  {!isMobile && <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: activeStage.textColor, opacity: 0.65, textTransform: "none", letterSpacing: 0.5, marginBottom: 2 }}>Current Stage</div>}
-                  <div style={{ fontFamily: FONT, fontSize: isMobile ? 12 : 15, fontWeight: 900, color: activeStage.textColor, display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}><StageIcon stage={activeStage} size={isMobile ? 12 : 15} /> {activeStage.label} {!isMobile && <span style={{ fontWeight: 600, fontSize: 12, opacity: 0.7 }}>— {activeStage.sub}</span>}</div>
-                </div>
-                <button onClick={() => completeStage(activeStage.id)}
-                  style={{ flexShrink: 0, background: "rgba(255,255,255,0.2)", color: activeStage.textColor, border: b(2, activeStage.textColor === C.white ? "rgba(255,255,255,0.5)" : "rgba(36,35,41,0.4)"), borderRadius: 12, padding: isMobile ? "8px 14px" : "12px 28px", fontFamily: FONT, fontSize: isMobile ? 12 : 13, fontWeight: 900, cursor: "pointer" }}>
-                  {activeStage.step === STAGES.length ? "🏆 Complete" : `Complete ${isMobile ? "" : activeStage.label + " "}→`}
-                </button>
-              </div>
-            )}
-          </>
-        )}
+      {/* Brief / Mind Map switcher */}
+      <div style={{ background: T.surface, borderBottom: tb(1.5, T.borderMuted), padding: "10px 20px", display: "flex", gap: 8, flexShrink: 0 }}>
+        {(["brief", "mindmap"] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} aria-pressed={tab === t}
+            style={{ background: tab === t ? T.ink : T.canvas, color: tab === t ? T.surface : T.inkMuted, border: tb(1.5, tab === t ? T.ink : T.borderMuted), borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+            {t === "brief" ? "Brief" : "Mind Map"}
+          </button>
+        ))}
       </div>
-      <style>{`@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
+
+      {tab === "brief" ? (
+        <div className="board-canvas" style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{ padding: isMobile ? "24px 16px" : "40px 56px", maxWidth: 680, margin: "0 auto" }}>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>DESCRIPTION</div>
+            {task.notes ? (
+              <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.8, whiteSpace: "pre-wrap", marginBottom: 36 }}>{task.notes}</div>
+            ) : (
+              <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic", marginBottom: 36 }}>No description in Asana yet.</div>
+            )}
+
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>
+              COMMENTS{comments && comments.length > 0 ? ` (${comments.length})` : ""}
+            </div>
+            {commentsError ? (
+              <div style={{ fontFamily: FONT, fontSize: 12, color: T.urgent }}>⚠ {commentsError}</div>
+            ) : comments === null ? (
+              <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted }}>Loading comments…</div>
+            ) : comments.length === 0 ? (
+              <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, fontStyle: "italic" }}>No comments yet.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {comments.map(c => (
+                  <div key={c.gid} style={{ background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 14px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                      <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink }}>{c.author || "Someone"}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, flexShrink: 0 }}>{new Date(c.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{c.text}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen />
+      )}
     </div>
   );
 }
 
 // ── Project Card ───────────────────────────────────────────────────────────
-function ProjectCard({ task, progress: _progress, category, onOpen, onCategoryChange, session, onDragStart, onDragEnd }: { task: Task; progress: number; category: CategoryKey; onOpen: (t: Task) => void; onCategoryChange: (c: CategoryKey) => void; session?: Session; onDragStart?: () => void; onDragEnd?: () => void }) {
-  const [nowMs, setNowMs] = useState(Date.now());
-  useEffect(() => {
-    if (!session) return;
-    const id = setInterval(() => setNowMs(Date.now()), 60000);
-    return () => clearInterval(id);
-  }, [session]);
-  const sessionState = (session && category === "factory") ? getSessionState(session, task.due_on, nowMs) : null;
+function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, onDragEnd }: { task: Task; category: CategoryKey; onOpen: (t: Task) => void; onCategoryChange: (c: CategoryKey) => void; onDragStart?: () => void; onDragEnd?: () => void }) {
   const catCfg = category ? CATEGORIES[category] : null;
   const due = task.due_on ? new Date(task.due_on + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
   const ul = urgLabel(task.due_on);
@@ -1463,22 +1010,6 @@ function ProjectCard({ task, progress: _progress, category, onOpen, onCategoryCh
           </div>
           <CategoryToggle value={category} onChange={onCategoryChange} size="small" tone="onLight" />
         </div>
-        {sessionState && (
-          <div style={{ borderTop: tb(1, T.borderMuted), paddingTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, color: T.ink }}>
-              <StageIcon stage={STAGES[sessionState.stageIndex]} size={13} />
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: sessionState.paused ? T.inkMuted : T.ink }}>
-                {sessionState.done ? "Complete" : sessionState.paused ? `${STAGES[sessionState.stageIndex].label} ⏸` : STAGES[sessionState.stageIndex].label}
-              </div>
-            </div>
-            {!sessionState.done && (
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 900, color: T.ink, fontVariantNumeric: "tabular-nums", letterSpacing: 0.5 }}>
-                {daysLabel(sessionState.remainingSecs)}
-              </div>
-            )}
-            {sessionState.done && <div style={{ fontSize: 11, color: T.inside, fontWeight: 900 }}>✓</div>}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -1631,13 +1162,11 @@ export default function App() {
   const [openTask, setOpenTask]     = useState<Task | null>(null);
   const [syncing, setSyncing]       = useState(false);
   const [syncMsg, setSyncMsg]       = useState<string | null>(null);
-  const [progresses, setProgresses] = useState<Record<string, number>>({});
   const [categories, setCategories] = useState<Record<string, CategoryKey>>({});
   const [showSettings, setShowSettings] = useState(false);
   const [showPrayer, setShowPrayer] = useState(false);
   const [sectionGids, setSectionGids] = useState<string[]>(DEFAULT_SECTION_GIDS);
   const [quickTaskSectionGid, setQuickTaskSectionGid] = useState<string>("");
-  const [sessions, setSessions] = useState<Record<string, Session>>({});
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [openTodoId, setOpenTodoId] = useState<string | null>(null);
   const [newTodoText, setNewTodoText] = useState("");
@@ -1659,19 +1188,17 @@ export default function App() {
         storageGet("mossmind_tasks").catch(() => null),
         storageGet("mossmind_categories").catch(() => null),
         storageGet("asana_section_gids").catch(() => null),
-        storageGet("mossmind_sessions").catch(() => null),
         storageGet("mossmind_todos").catch(() => null),
         storageGet("quick_task_section_gid").catch(() => null),
-      ]).then(([tasksRes, catsRes, sectionsRes, sessionsRes, todosRes, quickGidRes]) => {
+      ]).then(([tasksRes, catsRes, sectionsRes, todosRes, quickGidRes]) => {
         if (catsRes) { try { setCategories(JSON.parse(catsRes)); } catch (_) {} }
         if (sectionsRes) { try { const parsed = typeof sectionsRes === "string" ? JSON.parse(sectionsRes) : sectionsRes; if (Array.isArray(parsed)) setSectionGids(parsed); } catch (_) {} }
-        if (sessionsRes) { try { setSessions(JSON.parse(sessionsRes)); } catch (_) {} }
         if (todosRes) { try { setTodos(JSON.parse(todosRes)); } catch (_) {} }
         if (quickGidRes) setQuickTaskSectionGid(quickGidRes as string);
         if (tasksRes) {
           try {
             const c = JSON.parse(tasksRes);
-            if (Date.now() - c.ts < 30 * 60 * 1000 && c.projects?.length) { setProjects(c.projects); loadProgresses(c.projects); if (quickGidRes) syncQuickTasks(quickGidRes as string); return; }
+            if (Date.now() - c.ts < 30 * 60 * 1000 && c.projects?.length) { setProjects(c.projects); if (quickGidRes) syncQuickTasks(quickGidRes as string); return; }
           } catch (_) {}
         }
         // No cached tasks yet — prompt to sync
@@ -1685,19 +1212,10 @@ export default function App() {
     return () => clearInterval(id);
   }, [sectionGids, quickTaskSectionGid]);
 
-  async function loadProgresses(tasks: Task[]) {
-    const p: Record<string, number> = {};
-    await Promise.all(tasks.map(async t => {
-      try { const r = await storageGet("workflow_" + t.gid); if (r) { const d = JSON.parse(r); p[t.gid] = STAGES.filter(s => d.done && d.done[s.id]).length; } else { p[t.gid] = 0; } } catch (_) { p[t.gid] = 0; }
-    }));
-    setProgresses(p);
-  }
-
   async function createProject(task: Task, cat: CategoryKey) {
     const updated = [task, ...projects];
     setProjects(updated);
     await storageSet("mossmind_tasks", JSON.stringify({ projects: updated, ts: Date.now() }));
-    loadProgresses(updated);
     if (cat) {
       const updatedCats = { ...categories, [task.gid]: cat };
       setCategories(updatedCats);
@@ -1711,30 +1229,7 @@ export default function App() {
     try { await storageSet("mossmind_categories", JSON.stringify(updated)); } catch (_) {}
   }
 
-  function handleBack() { setOpenTask(null); loadProgresses(projects); }
-
-  async function startSession(gid: string) {
-    const updated = { ...sessions, [gid]: { startedAt: Date.now() } };
-    setSessions(updated);
-    try { await storageSet('mossmind_sessions', JSON.stringify(updated)); } catch (_) {}
-  }
-
-  async function resetSession(gid: string) {
-    const updated = { ...sessions };
-    delete updated[gid];
-    setSessions(updated);
-    try { await storageSet('mossmind_sessions', JSON.stringify(updated)); } catch (_) {}
-    try { await storageSet('workflow_' + gid, JSON.stringify({ notes: {}, done: {} })); } catch (_) {}
-  }
-
-  async function togglePauseSession(gid: string) {
-    const s = sessions[gid]; if (!s) return;
-    const updated = s.pausedAt
-      ? { ...sessions, [gid]: { startedAt: s.startedAt + (Date.now() - s.pausedAt) } }
-      : { ...sessions, [gid]: { ...s, pausedAt: Date.now() } };
-    setSessions(updated);
-    try { await storageSet('mossmind_sessions', JSON.stringify(updated)); } catch (_) {}
-  }
+  function handleBack() { setOpenTask(null); }
 
   async function saveTodos(updated: TodoItem[]) { setTodos(updated); try { await storageSet("mossmind_todos", JSON.stringify(updated)); } catch (_) {} }
   async function addTodo() {
@@ -1782,7 +1277,7 @@ export default function App() {
     try {
       const tasks = await fetchAsanaTasks(gids);
       if (tasks.length > 0) {
-        setProjects(tasks); loadProgresses(tasks);
+        setProjects(tasks);
         await storageSet("mossmind_tasks", JSON.stringify({ projects: tasks, ts: Date.now() }));
         setSyncMsg("✓ Synced " + tasks.length + " tasks");
       } else {
@@ -1823,7 +1318,7 @@ export default function App() {
           <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: muted ? T.inkMuted : T.surface, background: muted ? T.surface : accentColor, border: muted ? tb(1.5, T.borderMuted) : "none", borderRadius: 10, padding: "2px 8px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
-          {items.map(p => <ProjectCard key={p.gid} task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
+          {items.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
           {Array.from({ length: EMPTY_SLOTS }).map((_, i) => {
             const active = isOver && i === 0;
             return (
@@ -1959,7 +1454,7 @@ export default function App() {
                   </div>
                 ) : (
                   [...projects].sort(byDueDate).map(p => (
-                    <ProjectCard key={p.gid} task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} />
+                    <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} />
                   ))
                 )}
               </div>
@@ -2023,9 +1518,7 @@ export default function App() {
                   <TodoDetail item={openTodo} onUpdate={u => updateTodo(openTodo.id, u)} onDelete={() => deleteTodo(openTodo.id)} onBack={() => setOpenTodoId(null)} />
                 );
                 if (openTask) return (
-                  categories[openTask.gid] === "factory"
-                    ? <ProjectDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} session={sessions[openTask.gid]} onStartSession={() => startSession(openTask.gid)} onTogglePause={() => togglePauseSession(openTask.gid)} onReset={() => resetSession(openTask.gid)} />
-                    : <FactoryDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
+                  <TaskDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
                 );
                 return (
                   <div style={{ padding: "32px 48px", minHeight: "100%" }}>
@@ -2048,7 +1541,7 @@ export default function App() {
                               {quickApprovals.map(p => (
                                 <div key={p.gid} style={{ width: 256, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 }}>
                                   <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.soon, letterSpacing: 0.5, textTransform: "uppercase" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
-                                  <ProjectCard task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />
+                                  <ProjectCard task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />
                                 </div>
                               ))}
                             </div>
