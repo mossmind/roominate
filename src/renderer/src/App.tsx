@@ -604,12 +604,15 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             </div>
           );
         })() : (
-        <div style={{ background: cardColor, border: `${isCentral ? '2px' : isNextStep ? '2px' : '1px'} solid ${isFirst ? C.coral : isCentral ? 'rgba(255,255,255,0.5)' : isNextStep ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}`, boxShadow: isFirst ? `0 0 0 2px ${C.coral}` : isCentral ? '0 6px 32px rgba(0,0,0,0.6)' : isNextStep ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 16px rgba(0,0,0,0.35)', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
-          {/* Type label + drag handle */}
+        <div style={{ background: T.surface, borderRadius: T.radius, border: `${isCentral ? 3 : isNextStep ? 2.5 : 2}px solid ${isFirst ? T.focus : T.border}`, boxShadow: isFirst ? `0 0 0 3px ${T.focus}33` : 'none', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+          {/* Accent bar + drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
-            style={{ height: hasLabel ? 'auto' : 5, background: hasLabel ? 'rgba(0,0,0,0.25)' : cardColor, cursor: connectMode ? 'crosshair' : 'grab', padding: hasLabel ? '5px 8px 4px' : 0, display: 'flex', alignItems: 'center', gap: 5 }}>
-            {hasLabel && <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>}
-          </div>
+            style={{ height: isCentral ? 8 : 6, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab', flexShrink: 0 }} />
+          {hasLabel && (
+            <div onMouseDown={e => onMD(e, node.id)} style={{ padding: '6px 10px 0', cursor: connectMode ? 'crosshair' : 'grab' }}>
+              <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: T.ink, letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>
+            </div>
+          )}
 
           {node.fileName && node.type !== 'image' ? (
             // Non-image file (PDF, doc, etc.) — local path (Electron) or dataUrl (web)
@@ -618,37 +621,37 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
                 <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>
                   {node.fileExt === 'pdf' ? '📄' : ['mp4','mov','avi'].includes(node.fileExt ?? '') ? '🎬' : ['mp3','wav','aac'].includes(node.fileExt ?? '') ? '🎵' : ['doc','docx'].includes(node.fileExt ?? '') ? '📝' : '📁'}
                 </span>
-                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: C.peach, wordBreak: 'break-all', lineHeight: 1.35 }}>{node.fileName}</div>
+                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.ink, wordBreak: 'break-all', lineHeight: 1.35 }}>{node.fileName}</div>
               </div>
               <button onMouseDown={e => e.stopPropagation()}
                 onClick={() => node.filePath ? platformFiles.openPath(node.filePath) : window.open(node.url, '_blank')}
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 0, padding: '5px 0', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: C.peach, cursor: 'pointer', width: '100%' }}>
+                style={{ background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: '5px 0', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, cursor: 'pointer', width: '100%' }}>
                 Open ↗
               </button>
             </div>
           ) : node.type === 'image' ? (
             <div style={{ padding: '6px 6px 6px', position: 'relative' }}>
-              <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = 'rgba(255,255,255,0.04)'; }} />
+              <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = T.surfaceMuted; }} />
               {node.filePath && (
                 <button onMouseDown={e => e.stopPropagation()} onClick={() => platformFiles.openPath(node.filePath!)}
-                  style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 0, padding: '3px 8px', fontFamily: FONT, fontSize: 9, fontWeight: 700, color: C.white, cursor: 'pointer' }}>
+                  style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(34,32,29,0.65)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: T.radiusSm, padding: '3px 8px', fontFamily: FONT, fontSize: 9, fontWeight: 700, color: '#FFFFFF', cursor: 'pointer' }}>
                   Open ↗
                 </button>
               )}
               {editingId === node.id
-                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 6, fontFamily: FONT, fontSize: 11, background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)', outline: 'none', color: 'rgba(255,255,255,0.45)', boxSizing: 'border-box' }} />
-                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 6, fontFamily: FONT, fontSize: 11, color: node.text ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
+                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 6, fontFamily: FONT, fontSize: 11, background: 'transparent', border: 'none', borderBottom: `1px solid ${T.borderMuted}`, outline: 'none', color: T.inkMuted, boxSizing: 'border-box' }} />
+                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 6, fontFamily: FONT, fontSize: 11, color: node.text ? T.inkMuted : T.borderMuted, cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
             </div>
           ) : (
             <div style={{ padding: '10px 10px 8px' }}>
               <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder={node.nodeType === 'vibe' ? 'describe the feeling…' : node.nodeType === 'person' ? 'who is this for…' : node.nodeType === 'visual' ? 'color, imagery, texture…' : node.nodeType === 'nextstep' ? 'the one next move…' : 'type here…'}
                 onMouseDown={e => e.stopPropagation()}
-                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: isCentral ? 36 : node.nodeType === 'nextstep' ? 44 : 52, fontFamily: FONT, fontSize: isCentral ? 16 : node.nodeType === 'nextstep' ? 14 : 12, fontWeight: isCentral ? 700 : node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: C.white, resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', display: 'block', cursor: 'text', opacity: isCentral ? 1 : 0.9, padding: 0, textAlign: isCentral ? 'center' : 'left' }} />
+                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: isCentral ? 36 : node.nodeType === 'nextstep' ? 44 : 52, fontFamily: FONT, fontSize: isCentral ? 16 : node.nodeType === 'nextstep' ? 14 : 12, fontWeight: isCentral ? 700 : node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: T.ink, resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', display: 'block', cursor: 'text', padding: 0, textAlign: isCentral ? 'center' : 'left' }} />
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>
-                  <div style={{ width: 18, height: 18, background: cardColor, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
-                  <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>▾</span>
+                  <div style={{ width: 18, height: 18, background: cardColor, borderRadius: '50%', border: tb(1.5, T.borderMuted), flexShrink: 0 }} />
+                  <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted }}>▾</span>
                 </button>
                 {colorPickerNode === node.id && (
                   <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: T.surface, border: tb(1.5, T.border), borderRadius: 8, padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: '0 8px 24px rgba(34,32,29,0.25)' }}>
@@ -667,17 +670,17 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <div onMouseDown={e => { e.stopPropagation(); setResizing({ id: node.id, startW: node.w, startX: e.clientX }); }}
           className="node-resize"
           style={{ position: 'absolute', top: 0, right: -6, width: 12, height: '100%', cursor: 'ew-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s' }}>
-          <div style={{ width: 3, height: 24, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
+          <div style={{ width: 3, height: 24, background: T.inkMuted, borderRadius: 2 }} />
         </div>
         {/* Height resize handle */}
         <div onMouseDown={e => { e.stopPropagation(); setResizingH({ id: node.id, startH: node.h || nodeHeights.current[node.id] || 80, startY: e.clientY }); }}
           className="node-resize"
           style={{ position: 'absolute', bottom: -6, left: 0, width: '100%', height: 12, cursor: 'ns-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s' }}>
-          <div style={{ width: 24, height: 3, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
+          <div style={{ width: 24, height: 3, background: T.inkMuted, borderRadius: 2 }} />
         </div>
-        <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }}
+        <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }} title="Delete node" aria-label="Delete node"
           className="node-delete"
-          style={{ position: 'absolute', top: -6, right: -6, width: 16, height: 16, borderRadius: '50%', background: C.dark, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.35)', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, opacity: 0, transition: 'opacity 0.15s' }}>×</button>
+          style={{ position: 'absolute', top: -8, right: -8, width: 18, height: 18, borderRadius: '50%', background: T.surface, border: tb(1.5, T.border), color: T.ink, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, opacity: 0, transition: 'opacity 0.15s' }}>×</button>
       </div>
     );
   });
