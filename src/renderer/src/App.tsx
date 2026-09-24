@@ -85,25 +85,30 @@ const b = (w = 2, col = C.brown) => `${w}px solid ${col}`;
 // main board (header, columns, cards, sidebars). Kept separate from `C`
 // (which stays dark/moody for Mind Map, Prayer Field and the stage flow)
 // so this redesign doesn't repaint those intentionally atmospheric screens.
+// Values are CSS custom properties (see the :root / [data-theme="dark"] rules in
+// the global <style> block) so every component using T.* is theme-aware for free.
 const T = {
-  canvas:       "#F7F3EC", // warm off-white app canvas
-  surface:      "#FFFFFF", // card / panel fill
-  surfaceMuted: "#ECE6D9", // quiet fill for completed items, recessed panels
-  ink:          "#22201D", // primary text — near-black warm ink
-  inkMuted:     "#6B655C", // secondary text
-  border:       "#22201D", // crisp default border (ink)
-  borderMuted:  "#DDD5C6", // soft divider line
-  outside:      "#B4502C", // Outside/factory accent — terracotta
-  inside:       "#4B6B3A", // Inside/creative accent — deep moss
-  uncat:        "#6A6252", // Uncategorized accent — warm stone
-  urgent:       "#A8371F", // overdue / due today
-  soon:         "#95631A", // due within a week
-  focus:        "#2452C8", // keyboard focus ring — distinct from all category colors
+  canvas:       "var(--canvas)",       // warm off-white app canvas
+  surface:      "var(--surface)",      // card / panel fill
+  surfaceMuted: "var(--surface-muted)",// quiet fill for completed items, recessed panels
+  ink:          "var(--ink)",          // primary text — near-black warm ink
+  inkMuted:     "var(--ink-muted)",    // secondary text
+  border:       "var(--border)",       // crisp default border (ink)
+  borderMuted:  "var(--border-muted)", // soft divider line
+  outside:      "var(--outside)",      // Outside/factory accent — terracotta
+  inside:       "var(--inside)",       // Inside/creative accent — deep moss
+  uncat:        "var(--uncat)",        // Uncategorized accent — warm stone
+  urgent:       "var(--urgent)",       // overdue / due today
+  soon:         "var(--soon)",         // due within a week
+  focus:        "var(--focus)",        // keyboard focus ring — distinct from all category colors
   radius:       6,
   radiusSm:     3,
   slotHeight:   142, // uniform ProjectCard / column-slot height
 };
 const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
+// Alpha-tinted color — works with the CSS-variable T.* tokens (a hex-alpha suffix
+// like `${T.inside}1f` can't be appended to a var() reference).
+const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, transparent)`;
 
 const CATEGORIES = {
   factory:  { label: "Outside", emoji: "⚙️", color: T.outside, text: T.ink },
@@ -259,7 +264,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
             {sections.map(sec => {
               const checked = selectedGids.includes(sec.gid);
               return (
-                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: checked ? `${T.inside}1f` : T.canvas, border: tb(1.5, checked ? T.inside : T.borderMuted), transition: "all 0.15s" }}>
+                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: checked ? tint(T.inside, 12) : T.canvas, border: tb(1.5, checked ? T.inside : T.borderMuted), transition: "all 0.15s" }}>
                   <input type="checkbox" checked={checked} onChange={() => toggleSection(sec.gid)} style={{ width: 16, height: 16, accentColor: T.inside, flexShrink: 0 }} />
                   <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: checked ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
@@ -272,12 +277,12 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
           <>
             <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 8 }}>Quick Tasks Section</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: !quickTaskGid ? `${T.inside}1f` : T.canvas, border: tb(1.5, !quickTaskGid ? T.inside : T.borderMuted) }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: !quickTaskGid ? tint(T.inside, 12) : T.canvas, border: tb(1.5, !quickTaskGid ? T.inside : T.borderMuted) }}>
                 <input type="radio" checked={!quickTaskGid} onChange={() => setQuickTaskGid("")} style={{ accentColor: T.inside }} />
                 <span style={{ fontFamily: FONT, fontSize: 13, color: T.ink }}>None</span>
               </label>
               {sections.map(sec => (
-                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: quickTaskGid === sec.gid ? `${T.inside}1f` : T.canvas, border: tb(1.5, quickTaskGid === sec.gid ? T.inside : T.borderMuted) }}>
+                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: quickTaskGid === sec.gid ? tint(T.inside, 12) : T.canvas, border: tb(1.5, quickTaskGid === sec.gid ? T.inside : T.borderMuted) }}>
                   <input type="radio" checked={quickTaskGid === sec.gid} onChange={() => setQuickTaskGid(sec.gid)} style={{ accentColor: T.inside }} />
                   <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: quickTaskGid === sec.gid ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
@@ -299,11 +304,10 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 
 // ── Category Toggle ────────────────────────────────────────────────────────
 const CATEGORY_TOGGLE_LABEL: Record<string, string> = { factory: "Outside", creative: "Inside", none: "Uncategorized" };
-function CategoryToggle({ value, onChange, size = "normal", tone = "onDark" }: { value: CategoryKey; onChange: (v: CategoryKey) => void; size?: "normal" | "small"; tone?: "onDark" | "onLight" }) {
+function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryKey; onChange: (v: CategoryKey) => void; size?: "normal" | "small" }) {
   const small = size === "small";
   const base = small ? 16 : 22;
   const big = base;
-  const onLight = tone === "onLight";
   // factory/creative ordered so selected is first (left); uncat always last (right)
   const catPair: CategoryKey[] = value === "factory" ? ["factory", "creative"] : value === "creative" ? ["creative", "factory"] : ["factory", "creative"];
   const ordered: CategoryKey[] = [...catPair, null];
@@ -316,9 +320,7 @@ function CategoryToggle({ value, onChange, size = "normal", tone = "onDark" }: {
         const activeColor = cat === "creative" ? T.inside : cat === "factory" ? T.outside : T.uncat;
         return (
           <button key={cat ?? "none"} onClick={e => { e.stopPropagation(); onChange(cat); }} title={`Move to ${label}`} aria-label={`Move to ${label}`} aria-pressed={active}
-            style={onLight
-              ? { background: active ? `${activeColor}1f` : "transparent", border: "none", borderRadius: T.radiusSm, padding: small ? "3px 5px" : "5px 9px", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", color: active ? activeColor : T.inkMuted }
-              : { background: "transparent", border: "none", padding: small ? "2px 4px" : "4px 8px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", color: C.white, opacity: active ? 1 : 0.6 }}>
+            style={{ background: active ? `color-mix(in srgb, ${activeColor} 12%, transparent)` : "transparent", border: "none", borderRadius: T.radiusSm, padding: small ? "3px 5px" : "5px 9px", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", color: active ? activeColor : T.inkMuted }}>
             {cat === "creative" ? <InsideIcon width={sz} height={sz} /> : cat === "factory" ? <OutsideIcon width={sz} height={sz} /> : <UncatIcon width={sz} height={sz} />}
           </button>
         );
@@ -577,7 +579,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             </div>
           );
         })() : (
-        <div style={{ background: T.surface, borderRadius: T.radius, border: `${isCentral ? 3 : isNextStep ? 2.5 : 2}px solid ${isFirst ? T.focus : T.border}`, boxShadow: isFirst ? `0 0 0 3px ${T.focus}33` : 'none', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+        <div style={{ background: T.surface, borderRadius: T.radius, border: `${isCentral ? 3 : isNextStep ? 2.5 : 2}px solid ${isFirst ? T.focus : T.border}`, boxShadow: isFirst ? `0 0 0 3px ${tint(T.focus, 20)}` : 'none', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
           {/* Accent bar + drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
             style={{ height: isCentral ? 8 : 6, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab', flexShrink: 0 }} />
@@ -929,7 +931,7 @@ function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; 
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-          <CategoryToggle value={category} onChange={onCategoryChange} size="small" tone="onLight" />
+          <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
           {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
         </div>
       </div>
@@ -1008,7 +1010,7 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
               <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
             )}
           </div>
-          <CategoryToggle value={category} onChange={onCategoryChange} size="small" tone="onLight" />
+          <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
         </div>
       </div>
     </div>
@@ -1120,7 +1122,7 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
                 const isSelected = cat === key;
                 return (
                   <button key={String(key)} onClick={() => setCat(key)} aria-pressed={isSelected}
-                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? `${color}1f` : T.canvas, border: tb(1.5, isSelected ? color : T.borderMuted), borderRadius: T.radiusSm, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}>
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? tint(color, 12) : T.canvas, border: tb(1.5, isSelected ? color : T.borderMuted), borderRadius: T.radiusSm, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}>
                     <div style={{ color: isSelected ? color : T.inkMuted, display: "flex" }}>
                       {key === "factory" ? <OutsideIcon width={28} height={28} /> : key === "creative" ? <InsideIcon width={28} height={28} /> : <UncatIcon width={28} height={28} />}
                     </div>
@@ -1175,11 +1177,26 @@ export default function App() {
   const [dragGid, setDragGid] = useState<string | null>(null);
   const [dragOverCat, setDragOverCat] = useState<CategoryKey | undefined>(undefined);
   const [showCreate, setShowCreate] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const hasFetched = useRef(false);
   const syncInFlight = useRef(false);
   const isMobile = useIsMobile();
   const [mobileTab, setMobileTab] = useState<'create' | 'tasks' | 'prayer' | null>(null);
   const [mobileCreateName, setMobileCreateName] = useState('');
+
+  useEffect(() => {
+    storageGet("theme").then(v => { if (v === "dark" || v === "light") setTheme(v); }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    storageSet("theme", next).catch(() => {});
+  }
 
   useEffect(() => {
     if (!hasFetched.current) {
@@ -1350,6 +1367,7 @@ export default function App() {
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
           <button onClick={() => syncTasks()} disabled={syncing} title="Sync tasks from Asana" aria-label="Sync tasks from Asana" style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 16 : 12, fontWeight: 800, color: T.ink, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1, opacity: syncing ? 0.5 : 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
+          <button onClick={toggleTheme} title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>{theme === "light" ? "☾" : "☀"}</button>
           <button onClick={() => setShowSettings(true)} title="Settings" aria-label="Settings" style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>⚙</button>
         </div>
       </div>
@@ -1545,7 +1563,7 @@ export default function App() {
                     ) : (
                       <>
                         {quickApprovals.length > 0 && (
-                          <div style={{ background: `${T.soon}12`, border: `2.5px solid ${T.soon}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32 }}>
+                          <div style={{ background: tint(T.soon, 7), border: `2.5px solid ${T.soon}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                               <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
                               <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
@@ -1636,6 +1654,36 @@ export default function App() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+        :root {
+          --canvas: #F7F3EC;
+          --surface: #FFFFFF;
+          --surface-muted: #ECE6D9;
+          --ink: #22201D;
+          --ink-muted: #6B655C;
+          --border: #22201D;
+          --border-muted: #DDD5C6;
+          --outside: #B4502C;
+          --inside: #4B6B3A;
+          --uncat: #6A6252;
+          --urgent: #A8371F;
+          --soon: #95631A;
+          --focus: #2452C8;
+        }
+        [data-theme="dark"] {
+          --canvas: #1E1B18;
+          --surface: #29251F;
+          --surface-muted: #17150F;
+          --ink: #F0EBE3;
+          --ink-muted: #A79C8E;
+          --border: #F0EBE3;
+          --border-muted: #3A342C;
+          --outside: #E0763F;
+          --inside: #7FA85E;
+          --uncat: #B0A692;
+          --urgent: #E67056;
+          --soon: #D9A244;
+          --focus: #7AA2FF;
+        }
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { margin: 0; overflow: hidden; }
         ::-webkit-scrollbar { width: 8px; }
