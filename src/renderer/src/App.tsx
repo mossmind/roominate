@@ -51,6 +51,12 @@ interface AsanaApiTask {
 // ── Config ─────────────────────────────────────────────────────────────────
 const PROJECT_GID = "1208321640687989";
 const DEFAULT_SECTION_GIDS = ["1208321358070311"]; // "David is designing - approved by David"
+// Sections that hold quick, time-sensitive approvals — always synced and surfaced
+// in a banner above the board regardless of what's checked in Settings.
+const QUICK_APPROVAL_SECTIONS: Record<string, string> = {
+  "1208321358070309": "To-Do Tagg",
+  "1208537148351508": "Art Direction Review",
+};
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const C = {
@@ -149,6 +155,7 @@ interface Task {
   due_on: string | null
   notes: string
   url: string
+  sectionGid?: string
 }
 
 interface TodoItem {
@@ -175,11 +182,13 @@ async function storageSet(key: string, value: string): Promise<void> {
 }
 
 async function fetchAsanaTasks(sectionGids: string[]): Promise<Task[]> {
-  const safeGids = Array.isArray(sectionGids) ? sectionGids : DEFAULT_SECTION_GIDS;
-  const pages = await Promise.all(safeGids.map(gid => platformAsana.fetchTasks(gid)));
+  const selected = Array.isArray(sectionGids) ? sectionGids : DEFAULT_SECTION_GIDS;
+  // Quick-approval sections are always included, even if not checked in Settings.
+  const safeGids = Array.from(new Set([...selected, ...Object.keys(QUICK_APPROVAL_SECTIONS)]));
+  const pages = await Promise.all(safeGids.map(async gid => ({ gid, raw: await platformAsana.fetchTasks(gid) })));
   const seen = new Set<string>();
   const tasks: Task[] = [];
-  for (const raw of pages) {
+  for (const { gid: sectionGid, raw } of pages) {
     for (const t of raw) {
       if (t.completed || seen.has(t.gid)) continue;
       seen.add(t.gid);
@@ -189,6 +198,7 @@ async function fetchAsanaTasks(sectionGids: string[]): Promise<Task[]> {
         due_on: t.due_on || null,
         notes: t.notes || "",
         url: t.permalink_url || `https://app.asana.com/0/0/${t.gid}`,
+        sectionGid,
       });
     }
   }
@@ -1795,6 +1805,7 @@ export default function App() {
   const allOutside       = projects.filter(p => categories[p.gid] === "factory").sort(byDueDate);
   const allInside        = projects.filter(p => categories[p.gid] === "creative").sort(byDueDate);
   const allUncategorized = projects.filter(p => !categories[p.gid]).sort(byDueDate);
+  const quickApprovals   = projects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
 
   const EMPTY_SLOTS = 2;
   function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string, muted = false) {
@@ -2025,13 +2036,32 @@ export default function App() {
                         <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginTop: 8 }}>Add your Asana Personal Access Token in ⚙ Settings, then hit Sync</div>
                       </div>
                     ) : (
-                      <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-                        <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
-                          {renderColumn(<OutsideIcon width={30} height={30} style={{ color: T.outside, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
-                          {renderColumn(<InsideIcon width={30} height={30} style={{ color: T.inside, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
-                          {renderColumn(<UncatIcon width={30} height={30} style={{ color: T.uncat, flexShrink: 0 }} />, "Uncategorized", allUncategorized, null, T.uncat, true)}
+                      <>
+                        {quickApprovals.length > 0 && (
+                          <div style={{ background: `${T.soon}12`, border: `2.5px solid ${T.soon}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                              <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
+                              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
+                              <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, background: T.soon, borderRadius: 10, padding: "2px 10px", minWidth: 22, textAlign: "center" }}>{quickApprovals.length}</div>
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                              {quickApprovals.map(p => (
+                                <div key={p.gid} style={{ width: 256, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                                  <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.soon, letterSpacing: 0.5, textTransform: "uppercase" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
+                                  <ProjectCard task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
+                          <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
+                            {renderColumn(<OutsideIcon width={30} height={30} style={{ color: T.outside, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
+                            {renderColumn(<InsideIcon width={30} height={30} style={{ color: T.inside, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
+                            {renderColumn(<UncatIcon width={30} height={30} style={{ color: T.uncat, flexShrink: 0 }} />, "Uncategorized", allUncategorized, null, T.uncat, true)}
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
                 );
