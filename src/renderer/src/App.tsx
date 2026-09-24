@@ -94,6 +94,7 @@ const T = {
   focus:        "#2452C8", // keyboard focus ring — distinct from all category colors
   radius:       6,
   radiusSm:     3,
+  slotHeight:   142, // uniform ProjectCard / column-slot height
 };
 const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
 
@@ -1431,15 +1432,15 @@ function ProjectCard({ task, progress: _progress, category, onOpen, onCategoryCh
   const ul = urgLabel(task.due_on);
   const uc = urgColorLight(task.due_on);
   return (
-    <div className="board-card" role="button" tabIndex={0} draggable
+    <div className="board-card slot-card" role="button" tabIndex={0} draggable
       onDragStart={e => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", task.gid); onDragStart?.(); }}
       onDragEnd={onDragEnd}
       onClick={() => onOpen(task)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
-      style={{ background: T.surface, border: tb(2), borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", transition: "transform 0.15s ease, border-color 0.15s ease" }}>
+      style={{ background: T.surface, border: tb(2), borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, border-color 0.15s ease" }}>
       <div style={{ height: 8, background: catCfg ? catCfg.color : T.borderMuted, flexShrink: 0 }} />
-      <div style={{ padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: T.ink, lineHeight: 1.35, textAlign: "left" }}>{task.name}</div>
+      <div style={{ padding: "10px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
         <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
             {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
@@ -1792,6 +1793,7 @@ export default function App() {
   const allInside        = projects.filter(p => categories[p.gid] === "creative").sort(byDueDate);
   const allUncategorized = projects.filter(p => !categories[p.gid]).sort(byDueDate);
 
+  const EMPTY_SLOTS = 2;
   function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string, muted = false) {
     const isOver = dragGid !== null && dragOverCat === targetCat;
     return (
@@ -1806,13 +1808,15 @@ export default function App() {
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, flex: 1 }}>{label}</div>
           <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: muted ? T.inkMuted : T.surface, background: muted ? T.surface : accentColor, border: muted ? tb(1.5, T.borderMuted) : "none", borderRadius: 10, padding: "2px 8px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 100, flex: 1, paddingTop: 16 }}>
-          {items.length === 0
-            ? <div style={{ border: `2px dashed ${isOver ? accentColor : T.borderMuted}`, borderRadius: T.radius, height: 90, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.15s" }}>
-                <span style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted }}>Drop here</span>
-              </div>
-            : items.map(p => <ProjectCard key={p.gid} task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)
-          }
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
+          {items.map(p => <ProjectCard key={p.gid} task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
+          {Array.from({ length: EMPTY_SLOTS }).map((_, i) => {
+            const active = isOver && i === 0;
+            return (
+              <div key={i} className={active ? "slot-empty--active" : undefined}
+                style={{ '--slot-accent': accentColor, height: T.slotHeight, flexShrink: 0, border: `2px dashed ${active ? accentColor : T.borderMuted}`, borderRadius: T.radius, background: T.surfaceMuted, transition: "border-color 0.15s" } as React.CSSProperties} />
+            );
+          })}
         </div>
       </div>
     );
@@ -2126,6 +2130,12 @@ export default function App() {
         }
         .board-card:hover { border-color: ${T.ink} !important; transform: translateY(-2px); }
         .board-card:focus-visible { transform: translateY(-2px); }
+        /* Card lands in its column slot with a little bounce — plays on every mount,
+           including when a card is re-categorized into a new column. */
+        @keyframes slotIn { from { transform: scale(0.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .slot-card { animation: slotIn 0.32s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes slotPulse { 0%, 100% { border-color: var(--slot-accent); } 50% { border-color: ${T.borderMuted}; } }
+        .slot-empty--active { animation: slotPulse 1s ease-in-out infinite; }
       `}</style>
     </div>
   );
