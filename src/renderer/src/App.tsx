@@ -162,8 +162,6 @@ interface TodoItem {
 // ── Helpers ────────────────────────────────────────────────────────────────
 function daysLeft(due: string | null) { return due ? Math.ceil((new Date(due).getTime() - Date.now()) / 86400000) : null; }
 function urgLabel(due: string | null) { const d = daysLeft(due); if (d === null) return null; if (d < 0) return Math.abs(d) + "d overdue"; if (d === 0) return "Due today"; if (d <= 7) return d + "d left"; return null; }
-function urgColor(due: string | null) { const d = daysLeft(due); return d !== null && d <= 3 ? C.coral : d !== null && d <= 7 ? "#d4956a" : C.green; }
-// Light-theme counterpart of urgColor(), tuned for AA contrast on the T.canvas/T.surface board.
 function urgColorLight(due: string | null) { const d = daysLeft(due); return d !== null && d <= 7 ? (d <= 3 ? T.urgent : T.soon) : T.inkMuted; }
 
 // storage helpers
@@ -242,42 +240,42 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(36,35,41,0.5)", backdropFilter: "blur(4px)" }}>
-      <div style={{ background: C.peach, border: b(3, C.brown), borderRadius: T.radius, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
-        <div style={{ fontFamily: FONT, fontSize: 20, fontWeight: 900, color: C.brown, marginBottom: 6 }}>Settings</div>
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(34,32,29,0.55)" }}>
+      <div style={{ background: T.surface, border: tb(2.5), borderRadius: T.radius, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
+        <div style={{ fontFamily: FONT, fontSize: 20, fontWeight: 900, color: T.ink, marginBottom: 6 }}>Settings</div>
 
         {isElectron ? (
           <>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="1/…"
-                style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: b(2), borderRadius: 10, padding: "10px 14px", outline: "none", background: C.white, color: C.brown, boxSizing: "border-box" }} />
+                style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.canvas, color: T.ink, boxSizing: "border-box" }} />
               <button onClick={loadSections} disabled={!pat.trim() || loadingSections}
-                style={{ background: C.blue, color: C.white, border: b(2, C.brown), borderRadius: 10, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", flexShrink: 0 }}>
+                style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
                 {loadingSections ? "Loading…" : "Load Sections"}
               </button>
             </div>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Anthropic API Key (for AI mind maps)</div>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Anthropic API Key (for AI mind maps)</div>
             <input type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…"
-              style={{ width: "100%", fontFamily: FONT, fontSize: 13, border: b(2), borderRadius: 10, padding: "10px 14px", outline: "none", background: C.white, color: C.brown, boxSizing: "border-box", marginBottom: 20 }} />
+              style={{ width: "100%", fontFamily: FONT, fontSize: 13, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.canvas, color: T.ink, boxSizing: "border-box", marginBottom: 20 }} />
           </>
         ) : (
           <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
             <button onClick={loadSections} disabled={loadingSections}
-              style={{ background: C.blue, color: C.white, border: b(2, C.brown), borderRadius: 10, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
               {loadingSections ? "Loading…" : "Load Sections"}
             </button>
           </div>
         )}
 
-        <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, textTransform: "none", letterSpacing: 1, marginBottom: 8 }}>
+        <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 8 }}>
           Sections to sync ({selectedGids.length} selected)
         </div>
 
-        {sectionError && <div style={{ fontFamily: FONT, fontSize: 12, color: C.coral, marginBottom: 10 }}>{sectionError}</div>}
+        {sectionError && <div style={{ fontFamily: FONT, fontSize: 12, color: T.urgent, marginBottom: 10 }}>{sectionError}</div>}
 
         {sections.length === 0 && (
-          <div style={{ fontFamily: FONT, fontSize: 12, color: C.brown, opacity: 0.5, marginBottom: 16, fontStyle: "italic" }}>
+          <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginBottom: 16, fontStyle: "italic" }}>
             Enter your token and click "Load Sections" to pick which sections to sync.
           </div>
         )}
@@ -287,9 +285,9 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
             {sections.map(sec => {
               const checked = selectedGids.includes(sec.gid);
               return (
-                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 10, background: checked ? "rgba(101,121,70,0.18)" : "rgba(36,35,41,0.06)", border: b(1.5, checked ? C.blue : "rgba(36,35,41,0.15)"), transition: "all 0.15s" }}>
-                  <input type="checkbox" checked={checked} onChange={() => toggleSection(sec.gid)} style={{ width: 16, height: 16, accentColor: C.blue, flexShrink: 0 }} />
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: checked ? 700 : 500, color: C.brown }}>{sec.name}</span>
+                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: checked ? `${T.inside}1f` : T.canvas, border: tb(1.5, checked ? T.inside : T.borderMuted), transition: "all 0.15s" }}>
+                  <input type="checkbox" checked={checked} onChange={() => toggleSection(sec.gid)} style={{ width: 16, height: 16, accentColor: T.inside, flexShrink: 0 }} />
+                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: checked ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
               );
             })}
@@ -298,16 +296,16 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 
         {sections.length > 0 && (
           <>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.brown, opacity: 0.5, letterSpacing: 1, marginBottom: 8 }}>Quick Tasks Section</div>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 8 }}>Quick Tasks Section</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 10, background: !quickTaskGid ? "rgba(101,121,70,0.18)" : "rgba(36,35,41,0.06)", border: b(1.5, !quickTaskGid ? C.blue : "rgba(36,35,41,0.15)") }}>
-                <input type="radio" checked={!quickTaskGid} onChange={() => setQuickTaskGid("")} style={{ accentColor: C.blue }} />
-                <span style={{ fontFamily: FONT, fontSize: 13, color: C.brown }}>None</span>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: !quickTaskGid ? `${T.inside}1f` : T.canvas, border: tb(1.5, !quickTaskGid ? T.inside : T.borderMuted) }}>
+                <input type="radio" checked={!quickTaskGid} onChange={() => setQuickTaskGid("")} style={{ accentColor: T.inside }} />
+                <span style={{ fontFamily: FONT, fontSize: 13, color: T.ink }}>None</span>
               </label>
               {sections.map(sec => (
-                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 10, background: quickTaskGid === sec.gid ? "rgba(101,121,70,0.18)" : "rgba(36,35,41,0.06)", border: b(1.5, quickTaskGid === sec.gid ? C.blue : "rgba(36,35,41,0.15)") }}>
-                  <input type="radio" checked={quickTaskGid === sec.gid} onChange={() => setQuickTaskGid(sec.gid)} style={{ accentColor: C.blue }} />
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: quickTaskGid === sec.gid ? 700 : 500, color: C.brown }}>{sec.name}</span>
+                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: quickTaskGid === sec.gid ? `${T.inside}1f` : T.canvas, border: tb(1.5, quickTaskGid === sec.gid ? T.inside : T.borderMuted) }}>
+                  <input type="radio" checked={quickTaskGid === sec.gid} onChange={() => setQuickTaskGid(sec.gid)} style={{ accentColor: T.inside }} />
+                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: quickTaskGid === sec.gid ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
               ))}
             </div>
@@ -315,10 +313,10 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
         )}
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={save} style={{ flex: 1, background: C.brown, color: C.white, border: b(2, C.brown), borderRadius: 10, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+          <button onClick={save} style={{ flex: 1, background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
             {saved ? "✓ Saved!" : "Save"}
           </button>
-          <button onClick={onClose} style={{ background: "transparent", border: b(2, C.brown), borderRadius: 10, padding: "12px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.brown, cursor: "pointer" }}>Done</button>
+          <button onClick={onClose} style={{ background: "transparent", border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: T.inkMuted, cursor: "pointer" }}>Done</button>
         </div>
       </div>
     </div>
@@ -571,9 +569,9 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         const mx = (x1 + x2) / 2; const my = (y1 + y2) / 2;
         return (
           <g key={edge.id}>
-            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.4)" strokeWidth={2.5} filter="url(#wavy-line)" />
-            <circle cx={mx} cy={my} r={7} fill={C.dark} stroke="rgba(255,255,255,0.4)" strokeWidth={1} style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={() => removeEdge(edge.id)} />
-            <text x={mx} y={my + 4} textAnchor="middle" fill="rgba(255,255,255,0.55)" fontSize={10} style={{ pointerEvents: 'none' }}>×</text>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={T.inkMuted} strokeWidth={2} filter="url(#wavy-line)" />
+            <circle cx={mx} cy={my} r={7} fill={T.surface} stroke={T.inkMuted} strokeWidth={1} style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={() => removeEdge(edge.id)} />
+            <text x={mx} y={my + 4} textAnchor="middle" fill={T.inkMuted} fontSize={10} style={{ pointerEvents: 'none' }}>×</text>
           </g>
         );
       })}
@@ -600,7 +598,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
           const IconComp = ICON_MAP[node.icon];
           return (
             <div onMouseDown={e => onMD(e, node.id)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, cursor: connectMode ? 'crosshair' : 'grab', color: C.peach }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, cursor: connectMode ? 'crosshair' : 'grab', color: T.ink }}>
               <IconComp width={node.w - 8} height={node.w - 8} style={{ display: 'block' }} />
             </div>
           );
@@ -652,10 +650,10 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
                   <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>▾</span>
                 </button>
                 {colorPickerNode === node.id && (
-                  <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: '#1a1920', border: '1px solid rgba(255,255,255,0.12)', padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
+                  <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: T.surface, border: tb(1.5, T.border), borderRadius: 8, padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: '0 8px 24px rgba(34,32,29,0.25)' }}>
                     {MIND_COLORS.map(col => (
                       <div key={col} onClick={() => { updateNode(node.id, { color: col }); setColorPickerNode(null); }}
-                        style={{ width: 14, height: 14, background: col, border: `2px solid ${cardColor === col ? 'rgba(255,255,255,0.5)' : 'transparent'}`, cursor: 'pointer', borderRadius: '50%' }} />
+                        style={{ width: 14, height: 14, background: col, border: `2px solid ${cardColor === col ? T.ink : 'transparent'}`, cursor: 'pointer', borderRadius: '50%' }} />
                     ))}
                   </div>
                 )}
@@ -684,13 +682,13 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   });
 
   const toolbar = (
-    <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: C.mid, flexShrink: 0 }}>
+    <div style={{ borderBottom: tb(2), background: T.surface, flexShrink: 0 }}>
       <div style={{ padding: '8px 12px', display: 'flex', gap: 6, alignItems: 'center' }}>
         {/* Node type chips */}
         {(['vibe', 'person', 'visual', 'nextstep', 'thought'] as MindNodeType[]).map(nt => {
           const s = NODE_TYPE_STYLES[nt]
           return (
-            <button key={nt} onClick={() => addTextNode(nt)}
+            <button key={nt} onClick={() => addTextNode(nt)} title={`Add a ${s.label} note`}
               style={{ background: s.bg, color: 'rgba(255,255,255,0.92)', border: 'none', borderRadius: 20, padding: '5px 13px', fontFamily: FONT, fontSize: 10, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3, transition: 'opacity 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
@@ -703,12 +701,12 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
         {/* + menu */}
         <div style={{ position: 'relative' }}>
-          <button onClick={() => setShowAddMenu(v => !v)}
-            style={{ background: showAddMenu ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.07)', color: C.peach, border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20, width: 30, height: 28, fontFamily: FONT, fontSize: 16, fontWeight: 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>
+          <button onClick={() => setShowAddMenu(v => !v)} title="Add other node" aria-label="Add other node" aria-expanded={showAddMenu}
+            style={{ background: showAddMenu ? T.surfaceMuted : T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: 20, width: 30, height: 28, fontFamily: FONT, fontSize: 16, fontWeight: 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>
             +
           </button>
           {showAddMenu && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: C.dark, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '4px 0', zIndex: 100, minWidth: 130, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: T.surface, border: tb(1.5, T.border), borderRadius: 10, padding: '4px 0', zIndex: 100, minWidth: 130, boxShadow: '0 8px 24px rgba(34,32,29,0.2)' }}>
               {[
                 { label: 'Note', action: () => { addTextNode(); setShowAddMenu(false) } },
                 { label: 'Icon', action: () => { setShowIconPicker(v => !v); setShowImgInput(false); setShowAddMenu(false) } },
@@ -716,8 +714,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
                 { label: 'File', action: () => { addFileNode(); setShowAddMenu(false) } },
               ].map(item => (
                 <button key={item.label} onClick={item.action}
-                  style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '8px 16px', fontFamily: FONT, fontSize: 11, fontWeight: 600, color: C.peach, cursor: 'pointer', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
+                  style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '8px 16px', fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.ink, cursor: 'pointer', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.surfaceMuted)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                   {item.label}
                 </button>
@@ -728,26 +726,26 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <input ref={fileInputRef} type="file" onChange={handleWebFileSelect} style={{ display: 'none' }} />
 
         {/* Link toggle */}
-        <button onClick={() => { setConnectMode(v => !v); setConnecting(null); setShowAddMenu(false) }}
-          style={{ background: connectMode ? C.coral : 'rgba(255,255,255,0.07)', color: C.white, border: connectMode ? `1px solid ${C.coral}` : '1px solid rgba(255,255,255,0.18)', borderRadius: 20, padding: '5px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={() => { setConnectMode(v => !v); setConnecting(null); setShowAddMenu(false) }} title="Draw a connection between two nodes" aria-pressed={connectMode}
+          style={{ background: connectMode ? T.ink : T.canvas, color: connectMode ? T.surface : T.ink, border: tb(1.5, connectMode ? T.ink : T.borderMuted), borderRadius: 20, padding: '5px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
           {connectMode ? (connecting ? '→ pick 2nd' : '→ pick 1st') : '⤢ Link'}
         </button>
 
         {/* AI generate */}
-        <button onClick={generate} disabled={generating}
-          style={{ background: generating ? 'rgba(101,121,70,0.35)' : C.main, color: C.white, border: 'none', borderRadius: 20, padding: '5px 14px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', opacity: generating ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+        <button onClick={generate} disabled={generating} title="Generate mind map nodes from the project brief"
+          style={{ background: generating ? T.surfaceMuted : T.inside, color: generating ? T.inkMuted : T.surface, border: 'none', borderRadius: 20, padding: '5px 14px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', transition: 'opacity 0.15s' }}>
           {generating ? 'Generating…' : '✦ AI'}
         </button>
       </div>
 
       {/* Icon picker */}
       {showIconPicker && (
-        <div style={{ padding: '8px 12px 10px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ padding: '8px 12px 10px', borderTop: tb(1.5, T.borderMuted), display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           {Object.entries(ICON_MAP).map(([key, IconComp]) => (
-            <button key={key} onClick={() => { addIconNode(key); setShowIconPicker(false); }} title={key}
-              style={{ width: 34, height: 34, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.peach, padding: 0, transition: 'background 0.12s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}>
+            <button key={key} onClick={() => { addIconNode(key); setShowIconPicker(false); }} title={key} aria-label={`Add ${key} icon`}
+              style={{ width: 34, height: 34, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.ink, padding: 0, transition: 'background 0.12s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.surfaceMuted)}
+              onMouseLeave={e => (e.currentTarget.style.background = T.canvas)}>
               <IconComp width={18} height={18} />
             </button>
           ))}
@@ -756,29 +754,29 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
       {/* Image URL input */}
       {showImgInput && (
-        <div style={{ padding: '6px 12px 8px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ padding: '6px 12px 8px', borderTop: tb(1.5, T.borderMuted), display: 'flex', gap: 8, alignItems: 'center' }}>
           <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus
-            style={{ fontFamily: 'monospace', fontSize: 11, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '5px 10px', outline: 'none', color: C.peach, flex: 1 }} />
-          <button onClick={addImageNode} style={{ background: C.main, color: C.white, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
-          <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.35)', border: 'none', fontSize: 14, cursor: 'pointer', padding: '0 2px' }}>✕</button>
+            style={{ fontFamily: FONT, fontSize: 11, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: 6, padding: '5px 10px', outline: 'none', color: T.ink, flex: 1 }} />
+          <button onClick={addImageNode} style={{ background: T.ink, color: T.surface, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+          <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} title="Cancel" aria-label="Cancel" style={{ background: 'transparent', color: T.inkMuted, border: 'none', fontSize: 14, cursor: 'pointer', padding: '0 2px' }}>✕</button>
         </div>
       )}
 
-      {genError && <div style={{ padding: '0 12px 6px', fontFamily: 'monospace', fontSize: 10, color: C.coral }}>{genError}</div>}
+      {genError && <div style={{ padding: '0 12px 6px', fontFamily: FONT, fontSize: 10, color: T.urgent }}>{genError}</div>}
     </div>
   );
 
   const canvas = (
-    <div ref={canvasRef} onMouseMove={onMM} onMouseUp={onMU} onMouseLeave={onMU}
-      style={{ flex: 1, position: 'relative', backgroundColor: C.dark, backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '24px 24px', overflow: 'auto', userSelect: 'none', cursor: connectMode ? 'crosshair' : 'default', minHeight: fullscreen ? undefined : 420 }}>
+    <div ref={canvasRef} onMouseMove={onMM} onMouseUp={onMU} onMouseLeave={onMU} className="board-canvas"
+      style={{ flex: 1, position: 'relative', overflow: 'auto', userSelect: 'none', cursor: connectMode ? 'crosshair' : 'default', minHeight: fullscreen ? undefined : 420 }}>
       <div style={{ position: 'relative', minWidth: 2400, minHeight: 2000 }}>
       {edgeSvg}
       {loaded && nodes.length === 0 && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', gap: 14 }}>
-          <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.18)' }}>Get it out of your head — vibes, people, next step</div>
+          <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>Get it out of your head — vibes, people, next step</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {(['vibe', 'person', 'nextstep'] as MindNodeType[]).map(nt => (
-              <div key={nt} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.12)', padding: '3px 8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div key={nt} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, padding: '3px 8px', border: tb(1, T.borderMuted) }}>
                 {NODE_TYPE_STYLES[nt].prefix} {NODE_TYPE_STYLES[nt].label}
               </div>
             ))}
@@ -791,7 +789,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: fullscreen ? 1 : undefined, border: fullscreen ? 'none' : '1.5px solid rgba(255,255,255,0.15)', marginTop: fullscreen ? 0 : 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: fullscreen ? 1 : undefined, border: fullscreen ? 'none' : tb(1.5, T.borderMuted), marginTop: fullscreen ? 0 : 16 }}>
       {toolbar}
       {nextStepNode && (
         <div style={{ background: NODE_TYPE_STYLES.nextstep.bg, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
@@ -874,11 +872,8 @@ function PrayerField({ taskGid }: { taskGid: string }) {
   function isOld(p: Prayer) { return (Date.now() - p.createdAt) / 86400000 > 30 && p.revisits <= 1 }
 
   return (
-    <div ref={canvasRef} onClick={handleCanvasClick}
-      style={{ position: 'relative', width: '100%', height: '100%', minHeight: 400, overflow: 'hidden', cursor: 'crosshair',
-        background: 'rgba(36,35,41,0.95)',
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
-        backgroundSize: '28px 28px' }}>
+    <div ref={canvasRef} onClick={handleCanvasClick} className="board-canvas"
+      style={{ position: 'relative', width: '100%', height: '100%', minHeight: 400, overflow: 'hidden', cursor: 'crosshair' }}>
 
       {/* Prayer nodes */}
       {loaded && prayers.map(prayer => {
@@ -886,13 +881,13 @@ function PrayerField({ taskGid }: { taskGid: string }) {
         const Icon = prayerIcon(prayer)
         const iconSize = prayerIconSize(prayer)
         const opacity = prayerOpacity(prayer)
-        const textColor = prayer.isMarked ? '#B8651F' : 'rgba(255,255,255,0.75)'
+        const textColor = prayer.isMarked ? '#95470F' : T.inkMuted
         return old
           ? <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
-              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.35)', opacity, cursor: 'pointer' }} />
+              style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', width: 6, height: 6, borderRadius: '50%', background: T.inkMuted, opacity, cursor: 'pointer' }} />
           : <div key={prayer.id} data-prayer="true" onMouseDown={() => onPMD(prayer.id)} onMouseUp={e => onPMU(e, prayer)}
               style={{ position: 'absolute', left: `${prayer.x * 100}%`, top: `${prayer.y * 100}%`, transform: 'translate(-50%,-50%)', opacity, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, userSelect: 'none', maxWidth: 90 }}>
-              <Icon width={iconSize} height={iconSize} style={{ color: prayer.isMarked ? '#B8651F' : 'white', flexShrink: 0 }} />
+              <Icon width={iconSize} height={iconSize} style={{ color: prayer.isMarked ? '#95470F' : T.ink, flexShrink: 0 }} />
               <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: textColor, lineHeight: 1.3, textAlign: 'center', wordBreak: 'break-word' }}>{prayer.title}</div>
             </div>
       })}
@@ -900,23 +895,23 @@ function PrayerField({ taskGid }: { taskGid: string }) {
       {/* Empty state */}
       {loaded && prayers.length === 0 && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: 'italic', color: 'rgba(242,234,211,0.12)', textAlign: 'center' }}>tap anywhere to place a prayer</div>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: 'italic', color: T.inkMuted, textAlign: 'center' }}>tap anywhere to place a prayer</div>
         </div>
       )}
 
       {/* Composer */}
       {composing && (
         <div data-prayer="true" onClick={e => e.stopPropagation()}
-          style={{ position: 'absolute', left: composing.px, top: composing.py, width: 210, background: 'rgba(28,28,24,0.97)', border: '1px solid rgba(242,234,211,0.18)', padding: '14px 14px 12px', zIndex: 10 }}>
+          style={{ position: 'absolute', left: composing.px, top: composing.py, width: 210, background: T.surface, border: tb(1.5, T.border), borderRadius: T.radiusSm, padding: '14px 14px 12px', zIndex: 10, boxShadow: '0 4px 16px rgba(34,32,29,0.15)' }}>
           <input autoFocus value={composerTitle} onChange={e => setComposerTitle(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') submitComposer(); if (e.key === 'Escape') setComposing(null) }}
             placeholder="prayer title…"
-            style={{ width: '100%', fontFamily: FONT_DISPLAY, fontSize: 13, fontStyle: 'italic', color: '#F2EAD3', background: 'transparent', border: 'none', borderBottom: '1px solid rgba(242,234,211,0.18)', outline: 'none', paddingBottom: 6, marginBottom: 10, boxSizing: 'border-box' }} />
+            style={{ width: '100%', fontFamily: FONT_DISPLAY, fontSize: 13, fontStyle: 'italic', color: T.ink, background: 'transparent', border: 'none', borderBottom: `1px solid ${T.borderMuted}`, outline: 'none', paddingBottom: 6, marginBottom: 10, boxSizing: 'border-box' }} />
           <textarea value={composerBody} onChange={e => setComposerBody(e.target.value)} placeholder="write more… (optional)" rows={3}
-            style={{ width: '100%', fontFamily: FONT, fontSize: 11, color: 'rgba(242,234,211,0.55)', background: 'transparent', border: 'none', outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.6, marginBottom: 10 }} />
+            style={{ width: '100%', fontFamily: FONT, fontSize: 11, color: T.inkMuted, background: 'transparent', border: 'none', outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.6, marginBottom: 10 }} />
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button onClick={() => setComposing(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(242,234,211,0.3)', fontFamily: FONT, fontSize: 10, cursor: 'pointer', padding: 0 }}>cancel</button>
-            <button onClick={submitComposer} style={{ background: '#D4A574', border: 'none', color: '#1e1f1a', fontFamily: FONT, fontSize: 10, fontWeight: 800, padding: '4px 12px', cursor: 'pointer' }}>place</button>
+            <button onClick={() => setComposing(null)} style={{ background: 'transparent', border: 'none', color: T.inkMuted, fontFamily: FONT, fontSize: 10, cursor: 'pointer', padding: 0 }}>cancel</button>
+            <button onClick={submitComposer} style={{ background: T.ink, border: 'none', borderRadius: T.radiusSm, color: T.surface, fontFamily: FONT, fontSize: 10, fontWeight: 800, padding: '4px 12px', cursor: 'pointer' }}>place</button>
           </div>
         </div>
       )}
@@ -924,12 +919,12 @@ function PrayerField({ taskGid }: { taskGid: string }) {
       {/* Prayer detail overlay */}
       {openPrayer && (
         <div data-prayer="true" onClick={() => setOpenPrayer(null)}
-          style={{ position: 'absolute', inset: 0, background: 'rgba(28,28,24,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(28,28,24,0.98)', border: '1px solid rgba(242,234,211,0.14)', padding: '32px 36px', maxWidth: 400, width: '88%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontStyle: 'italic', fontWeight: 500, color: openPrayer.isMarked ? '#B8651F' : '#D4A574', marginBottom: 14, lineHeight: 1.35 }}>{openPrayer.title}</div>
-            {openPrayer.body && <div style={{ fontFamily: FONT, fontSize: 13, color: 'rgba(242,234,211,0.7)', lineHeight: 1.85, marginBottom: 20, whiteSpace: 'pre-wrap' }}>{openPrayer.body}</div>}
-            <div style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(242,234,211,0.22)', marginBottom: 20 }}>{new Date(openPrayer.createdAt).toLocaleDateString()} · visited {openPrayer.revisits}×</div>
-            <button onClick={() => setOpenPrayer(null)} style={{ background: 'transparent', border: '1px solid rgba(242,234,211,0.18)', color: 'rgba(242,234,211,0.45)', fontFamily: FONT, fontSize: 10, fontWeight: 700, padding: '6px 16px', cursor: 'pointer' }}>close</button>
+          style={{ position: 'absolute', inset: 0, background: 'rgba(34,32,29,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: T.surface, border: tb(2), borderRadius: T.radius, padding: '32px 36px', maxWidth: 400, width: '88%' }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontStyle: 'italic', fontWeight: 500, color: openPrayer.isMarked ? '#95470F' : T.ink, marginBottom: 14, lineHeight: 1.35 }}>{openPrayer.title}</div>
+            {openPrayer.body && <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.85, marginBottom: 20, whiteSpace: 'pre-wrap' }}>{openPrayer.body}</div>}
+            <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, marginBottom: 20 }}>{new Date(openPrayer.createdAt).toLocaleDateString()} · visited {openPrayer.revisits}×</div>
+            <button onClick={() => setOpenPrayer(null)} style={{ background: 'transparent', border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, color: T.inkMuted, fontFamily: FONT, fontSize: 10, fontWeight: 700, padding: '6px 16px', cursor: 'pointer' }}>close</button>
           </div>
         </div>
       )}
@@ -996,51 +991,50 @@ function StagePanel({ stage, isActive, isUnlocked, isDone, note, onNote, onCompl
 // ── Factory Detail ─────────────────────────────────────────────────────────
 function FactoryDetail({ task, category, onCategoryChange, onBack }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void }) {
   const isMobile = useIsMobile();
-  const uc = urgColor(task.due_on); const ul = urgLabel(task.due_on); const dl = daysLeft(task.due_on);
-  const catCfg = category ? CATEGORIES[category] : null;
+  const uc = urgColorLight(task.due_on); const ul = urgLabel(task.due_on);
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ background: C.brown, borderBottom: b(2, C.brown), padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap" }}>
-        <button onClick={onBack} style={{ background: C.peach, border: b(2, C.white), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.brown, cursor: "pointer", flexShrink: 0 }}>← Back</button>
+      <div style={{ background: T.surface, borderBottom: tb(2), padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap" }}>
+        <button onClick={onBack} style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 16 : 24, fontWeight: 600, color: C.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
-            {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
-            {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 16 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
+            {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.outside }} />}
+            {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.inside }} />}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
-            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{task.due_on}</div>}
-            {ul && <div style={{ background: uc, border: b(1.5, C.white), borderRadius: 20, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: dl !== null && dl <= 0 ? C.white : C.brown }}>{ul}</div>}
+            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
+            {ul && <div style={{ color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-          <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
-          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
+          <CategoryToggle value={category} onChange={onCategoryChange} size="small" tone="onLight" />
+          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
         </div>
       </div>
-      <div className="graph-bg" style={{ flex: 1, overflowY: "auto", padding: 40 }}>
+      <div className="board-canvas" style={{ flex: 1, overflowY: "auto", padding: 40 }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
           {category === "creative" ? (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-                <InsideIcon width={36} height={36} style={{ color: C.peach }} />
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.peach }}>Inside Task</div>
+                <InsideIcon width={36} height={36} style={{ color: T.inside }} />
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: T.ink }}>Inside Task</div>
               </div>
               {task.notes
-                ? <div style={{ fontFamily: FONT, fontSize: 14, color: C.peach, lineHeight: 1.8, whiteSpace: "pre-wrap", opacity: 0.85 }}>{task.notes}</div>
-                : <div style={{ fontFamily: FONT, fontSize: 13, color: C.peach, opacity: 0.4, fontStyle: "italic" }}>No description in Asana yet.</div>
+                ? <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{task.notes}</div>
+                : <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic" }}>No description in Asana yet.</div>
               }
-              <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ marginTop: 28, background: C.main, color: C.white, border: "none", borderRadius: 12, padding: "12px 28px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Open in Asana ↗</button>
+              <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ marginTop: 28, background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "12px 28px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Open in Asana ↗</button>
             </>
           ) : (
             <>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><UncatIcon width={64} height={64} style={{ color: C.peach, opacity: 0.3 }} /></div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600, color: C.peach, marginBottom: 10, textAlign: "center" }}>Uncategorized</div>
-              <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: C.peach, opacity: 0.5, lineHeight: 1.7, marginBottom: 24, textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><UncatIcon width={64} height={64} style={{ color: T.uncat }} /></div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600, color: T.ink, marginBottom: 10, textAlign: "center" }}>Uncategorized</div>
+              <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.inkMuted, lineHeight: 1.7, marginBottom: 24, textAlign: "center" }}>
                 Mark this task as Inside to view its description, or Outside to run it through the creative process.
               </div>
               <div style={{ display: "flex", justifyContent: "center" }}>
-                <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: C.main, color: C.white, border: "none", borderRadius: 12, padding: "14px 32px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer" }}>Open in Asana ↗</button>
+                <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "14px 32px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer" }}>Open in Asana ↗</button>
               </div>
             </>
           )}
@@ -1152,7 +1146,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
             </div>
           ) : (
             <button onClick={() => onUnlock("")}
-              style={{ background: C.white, color: C.dark, border: "none", borderRadius: 14, padding: "16px 52px", fontFamily: FONT, fontSize: 15, fontWeight: 900, cursor: "pointer", animation: "popIn 0.4s cubic-bezier(.34,1.56,.64,1)", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
+              style={{ background: T.surface, color: T.ink, border: "none", borderRadius: T.radius, padding: "16px 52px", fontFamily: FONT, fontSize: 15, fontWeight: 900, cursor: "pointer", animation: "popIn 0.4s cubic-bezier(.34,1.56,.64,1)", boxShadow: "0 4px 18px rgba(0,0,0,0.3)" }}>
               Begin Work →
             </button>
           )}
@@ -1161,7 +1155,8 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
       {/* Mute button */}
       <button
         onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m); }}
-        style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.6)", cursor: "pointer" }}>
+        title={muted ? "Unmute prayer music" : "Mute prayer music"}
+        style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}>
         {muted ? "♪ Unmute" : "♪ Mute"}
       </button>
       <style>{`@keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }`}</style>
@@ -1230,7 +1225,7 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
 
   const doneCount = STAGES.filter(s => done[s.id]).length;
   const activeStage = loaded ? STAGES.find((s, i) => { const prevDone = i === 0 || !!done[STAGES[i - 1].id]; return prevDone && !done[s.id]; }) : undefined;
-  const uc = urgColor(task.due_on); const ul = urgLabel(task.due_on); const dl = daysLeft(task.due_on);
+  const uc = urgColorLight(task.due_on); const ul = urgLabel(task.due_on);
   const catCfg = category ? CATEGORIES[category] : null;
 
   return (
@@ -1238,51 +1233,51 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
       {showMorningLock && <MorningPrayerLock task={task} onUnlock={handleMorningUnlock} />}
       {celebrate && (
         <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ background: celebrate.color, border: b(3, C.brown), borderRadius: 24, padding: "32px 48px", textAlign: "center", animation: "popIn 0.4s cubic-bezier(.34,1.56,.64,1)" }}>
+          <div style={{ background: celebrate.color, border: tb(3), borderRadius: T.radius, padding: "32px 48px", textAlign: "center", animation: "popIn 0.4s cubic-bezier(.34,1.56,.64,1)" }}>
             <div style={{ fontSize: 56 }}><StageIcon stage={celebrate} size={56} /></div>
             <div style={{ fontFamily: FONT, fontSize: 22, fontWeight: 900, color: celebrate.textColor, marginTop: 8 }}>{celebrate.reward}!</div>
             {celebrate.step < STAGES.length && <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: celebrate.textColor, opacity: 0.8, marginTop: 4 }}>{STAGES[celebrate.step].label} unlocked →</div>}
           </div>
         </div>
       )}
-      <div style={{ height: 4, background: catCfg ? catCfg.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
-      <div style={{ background: C.brown, borderBottom: b(2, C.brown), padding: isMobile ? "8px 12px" : "14px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: isMobile ? 6 : 0 }}>
+      <div style={{ height: 4, background: catCfg ? catCfg.color : T.borderMuted, flexShrink: 0 }} />
+      <div style={{ background: T.surface, borderBottom: tb(2), padding: isMobile ? "8px 12px" : "14px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: isMobile ? 6 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 16 }}>
-          <button onClick={onBack} style={{ background: C.peach, border: b(2, C.white), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.brown, cursor: "pointer", flexShrink: 0 }}>← Back</button>
+          <button onClick={onBack} style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ fontFamily: FONT, fontSize: isMobile ? 14 : 18, fontWeight: 900, color: C.white, whiteSpace: isMobile ? "normal" : "nowrap", overflow: isMobile ? "visible" : "hidden", textOverflow: isMobile ? "unset" : "ellipsis" }}>{task.name}</div>
-              {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
-              {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: C.white, opacity: 0.75 }} />}
+              <div style={{ fontFamily: FONT, fontSize: isMobile ? 14 : 18, fontWeight: 900, color: T.ink, whiteSpace: isMobile ? "normal" : "nowrap", overflow: isMobile ? "visible" : "hidden", textOverflow: isMobile ? "unset" : "ellipsis" }}>{task.name}</div>
+              {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.outside }} />}
+              {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.inside }} />}
             </div>
             {!isMobile && <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
-              {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{task.due_on}</div>}
-              {ul && <div style={{ background: uc, border: b(1.5, C.white), borderRadius: 20, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: dl !== null && dl <= 0 ? C.white : C.brown }}>{ul}</div>}
+              {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
+              {ul && <div style={{ color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
             </div>}
           </div>
           {!isMobile && <>
-            <button onClick={() => { if (window.confirm("Reset the creative process? All notes and progress will be cleared.")) handleReset(); }} style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)", border: b(2, "rgba(255,255,255,0.2)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>↺ Reset</button>
-            <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>Asana ↗</button>
+            <button onClick={() => { if (window.confirm("Reset the creative process? All notes and progress will be cleared.")) handleReset(); }} title="Reset all progress" style={{ background: T.canvas, color: T.inkMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>↺ Reset</button>
+            <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>Asana ↗</button>
           </>}
           {isMobile && <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-            <button onClick={() => { if (window.confirm("Reset progress?")) handleReset(); }} style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)", border: b(1.5, "rgba(255,255,255,0.2)"), borderRadius: 8, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↺</button>
-            {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: b(1.5, "rgba(255,255,255,0.3)"), borderRadius: 8, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↗</button>}
+            <button onClick={() => { if (window.confirm("Reset progress?")) handleReset(); }} title="Reset progress" style={{ background: T.canvas, color: T.inkMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↺</button>
+            {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} title="Open in Asana" style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "5px 10px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer" }}>↗</button>}
           </div>}
         </div>
       </div>
       {/* Timed Session Banner */}
-      <div style={{ background: "rgba(20,18,28,0.9)", borderBottom: "1px solid rgba(255,255,255,0.1)", padding: isMobile ? "8px 12px" : "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 8, minHeight: 44 }}>
+      <div style={{ background: T.surfaceMuted, borderBottom: tb(1.5, T.borderMuted), padding: isMobile ? "8px 12px" : "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 8, minHeight: 44 }}>
         {sessionState ? (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <div style={{ color: C.white, display: "flex", alignItems: "center", flexShrink: 0 }}>
+              <div style={{ color: T.ink, display: "flex", alignItems: "center", flexShrink: 0 }}>
                 <StageIcon stage={STAGES[sessionState.stageIndex]} size={isMobile ? 16 : 22} />
               </div>
               <div style={{ minWidth: 0 }}>
-                {!isMobile && <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.3)", letterSpacing: 0.5, marginBottom: 1 }}>
+                {!isMobile && <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5, marginBottom: 1 }}>
                   {sessionState.done ? "Session Complete" : `Stage ${sessionState.stageIndex + 1} of ${STAGES.length} — ${sessionState.paused ? "Paused" : "Active"}`}
                 </div>}
-                <div style={{ fontFamily: FONT, fontSize: isMobile ? 12 : 14, fontWeight: 900, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <div style={{ fontFamily: FONT, fontSize: isMobile ? 12 : 14, fontWeight: 900, color: T.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {sessionState.done ? "All stages complete" : STAGES[sessionState.stageIndex].label}
                 </div>
               </div>
@@ -1290,16 +1285,16 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               {!sessionState.done && !isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                  <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: 0.5 }}>next stage in</div>
-                  <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 900, color: sessionState.paused ? "rgba(255,255,255,0.4)" : C.white, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{daysLabel(sessionState.remainingSecs)}</div>
+                  <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5 }}>next stage in</div>
+                  <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 900, color: sessionState.paused ? T.inkMuted : T.ink, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{daysLabel(sessionState.remainingSecs)}</div>
                 </div>
               )}
               {!sessionState.done && isMobile && (
-                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 900, color: sessionState.paused ? "rgba(255,255,255,0.4)" : C.white, fontVariantNumeric: "tabular-nums" }}>{daysLabel(sessionState.remainingSecs)}</div>
+                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 900, color: sessionState.paused ? T.inkMuted : T.ink, fontVariantNumeric: "tabular-nums" }}>{daysLabel(sessionState.remainingSecs)}</div>
               )}
               {sessionState.done
-                ? <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.main }}>✓ Done</div>
-                : <button onClick={onTogglePause} style={{ background: sessionState.paused ? C.main : "rgba(255,255,255,0.1)", color: C.white, border: "none", borderRadius: 8, padding: isMobile ? "5px 10px" : "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+                ? <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.inside }}>✓ Done</div>
+                : <button onClick={onTogglePause} title={sessionState.paused ? "Resume session" : "Pause session"} style={{ background: sessionState.paused ? T.inside : T.surface, color: sessionState.paused ? T.surface : T.ink, border: tb(1.5, sessionState.paused ? T.inside : T.borderMuted), borderRadius: T.radiusSm, padding: isMobile ? "5px 10px" : "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
                     {sessionState.paused ? "▶" : "⏸"}{!isMobile && (sessionState.paused ? " Resume" : " Pause")}
                   </button>
               }
@@ -1308,13 +1303,13 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
         ) : (
           <>
             {!isMobile && (() => { const [p, r, a] = getSessionDurations(Date.now(), task.due_on); return (
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>
+              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted }}>
                 {task.due_on ? `Timed session: Prayer (${daysLabel(p)}) → Revelation (${daysLabel(r)}) → Action (${daysLabel(a)})` : 'No due date — set one in Asana to scale the session'}
               </div>
             ); })()}
-            {isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>Timed session</div>}
+            {isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted }}>Timed session</div>}
             {onStartSession && (
-              <button onClick={onStartSession} style={{ background: C.main, color: C.white, border: "none", borderRadius: 10, padding: isMobile ? "6px 16px" : "8px 22px", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer", flexShrink: 0, letterSpacing: 0.3 }}>
+              <button onClick={onStartSession} style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: isMobile ? "6px 16px" : "8px 22px", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer", flexShrink: 0, letterSpacing: 0.3 }}>
                 ▶ Start
               </button>
             )}
@@ -1323,41 +1318,41 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
         {/* Step indicators — always visible */}
-        <div style={{ background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.08)`, padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div style={{ background: T.surface, borderBottom: tb(1.5, T.borderMuted), padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           {STAGES.slice(0, 2).map((s, i) => {
             const isViewing = !showDescription && i === viewingStageIdx;
             return (
               <Fragment key={s.id}>
-                {i > 0 && <div style={{ width: 36, height: 2, background: "rgba(255,255,255,0.12)" }} />}
-                <button onClick={() => { setShowDescription(false); setViewingStageIdx(i); }}
-                  style={{ padding: 0, background: "transparent", border: "none", cursor: "pointer", opacity: isViewing ? 1 : 0.35, transition: "opacity 0.2s", display: "flex", alignItems: "center", justifyContent: "center", color: C.white }}>
+                {i > 0 && <div style={{ width: 36, height: 2, background: T.borderMuted }} />}
+                <button onClick={() => { setShowDescription(false); setViewingStageIdx(i); }} title={s.label} aria-label={s.label}
+                  style={{ padding: 6, background: isViewing ? T.surfaceMuted : "transparent", border: "none", borderRadius: T.radiusSm, cursor: "pointer", opacity: isViewing ? 1 : 0.4, transition: "opacity 0.2s, background 0.2s", display: "flex", alignItems: "center", justifyContent: "center", color: T.ink }}>
                   <StageIcon stage={s} size={28} />
                 </button>
               </Fragment>
             );
           })}
-          <div style={{ width: 36, height: 2, background: "rgba(255,255,255,0.12)" }} />
-          <button onClick={() => setShowDescription(v => !v)}
-            style={{ padding: "4px 10px", background: showDescription ? "rgba(255,255,255,0.15)" : "transparent", border: "none", borderRadius: 6, cursor: "pointer", opacity: showDescription ? 1 : 0.35, transition: "opacity 0.2s", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.white, letterSpacing: 0.3 }}>
+          <div style={{ width: 36, height: 2, background: T.borderMuted }} />
+          <button onClick={() => setShowDescription(v => !v)} title="View project brief" aria-pressed={showDescription}
+            style={{ padding: "4px 10px", background: showDescription ? T.surfaceMuted : "transparent", border: "none", borderRadius: 6, cursor: "pointer", opacity: showDescription ? 1 : 0.4, transition: "opacity 0.2s", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.ink, letterSpacing: 0.3 }}>
             Brief
           </button>
         </div>
 
         {/* Content area */}
         {showDescription ? (
-          <div className="graph-bg" style={{ flex: 1, overflowY: "auto" }}>
+          <div className="board-canvas" style={{ flex: 1, overflowY: "auto" }}>
             <div style={{ padding: isMobile ? "24px 16px" : "52px 64px", maxWidth: 620, margin: "0 auto" }}>
-              <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 900, color: C.peach, marginBottom: 32, lineHeight: 1.3 }}>{task.name}</div>
-              <div style={{ width: 40, height: 3, background: C.main, borderRadius: 99, marginBottom: 32 }} />
+              <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 900, color: T.ink, marginBottom: 32, lineHeight: 1.3 }}>{task.name}</div>
+              <div style={{ width: 40, height: 3, background: T.inside, borderRadius: 99, marginBottom: 32 }} />
               {task.notes ? (
-                <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 400, color: C.peach, lineHeight: 1.9, whiteSpace: "pre-wrap", opacity: 0.8 }}>{task.notes}</div>
+                <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 400, color: T.ink, lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{task.notes}</div>
               ) : (
-                <div style={{ fontFamily: FONT, fontSize: 14, color: C.peach, opacity: 0.3 }}>No description added in Asana yet.</div>
+                <div style={{ fontFamily: FONT, fontSize: 14, color: T.inkMuted }}>No description added in Asana yet.</div>
               )}
               {task.due_on && (
-                <div style={{ marginTop: 40, display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "10px 18px" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.peach, opacity: 0.4, letterSpacing: 1.5 }}>Due</span>
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: urgColor(task.due_on) }}>{task.due_on}</span>
+                <div style={{ marginTop: 40, display: "inline-flex", alignItems: "center", gap: 10, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 18px" }}>
+                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5 }}>Due</span>
+                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: urgColorLight(task.due_on) }}>{task.due_on}</span>
                 </div>
               )}
             </div>
@@ -1368,17 +1363,17 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
             {loaded && viewingStageIdx === 1 ? (
               <MindMap taskGid={task.gid} taskName={task.name} taskNotes={task.notes} fullscreen />
             ) : (
-              <div className="graph-bg" style={{ flex: 1, overflowY: isMobile && !showDescription && viewingStageIdx === 0 ? "hidden" : "auto", display: "flex", flexDirection: "column" }}>
+              <div className="board-canvas" style={{ flex: 1, overflowY: isMobile && !showDescription && viewingStageIdx === 0 ? "hidden" : "auto", display: "flex", flexDirection: "column" }}>
                 {!loaded ? (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: FONT, fontSize: 14, color: C.peach, opacity: 0.3 }}>Loading…</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: FONT, fontSize: 14, color: T.inkMuted }}>Loading…</div>
                 ) : viewingStageIdx >= STAGES.length ? (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: 48, textAlign: "center" }}>
                     <div style={{ fontSize: 64, marginBottom: 20 }}>🏆</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 42, fontWeight: 600, color: C.peach, marginBottom: 8 }}>Faithfully Finished.</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 400, color: C.peach, opacity: 0.5, lineHeight: 1.7, marginBottom: 28 }}>Well done. The work is offered up.</div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 42, fontWeight: 600, color: T.ink, marginBottom: 8 }}>Faithfully Finished.</div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 400, color: T.inkMuted, lineHeight: 1.7, marginBottom: 28 }}>Well done. The work is offered up.</div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
                       {STAGES.map((s, i) => (
-                        <button key={s.id} onClick={() => setViewingStageIdx(i)} style={{ background: "rgba(255,255,255,0.06)", border: b(1.5, "rgba(255,255,255,0.12)"), borderRadius: 10, padding: "8px 16px", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: C.peach, cursor: "pointer", opacity: 0.6 }}>
+                        <button key={s.id} onClick={() => setViewingStageIdx(i)} style={{ background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 16px", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, cursor: "pointer" }}>
                           <StageIcon stage={s} size={14} /> {s.label}
                         </button>
                       ))}
@@ -1387,22 +1382,23 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
                 ) : (() => {
                   const stage = STAGES[viewingStageIdx];
                   if (stage.id === "prayer") return <PrayerField taskGid={task.gid} />;
+                  const stageAccent = stage.id === "revelation" ? T.inside : T.outside;
                   return (
                     <div style={{ padding: isMobile ? "24px 16px" : "52px 64px", maxWidth: 620, margin: "0 auto" }}>
-                      <div style={{ color: C.peach, marginBottom: 12 }}><StageIcon stage={stage} size={isMobile ? 28 : 44} /></div>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 28 : 42, fontWeight: 600, color: C.peach, marginBottom: 4 }}>{stage.label}</div>
-                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: C.peach, opacity: 0.3, letterSpacing: 0.5, marginBottom: isMobile ? 14 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
-                      <div style={{ width: 32, height: 3, background: stage.id === "revelation" ? C.main : C.coral, borderRadius: 99, marginBottom: isMobile ? 16 : 28 }} />
-                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: C.coral, textTransform: "none", letterSpacing: 1.5, marginBottom: 10 }}>{stage.q}</div>
+                      <div style={{ color: T.ink, marginBottom: 12 }}><StageIcon stage={stage} size={isMobile ? 28 : 44} /></div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 28 : 42, fontWeight: 600, color: T.ink, marginBottom: 4 }}>{stage.label}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 500, color: T.inkMuted, letterSpacing: 0.5, marginBottom: isMobile ? 14 : 24 }}>Step {stage.step} of {STAGES.length} — {stage.sub}</div>
+                      <div style={{ width: 32, height: 3, background: stageAccent, borderRadius: 99, marginBottom: isMobile ? 16 : 28 }} />
+                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: stageAccent, textTransform: "none", letterSpacing: 1.5, marginBottom: 10 }}>{stage.q}</div>
                       <textarea value={notes[stage.id] || ""} onChange={e => setNote(stage.id, e.target.value)} placeholder="Write your thoughts here…"
-                        style={{ width: "100%", maxWidth: isMobile ? "100%" : 500, minHeight: 160, fontFamily: "monospace", fontSize: 14, color: C.peach, background: "rgba(36,35,41,0.9)", backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px)", backgroundSize: "20px 20px", border: `1.5px solid rgba(255,255,255,0.85)`, borderRadius: 0, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.7, display: "block" }} />
+                        style={{ width: "100%", maxWidth: isMobile ? "100%" : 500, minHeight: 160, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.7, display: "block" }} />
                     </div>
                   );
                 })()}
               </div>
             )}
             {loaded && activeStage && STAGES.indexOf(activeStage) === viewingStageIdx && !showMorningLock && (
-              <div style={{ flexShrink: 0, background: activeStage.color, borderTop: b(2.5, C.brown), padding: isMobile ? "10px 14px" : "14px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <div style={{ flexShrink: 0, background: activeStage.color, borderTop: tb(2.5), padding: isMobile ? "10px 14px" : "14px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
                   {!isMobile && <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: activeStage.textColor, opacity: 0.65, textTransform: "none", letterSpacing: 0.5, marginBottom: 2 }}>Current Stage</div>}
                   <div style={{ fontFamily: FONT, fontSize: isMobile ? 12 : 15, fontWeight: 900, color: activeStage.textColor, display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}><StageIcon stage={activeStage} size={isMobile ? 12 : 15} /> {activeStage.label} {!isMobile && <span style={{ fontWeight: 600, fontSize: 12, opacity: 0.7 }}>— {activeStage.sub}</span>}</div>
