@@ -74,9 +74,32 @@ const FONT = "'Bricolage Grotesque', system-ui, sans-serif";
 const FONT_DISPLAY = "'Cormorant', Georgia, serif";
 const b = (w = 2, col = C.brown) => `${w}px solid ${col}`;
 
+// Board tokens — the light, restrained-neo-brutalist surface used by the
+// main board (header, columns, cards, sidebars). Kept separate from `C`
+// (which stays dark/moody for Mind Map, Prayer Field and the stage flow)
+// so this redesign doesn't repaint those intentionally atmospheric screens.
+const T = {
+  canvas:       "#F7F3EC", // warm off-white app canvas
+  surface:      "#FFFFFF", // card / panel fill
+  surfaceMuted: "#ECE6D9", // quiet fill for completed items, recessed panels
+  ink:          "#22201D", // primary text — near-black warm ink
+  inkMuted:     "#6B655C", // secondary text
+  border:       "#22201D", // crisp default border (ink)
+  borderMuted:  "#DDD5C6", // soft divider line
+  outside:      "#B4502C", // Outside/factory accent — terracotta
+  inside:       "#4B6B3A", // Inside/creative accent — deep moss
+  uncat:        "#6A6252", // Uncategorized accent — warm stone
+  urgent:       "#A8371F", // overdue / due today
+  soon:         "#95631A", // due within a week
+  focus:        "#2452C8", // keyboard focus ring — distinct from all category colors
+  radius:       6,
+  radiusSm:     3,
+};
+const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
+
 const CATEGORIES = {
-  factory:  { label: "Outside", emoji: "⚙️", color: C.coral,    text: C.brown },
-  creative: { label: "Inside",  emoji: "✦",  color: C.creative, text: C.brown },
+  factory:  { label: "Outside", emoji: "⚙️", color: T.outside, text: T.ink },
+  creative: { label: "Inside",  emoji: "✦",  color: T.inside,  text: T.ink },
 } as const;
 
 type CategoryKey = keyof typeof CATEGORIES | null;
@@ -140,6 +163,8 @@ interface TodoItem {
 function daysLeft(due: string | null) { return due ? Math.ceil((new Date(due).getTime() - Date.now()) / 86400000) : null; }
 function urgLabel(due: string | null) { const d = daysLeft(due); if (d === null) return null; if (d < 0) return Math.abs(d) + "d overdue"; if (d === 0) return "Due today"; if (d <= 7) return d + "d left"; return null; }
 function urgColor(due: string | null) { const d = daysLeft(due); return d !== null && d <= 3 ? C.coral : d !== null && d <= 7 ? "#d4956a" : C.green; }
+// Light-theme counterpart of urgColor(), tuned for AA contrast on the T.canvas/T.surface board.
+function urgColorLight(due: string | null) { const d = daysLeft(due); return d !== null && d <= 7 ? (d <= 3 ? T.urgent : T.soon) : T.inkMuted; }
 
 // storage helpers
 async function storageGet(key: string): Promise<string | null> {
@@ -218,7 +243,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(36,35,41,0.5)", backdropFilter: "blur(4px)" }}>
-      <div style={{ background: C.peach, border: b(3, C.brown), borderRadius: 24, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
+      <div style={{ background: C.peach, border: b(3, C.brown), borderRadius: T.radius, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ fontFamily: FONT, fontSize: 20, fontWeight: 900, color: C.brown, marginBottom: 6 }}>Settings</div>
 
         {isElectron ? (
@@ -301,10 +326,12 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 }
 
 // ── Category Toggle ────────────────────────────────────────────────────────
-function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryKey; onChange: (v: CategoryKey) => void; size?: "normal" | "small" }) {
+const CATEGORY_TOGGLE_LABEL: Record<string, string> = { factory: "Outside", creative: "Inside", none: "Uncategorized" };
+function CategoryToggle({ value, onChange, size = "normal", tone = "onDark" }: { value: CategoryKey; onChange: (v: CategoryKey) => void; size?: "normal" | "small"; tone?: "onDark" | "onLight" }) {
   const small = size === "small";
   const base = small ? 16 : 22;
   const big = base;
+  const onLight = tone === "onLight";
   // factory/creative ordered so selected is first (left); uncat always last (right)
   const catPair: CategoryKey[] = value === "factory" ? ["factory", "creative"] : value === "creative" ? ["creative", "factory"] : ["factory", "creative"];
   const ordered: CategoryKey[] = [...catPair, null];
@@ -313,9 +340,13 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
       {ordered.map(cat => {
         const active = value === cat;
         const sz = active ? big : base;
+        const label = CATEGORY_TOGGLE_LABEL[cat ?? "none"];
+        const activeColor = cat === "creative" ? T.inside : cat === "factory" ? T.outside : T.uncat;
         return (
-          <button key={cat ?? "none"} onClick={e => { e.stopPropagation(); onChange(cat); }}
-            style={{ background: "transparent", border: "none", padding: small ? "2px 4px" : "4px 8px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", color: C.white, opacity: active ? 1 : 0.6 }}>
+          <button key={cat ?? "none"} onClick={e => { e.stopPropagation(); onChange(cat); }} title={`Move to ${label}`} aria-label={`Move to ${label}`} aria-pressed={active}
+            style={onLight
+              ? { background: active ? `${activeColor}1f` : "transparent", border: "none", borderRadius: T.radiusSm, padding: small ? "3px 5px" : "5px 9px", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", color: active ? activeColor : T.inkMuted }
+              : { background: "transparent", border: "none", padding: small ? "2px 4px" : "4px 8px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", color: C.white, opacity: active ? 1 : 0.6 }}>
             {cat === "creative" ? <InsideIcon width={sz} height={sz} /> : cat === "factory" ? <OutsideIcon width={sz} height={sz} /> : <UncatIcon width={sz} height={sz} />}
           </button>
         );
@@ -1392,7 +1423,6 @@ function ProjectDetail({ task, category, onCategoryChange, onBack, session, onSt
 
 // ── Project Card ───────────────────────────────────────────────────────────
 function ProjectCard({ task, progress: _progress, category, onOpen, onCategoryChange, session, onDragStart, onDragEnd }: { task: Task; progress: number; category: CategoryKey; onOpen: (t: Task) => void; onCategoryChange: (c: CategoryKey) => void; session?: Session; onDragStart?: () => void; onDragEnd?: () => void }) {
-  const [hov, setHov] = useState(false);
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
     if (!session) return;
@@ -1402,34 +1432,41 @@ function ProjectCard({ task, progress: _progress, category, onOpen, onCategoryCh
   const sessionState = (session && category === "factory") ? getSessionState(session, task.due_on, nowMs) : null;
   const catCfg = category ? CATEGORIES[category] : null;
   const due = task.due_on ? new Date(task.due_on + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
+  const ul = urgLabel(task.due_on);
+  const uc = urgColorLight(task.due_on);
   return (
-    <div className="glass-card" draggable onDragStart={e => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", task.gid); onDragStart?.(); }} onDragEnd={onDragEnd} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onOpen(task)}
-      style={{ background: C.dark, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 0, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", minHeight: 220, transform: hov ? "translateY(-4px) scale(1.01)" : "translateY(0) scale(1)", transition: "transform 0.18s cubic-bezier(.34,1.56,.64,1), box-shadow 0.18s, background 0.18s", boxShadow: hov ? "0 20px 40px rgba(36,35,41,0.55)" : "0 4px 16px rgba(36,35,41,0.3)" }}>
-      <div style={{ height: 6, background: catCfg ? catCfg.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
-      <div style={{ padding: "14px 14px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
-          <div style={{ fontFamily: FONT, fontSize: 18, fontWeight: 600, color: C.peach, lineHeight: 1.4, textAlign: "left" }}>{task.name}</div>
-        </div>
-        <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {due
-            ? <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.65)" }}><span style={{ fontWeight: 400, fontSize: 10, opacity: 0.7 }}>Due: </span>{due}</div>
-            : <div />}
-          <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
+    <div className="board-card" role="button" tabIndex={0} draggable
+      onDragStart={e => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", task.gid); onDragStart?.(); }}
+      onDragEnd={onDragEnd}
+      onClick={() => onOpen(task)}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
+      style={{ background: T.surface, border: tb(2), borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", transition: "transform 0.15s ease, border-color 0.15s ease" }}>
+      <div style={{ height: 8, background: catCfg ? catCfg.color : T.borderMuted, flexShrink: 0 }} />
+      <div style={{ padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: T.ink, lineHeight: 1.35, textAlign: "left" }}>{task.name}</div>
+        <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+            {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
+            {ul && (
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
+            )}
+          </div>
+          <CategoryToggle value={category} onChange={onCategoryChange} size="small" tone="onLight" />
         </div>
         {sessionState && (
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, color: C.peach }}>
+          <div style={{ borderTop: tb(1, T.borderMuted), paddingTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, color: T.ink }}>
               <StageIcon stage={STAGES[sessionState.stageIndex]} size={13} />
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: sessionState.paused ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.65)" }}>
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: sessionState.paused ? T.inkMuted : T.ink }}>
                 {sessionState.done ? "Complete" : sessionState.paused ? `${STAGES[sessionState.stageIndex].label} ⏸` : STAGES[sessionState.stageIndex].label}
               </div>
             </div>
             {!sessionState.done && (
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 900, color: C.peach, fontVariantNumeric: "tabular-nums", letterSpacing: 0.5 }}>
+              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 900, color: T.ink, fontVariantNumeric: "tabular-nums", letterSpacing: 0.5 }}>
                 {daysLabel(sessionState.remainingSecs)}
               </div>
             )}
-            {sessionState.done && <div style={{ fontSize: 11, color: C.main, fontWeight: 900 }}>✓</div>}
+            {sessionState.done && <div style={{ fontSize: 11, color: T.inside, fontWeight: 900 }}>✓</div>}
           </div>
         )}
       </div>
@@ -1439,22 +1476,22 @@ function ProjectCard({ task, progress: _progress, category, onOpen, onCategoryCh
 
 // ── Todo Card ─────────────────────────────────────────────────────────────
 function TodoCard({ item, onOpen, onToggle, onClose }: { item: TodoItem; onOpen?: () => void; onToggle: (e: React.MouseEvent) => void; onClose: (e: React.MouseEvent) => void }) {
-  const [hov, setHov] = useState(false);
   return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={onOpen}
-      style={{ background: C.dark, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 0, cursor: "default", transition: "background 0.15s" }}>
-      <div style={{ padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <div onClick={onToggle}
-          style={{ width: 18, height: 18, borderRadius: 0, flexShrink: 0, marginTop: 2, border: `1.5px solid ${item.done ? C.main : "rgba(255,255,255,0.4)"}`, background: item.done ? C.main : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s" }}>
-          {item.done && <span style={{ color: C.white, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
-        </div>
-        <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 500, color: C.peach, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.35 : 1, flex: 1, minWidth: 0, wordBreak: "break-word" }}>
+    <div className={onOpen ? "board-card" : undefined} role={onOpen ? "button" : undefined} tabIndex={onOpen ? 0 : undefined} onClick={onOpen}
+      onKeyDown={e => { if (onOpen && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onOpen(); } }}
+      style={{ background: item.done ? T.surfaceMuted : T.surface, border: tb(1.5, item.done ? T.borderMuted : T.border), borderRadius: T.radiusSm, cursor: onOpen ? "pointer" : "default", transition: "border-color 0.15s, background 0.15s" }}>
+      <div style={{ padding: "9px 10px", display: "flex", alignItems: "flex-start", gap: 9 }}>
+        <button onClick={onToggle} title={item.done ? "Mark not done" : "Mark done"} aria-label={item.done ? "Mark not done" : "Mark done"}
+          style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, marginTop: 2, border: tb(1.5, item.done ? T.inside : T.inkMuted), background: item.done ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s", padding: 0 }}>
+          {item.done && <span style={{ color: T.surface, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+        </button>
+        <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 500, color: item.done ? T.inkMuted : T.ink, textDecoration: item.done ? "line-through" : "none", flex: 1, minWidth: 0, wordBreak: "break-word" }}>
           {item.title}
         </div>
-        <button onClick={onClose}
-          style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 14, cursor: "pointer", padding: "0 2px", lineHeight: 1, flexShrink: 0 }}
-          onMouseEnter={e => (e.currentTarget.style.color = C.white)}
-          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>✕</button>
+        <button onClick={onClose} title="Delete this task" aria-label="Delete this task"
+          style={{ background: "transparent", border: "none", color: T.inkMuted, fontSize: 14, cursor: "pointer", padding: "0 2px", lineHeight: 1, flexShrink: 0 }}
+          onMouseEnter={e => (e.currentTarget.style.color = T.urgent)}
+          onMouseLeave={e => (e.currentTarget.style.color = T.inkMuted)}>✕</button>
       </div>
     </div>
   );
@@ -1468,23 +1505,23 @@ function TodoDetail({ item, onUpdate, onDelete, onBack }: { item: TodoItem; onUp
   useEffect(() => { setTitle(item.title); setNotes(item.notes); }, [item.id]);
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.08)`, padding: "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: 14 }}>
-        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.peach, cursor: "pointer" }}>← Back</button>
+      <div style={{ background: T.surface, borderBottom: tb(2), padding: "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: 14 }}>
+        <button onClick={onBack} title="Back to Quick Tasks" style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer" }}>← Back</button>
         <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => title.trim() && onUpdate({ title: title.trim() })} onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-          style={{ flex: 1, fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach, background: "transparent", border: "none", outline: "none", minWidth: 0 }} />
+          style={{ flex: 1, fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, background: "transparent", border: "none", outline: "none", minWidth: 0 }} />
         <button onClick={() => onUpdate({ done: !item.done })}
-          style={{ background: item.done ? "rgba(255,255,255,0.08)" : C.main, color: C.white, border: "none", borderRadius: 10, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+          style={{ background: item.done ? T.canvas : T.inside, color: item.done ? T.ink : T.surface, border: tb(1.5, item.done ? T.border : T.inside), borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
           {item.done ? "↩ Reopen" : "✓ Done"}
         </button>
-        <button onClick={() => { onDelete(); onBack(); }}
-          style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.15)`, color: "rgba(255,255,255,0.4)", borderRadius: 10, padding: "6px 14px", fontFamily: FONT, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
+        <button onClick={() => { onDelete(); onBack(); }} title="Delete this task"
+          style={{ background: "transparent", border: tb(1.5, T.borderMuted), color: T.inkMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
           Delete
         </button>
       </div>
-      <div className="graph-bg" style={{ flex: 1, overflowY: "auto", padding: "48px 64px" }}>
+      <div className="board-canvas" style={{ flex: 1, overflowY: "auto", padding: "48px 64px" }}>
         <textarea value={notes} onChange={e => { setNotes(e.target.value); onUpdate({ notes: e.target.value }); }}
           placeholder="Add notes…"
-          style={{ width: "100%", maxWidth: 560, minHeight: 200, fontFamily: FONT, fontSize: 14, color: C.peach, background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.8, display: "block" }} />
+          style={{ width: "100%", maxWidth: 560, minHeight: 200, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radius, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.8, display: "block" }} />
       </div>
     </div>
   );
@@ -1510,43 +1547,43 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }} onClick={onClose}>
-      <div style={{ background: C.dark, border: `1px solid rgba(255,255,255,0.12)`, width: 480, maxWidth: "90vw", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(34,32,29,0.55)" }} onClick={onClose}>
+      <div style={{ background: T.surface, border: tb(2.5), borderRadius: T.radius, width: 480, maxWidth: "90vw", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ background: C.mid, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>New Project</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
+        <div style={{ background: T.surfaceMuted, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: tb(2) }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>New Project</div>
+          <button onClick={onClose} title="Close" aria-label="Close" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
         </div>
 
         {/* Body */}
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Name */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.4)", letterSpacing: 1.2 }}>PROJECT NAME</label>
+            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>PROJECT NAME</label>
             <input autoFocus value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCreate()} placeholder="Name your project…"
-              style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.peach, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
           </div>
 
           {/* Description */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.4)", letterSpacing: 1.2 }}>DESCRIPTION</label>
+            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>DESCRIPTION</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project about…"
-              style={{ fontFamily: FONT, fontSize: 13, color: C.peach, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 90, lineHeight: 1.7 }} />
+              style={{ fontFamily: FONT, fontSize: 13, color: T.ink, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 90, lineHeight: 1.7 }} />
           </div>
 
           {/* Category */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.4)", letterSpacing: 1.2 }}>CATEGORY</label>
+            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>CATEGORY</label>
             <div style={{ display: "flex", gap: 10 }}>
-              {([["factory", "Outside", C.coral], ["creative", "Inside", C.main], [null, "Uncategorized", "rgba(255,255,255,0.2)"]] as [CategoryKey, string, string][]).map(([key, label, color]) => {
+              {([["factory", "Outside", T.outside], ["creative", "Inside", T.inside], [null, "Uncategorized", T.uncat]] as [CategoryKey, string, string][]).map(([key, label, color]) => {
                 const isSelected = cat === key;
                 return (
-                  <button key={String(key)} onClick={() => setCat(key)}
-                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)", border: `1.5px solid ${isSelected ? color : "rgba(255,255,255,0.08)"}`, borderRadius: 0, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}>
-                    <div style={{ color: isSelected ? color : "rgba(255,255,255,0.3)", display: "flex" }}>
+                  <button key={String(key)} onClick={() => setCat(key)} aria-pressed={isSelected}
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? `${color}1f` : T.canvas, border: tb(1.5, isSelected ? color : T.borderMuted), borderRadius: T.radiusSm, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}>
+                    <div style={{ color: isSelected ? color : T.inkMuted, display: "flex" }}>
                       {key === "factory" ? <OutsideIcon width={28} height={28} /> : key === "creative" ? <InsideIcon width={28} height={28} /> : <UncatIcon width={28} height={28} />}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: isSelected ? C.peach : "rgba(255,255,255,0.35)" }}>{label}</div>
+                    <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: isSelected ? T.ink : T.inkMuted }}>{label}</div>
                   </button>
                 );
               })}
@@ -1555,10 +1592,10 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
         </div>
 
         {/* Footer */}
-        <div style={{ padding: "16px 24px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "flex-end", gap: 10 }}>
-          <button onClick={onClose} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.4)", borderRadius: 0, padding: "10px 20px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+        <div style={{ padding: "16px 24px", borderTop: tb(1.5, T.borderMuted), display: "flex", justifyContent: "flex-end", gap: 10 }}>
+          <button onClick={onClose} style={{ background: "transparent", border: tb(1.5, T.borderMuted), color: T.inkMuted, borderRadius: T.radiusSm, padding: "10px 20px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleCreate} disabled={!name.trim()}
-            style={{ background: name.trim() ? C.main : "rgba(255,255,255,0.08)", color: name.trim() ? C.white : "rgba(255,255,255,0.2)", border: "none", borderRadius: 0, padding: "10px 24px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+            style={{ background: name.trim() ? T.ink : T.surfaceMuted, color: name.trim() ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "10px 24px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
             Create Project
           </button>
         </div>
@@ -1759,23 +1796,24 @@ export default function App() {
   const allInside        = projects.filter(p => categories[p.gid] === "creative").sort(byDueDate);
   const allUncategorized = projects.filter(p => !categories[p.gid]).sort(byDueDate);
 
-  function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, muted = false) {
+  function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string, muted = false) {
     const isOver = dragGid !== null && dragOverCat === targetCat;
     return (
       <div
-        style={{ display: "flex", flexDirection: "column", width: 240, flexShrink: 0, borderRadius: 4, outline: isOver ? `2px solid ${C.coral}` : "2px solid transparent", transition: "outline 0.15s" }}
+        style={{ display: "flex", flexDirection: "column", width: 256, flexShrink: 0, borderRadius: T.radius, outline: isOver ? `2px solid ${accentColor}` : "2px solid transparent", outlineOffset: 4, transition: "outline-color 0.15s" }}
         onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverCat(targetCat); }}
         onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverCat(undefined); }}
         onDrop={e => { e.preventDefault(); const gid = e.dataTransfer.getData("text/plain"); if (gid) updateCategory(gid, targetCat); setDragGid(null); setDragOverCat(undefined); }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, opacity: muted ? 0.5 : 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, paddingBottom: 12, borderBottom: `2.5px solid ${accentColor}` }}>
           {icon}
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.peach }}>{label}</div>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, flex: 1 }}>{label}</div>
+          <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: muted ? T.inkMuted : T.surface, background: muted ? T.surface : accentColor, border: muted ? tb(1.5, T.borderMuted) : "none", borderRadius: 10, padding: "2px 8px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 28, minHeight: 100, flex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 100, flex: 1, paddingTop: 16 }}>
           {items.length === 0
-            ? <div style={{ border: `2px dashed ${isOver ? C.coral : "rgba(255,255,255,0.2)"}`, borderRadius: 4, height: 100, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.15s" }}>
-                <span style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>Drop here</span>
+            ? <div style={{ border: `2px dashed ${isOver ? accentColor : T.borderMuted}`, borderRadius: T.radius, height: 90, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.15s" }}>
+                <span style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted }}>Drop here</span>
               </div>
             : items.map(p => <ProjectCard key={p.gid} task={p} progress={progresses[p.gid] || 0} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} session={sessions[p.gid]} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)
           }
@@ -1785,25 +1823,25 @@ export default function App() {
   }
 
   return (
-    <div className="graph-bg" style={{ display: "flex", flexDirection: "column", height: "100vh", fontFamily: FONT, overflow: "hidden" }}>
+    <div className="board-canvas" style={{ display: "flex", flexDirection: "column", height: "100vh", fontFamily: FONT, overflow: "hidden" }}>
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} onSaved={(gids, quickGid) => { setSectionGids(gids); setQuickTaskSectionGid(quickGid); syncTasks(gids); syncQuickTasks(quickGid); }} />}
       {showPrayer && <MorningPrayerLock onUnlock={() => setShowPrayer(false)} />}
       {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreate={createProject} />}
 
       {/* Title bar */}
-      <div style={{ background: C.mid, borderBottom: `1px solid rgba(255,255,255,0.08)`, padding: "0 12px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, height: 54, flexShrink: 0, minWidth: 0, overflow: "hidden" }}>
+      <div style={{ background: T.surface, borderBottom: tb(2), padding: "0 12px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, height: 54, flexShrink: 0, minWidth: 0, overflow: "hidden" }}>
         {/* Traffic light spacer on Mac — skip on mobile */}
         {!isMobile && <div style={{ width: 60, flexShrink: 0 }} />}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, minWidth: 0 }}>
-          <MossIcon width={isMobile ? 28 : 42} height={isMobile ? 28 : 42} style={{ color: C.main, flexShrink: 0 }} />
-          {!isMobile && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.peach, letterSpacing: 0 }}>MossMind</div>}
+          <MossIcon width={isMobile ? 28 : 42} height={isMobile ? 28 : 42} style={{ color: T.inside, flexShrink: 0 }} />
+          {!isMobile && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>MossMind</div>}
         </div>
-        {!isMobile && <button onClick={() => setShowCreate(true)} style={{ background: C.main, border: "none", borderRadius: 0, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: C.white, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
+        {!isMobile && <button onClick={() => setShowCreate(true)} style={{ background: T.ink, border: "none", borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
-          {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? C.green : C.coral }}>{syncMsg}</div>}
-          <button onClick={() => syncTasks()} disabled={syncing} style={{ background: "rgba(255,255,255,0.15)", border: b(2, "rgba(255,255,255,0.3)"), borderRadius: 8, padding: isMobile ? "5px 8px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 16 : 12, fontWeight: 800, color: C.peach, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
-          <button onClick={() => setShowSettings(true)} style={{ background: "rgba(255,255,255,0.1)", border: b(2, "rgba(255,255,255,0.2)"), borderRadius: 8, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: C.peach, cursor: "pointer", lineHeight: 1 }}>⚙</button>
+          {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
+          <button onClick={() => syncTasks()} disabled={syncing} title="Sync tasks from Asana" aria-label="Sync tasks from Asana" style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 16 : 12, fontWeight: 800, color: T.ink, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1, opacity: syncing ? 0.5 : 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
+          <button onClick={() => setShowSettings(true)} title="Settings" aria-label="Settings" style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>⚙</button>
         </div>
       </div>
 
@@ -1811,12 +1849,12 @@ export default function App() {
         {isMobile && !openTask && !openTodoId ? (
           <>
             {/* ── Mobile: individual left tabs ── */}
-            <div style={{ width: 52, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", paddingTop: 16, gap: 10, zIndex: 10 }}>
+            <div style={{ width: 56, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", paddingTop: 16, gap: 10, zIndex: 10 }}>
               {(["create", "tasks", "prayer"] as const).map(tab => {
                 const active = mobileTab === tab;
                 return (
-                  <button key={tab} onClick={() => setMobileTab(p => p === tab ? null : tab)}
-                    style={{ width: 50, height: 56, background: active ? C.mid : C.dark, border: `1px solid ${active ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)"}`, borderRight: active ? "none" : `1px solid rgba(255,255,255,0.1)`, borderRadius: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: active ? C.peach : "rgba(255,255,255,0.45)", transition: "background 0.15s, color 0.15s, border-color 0.15s", boxShadow: active ? "none" : "0 2px 8px rgba(0,0,0,0.3)" }}>
+                  <button key={tab} onClick={() => setMobileTab(p => p === tab ? null : tab)} title={tab === "create" ? "New project" : tab === "tasks" ? "Quick Tasks" : "Prayer"}
+                    style={{ width: 52, height: 58, background: active ? T.ink : T.surface, border: tb(1.5, active ? T.ink : T.borderMuted), borderRight: active ? "none" : undefined, borderRadius: `${T.radius}px 0 0 ${T.radius}px`, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: active ? T.surface : T.inkMuted, transition: "background 0.15s, color 0.15s, border-color 0.15s" }}>
                     {tab === "prayer" ? <PrayerIcon width={18} height={18} /> : tab === "create" ? <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> : <span style={{ fontSize: 14 }}>☑</span>}
                     <span style={{ fontFamily: FONT, fontSize: 8, fontWeight: 800, letterSpacing: 0.4 }}>{tab === "create" ? "Create" : tab === "tasks" ? "Tasks" : "Prayer"}</span>
                   </button>
@@ -1828,13 +1866,13 @@ export default function App() {
             <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
               {/* Sliding panel */}
               <div style={{ position: "absolute", inset: 0, overflow: "hidden", zIndex: 5, pointerEvents: mobileTab ? "auto" : "none" }}>
-                <div style={{ position: "absolute", inset: 0, background: C.dark, transform: mobileTab ? "translateX(0)" : "translateX(100%)", transition: "transform 0.22s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+                <div style={{ position: "absolute", inset: 0, background: T.canvas, transform: mobileTab ? "translateX(0)" : "translateX(100%)", transition: "transform 0.22s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
                   {/* Panel header */}
-                  <div style={{ background: C.mid, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>
+                  <div style={{ background: T.surface, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: tb(2), flexShrink: 0 }}>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>
                       {mobileTab === "create" ? "New Project" : mobileTab === "tasks" ? "Quick Tasks" : "Prayer"}
                     </div>
-                    <button onClick={() => setMobileTab(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "2px 6px" }}>×</button>
+                    <button onClick={() => setMobileTab(null)} title="Close" aria-label="Close" style={{ background: "none", border: "none", color: T.inkMuted, fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "2px 6px" }}>×</button>
                   </div>
 
                   {/* Create panel */}
@@ -1843,9 +1881,9 @@ export default function App() {
                       <input autoFocus value={mobileCreateName} onChange={e => setMobileCreateName(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && mobileCreateName.trim()) { createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); } }}
                         placeholder="Project name…"
-                        style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.peach, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 0, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                        style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
                       <button onClick={() => { if (!mobileCreateName.trim()) return; createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); }} disabled={!mobileCreateName.trim()}
-                        style={{ background: mobileCreateName.trim() ? C.main : "rgba(255,255,255,0.08)", color: mobileCreateName.trim() ? C.white : "rgba(255,255,255,0.2)", border: "none", borderRadius: 0, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
+                        style={{ background: mobileCreateName.trim() ? T.ink : T.surfaceMuted, color: mobileCreateName.trim() ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
                         Create Project
                       </button>
                     </div>
@@ -1854,11 +1892,11 @@ export default function App() {
                   {/* Tasks panel */}
                   {mobileTab === "tasks" && (
                     <>
-                      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
+                      <div style={{ padding: "16px 20px", borderBottom: tb(1, T.borderMuted), flexShrink: 0 }}>
                         <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                           <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
-                            style={{ flex: 1, fontFamily: "monospace", fontSize: 13, color: C.peach, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "9px 12px", outline: "none", minWidth: 0 }} />
-                          <button type="submit" style={{ background: C.main, color: C.white, border: "none", borderRadius: 0, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                            style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "9px 12px", outline: "none", minWidth: 0 }} />
+                          <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                         </form>
                       </div>
                       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1867,13 +1905,13 @@ export default function App() {
                         ))}
                         {todos.filter(t => t.done).length > 0 && (
                           <>
-                            <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: 1.5, paddingTop: 10, paddingBottom: 2 }}>DONE</div>
+                            <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5, paddingTop: 10, paddingBottom: 2 }}>DONE</div>
                             {todos.filter(t => t.done).map(t => (
                               <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: false }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
                             ))}
                           </>
                         )}
-                        {todos.length === 0 && <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 32 }}>No tasks yet</div>}
+                        {todos.length === 0 && <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, textAlign: "center", paddingTop: 32 }}>No tasks yet</div>}
                       </div>
                     </>
                   )}
@@ -1881,15 +1919,15 @@ export default function App() {
                   {/* Prayer panel */}
                   {mobileTab === "prayer" && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 28px", textAlign: "center", gap: 24, flex: 1 }}>
-                      <PrayerIcon width={52} height={52} style={{ color: C.peach, opacity: 0.8 }} />
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 600, color: C.peach, lineHeight: 1.3 }}>Open the Door</div>
-                      <div style={{ width: 32, height: 2, background: C.main }} />
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: "italic", color: C.peach, opacity: 0.6, lineHeight: 1.7 }}>
+                      <PrayerIcon width={52} height={52} style={{ color: T.ink, opacity: 0.8 }} />
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 600, color: T.ink, lineHeight: 1.3 }}>Open the Door</div>
+                      <div style={{ width: 32, height: 2, background: T.inside }} />
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: "italic", color: T.inkMuted, lineHeight: 1.7 }}>
                         "Behold, I stand at the door and knock."
-                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "normal", fontWeight: 700, opacity: 0.6, marginTop: 4 }}>Rev 3:20</div>
+                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "normal", fontWeight: 700, marginTop: 4 }}>Rev 3:20</div>
                       </div>
                       <button onClick={() => { setMobileTab(null); setShowPrayer(true); }}
-                        style={{ background: C.main, color: C.white, border: "none", borderRadius: 0, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
+                        style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
                         Begin Prayer →
                       </button>
                     </div>
@@ -1900,10 +1938,10 @@ export default function App() {
               {/* Cards column — single column */}
               <div style={{ position: "absolute", inset: 0, overflowY: "auto", overflowX: "hidden", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
                 {projects.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "60px 20px", opacity: 0.6 }}>
+                  <div style={{ textAlign: "center", padding: "60px 20px" }}>
                     <div style={{ fontSize: 36, marginBottom: 12 }}>🌿</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: C.peach }}>No tasks yet</div>
-                    <div style={{ fontFamily: FONT, fontSize: 12, color: C.peach, marginTop: 8, opacity: 0.7 }}>Add your Asana token in ⚙ Settings, then Sync</div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink }}>No tasks yet</div>
+                    <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginTop: 8 }}>Add your Asana token in ⚙ Settings, then Sync</div>
                   </div>
                 ) : (
                   [...projects].sort(byDueDate).map(p => (
@@ -1917,30 +1955,30 @@ export default function App() {
           <>
             {/* Projects panel — visible when a project is open */}
             {openTask && (
-              <div style={{ borderRight: "1px solid rgba(255,255,255,0.08)", backgroundColor: C.dark, display: "flex", flexDirection: "column", flexShrink: 0, width: projectsPanelOpen ? 280 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
+              <div style={{ borderRight: tb(2), backgroundColor: T.surfaceMuted, display: "flex", flexDirection: "column", flexShrink: 0, width: projectsPanelOpen ? 280 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
                 {projectsPanelOpen ? (
                   <>
-                    <div style={{ padding: "16px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: C.peach }}>Projects</div>
-                      <button onClick={() => setProjectsPanelOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "2px 4px" }}>‹</button>
+                    <div style={{ padding: "16px 14px 10px", borderBottom: tb(1.5, T.borderMuted), display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: T.ink }}>Projects</div>
+                      <button onClick={() => setProjectsPanelOpen(false)} title="Collapse" aria-label="Collapse projects panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
                     </div>
                     <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 0" }}>
-                      {[{ label: "Outside", items: allOutside, color: C.coral, icon: <OutsideIcon width={18} height={18} /> }, { label: "Inside", items: allInside, color: C.main, icon: <InsideIcon width={18} height={18} /> }].map(({ label, items, color, icon }) => (
+                      {[{ label: "Outside", items: allOutside, color: T.outside, icon: <OutsideIcon width={18} height={18} /> }, { label: "Inside", items: allInside, color: T.inside, icon: <InsideIcon width={18} height={18} /> }].map(({ label, items, color, icon }) => (
                         items.length === 0 ? null : (
                           <div key={label} style={{ marginBottom: 8 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 8px", color: "rgba(255,255,255,0.55)" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 8px", color: T.inkMuted }}>
                               {icon}
-                              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.7)", letterSpacing: 0 }}>{label}</div>
+                              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>{label}</div>
                             </div>
                             {items.map(p => {
                               const isCurrent = openTask.gid === p.gid;
                               return (
                                 <button key={p.gid} onClick={() => setOpenTask(p)}
-                                  style={{ width: "calc(100% - 20px)", margin: "0 10px 10px", background: isCurrent ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${isCurrent ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 0, padding: 0, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", overflow: "hidden", transition: "background 0.15s, border-color 0.15s", boxShadow: isCurrent ? "0 4px 16px rgba(0,0,0,0.3)" : "none" }}>
+                                  style={{ width: "calc(100% - 20px)", margin: "0 10px 10px", background: T.surface, border: tb(1.5, isCurrent ? T.ink : T.borderMuted), borderRadius: T.radiusSm, padding: 0, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", overflow: "hidden", transition: "border-color 0.15s" }}>
                                   <div style={{ height: 5, background: color, flexShrink: 0 }} />
                                   <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
-                                    <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? C.peach : "rgba(255,255,255,0.6)", lineHeight: 1.35 }}>{p.name}</div>
-                                    {p.due_on && <div style={{ fontFamily: FONT, fontSize: 10, color: urgColor(p.due_on), fontWeight: 600 }}>{p.due_on}</div>}
+                                    <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: T.ink, lineHeight: 1.35 }}>{p.name}</div>
+                                    {p.due_on && <div style={{ fontFamily: FONT, fontSize: 10, color: urgColorLight(p.due_on), fontWeight: 600 }}>{p.due_on}</div>}
                                   </div>
                                 </button>
                               );
@@ -1949,15 +1987,15 @@ export default function App() {
                         )
                       ))}
                       {allOutside.length === 0 && allInside.length === 0 && (
-                        <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 24 }}>No categorized projects</div>
+                        <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, textAlign: "center", paddingTop: 24 }}>No categorized projects</div>
                       )}
                     </div>
                   </>
                 ) : (
-                  <button onClick={() => setProjectsPanelOpen(true)}
-                    style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: "rgba(255,255,255,0.3)" }}>
+                  <button onClick={() => setProjectsPanelOpen(true)} title="Expand projects panel" aria-label="Expand projects panel"
+                    style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: T.inkMuted }}>
                     <span style={{ fontSize: 16 }}>›</span>
-                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", writingMode: "vertical-rl", letterSpacing: 1.5 }}>PROJECTS</div>
+                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>PROJECTS</div>
                   </button>
                 )}
               </div>
@@ -1976,19 +2014,19 @@ export default function App() {
                     : <FactoryDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
                 );
                 return (
-                  <div style={{ padding: "36px 48px", minHeight: "100%" }}>
+                  <div style={{ padding: "32px 48px", minHeight: "100%" }}>
                     {!projects.length ? (
-                      <div style={{ textAlign: "center", padding: "80px 40px", opacity: 0.6 }}>
+                      <div style={{ textAlign: "center", padding: "80px 40px" }}>
                         <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: C.peach }}>No tasks yet</div>
-                        <div style={{ fontFamily: FONT, fontSize: 12, color: C.peach, marginTop: 8, opacity: 0.7 }}>Add your Asana Personal Access Token in ⚙ Settings, then hit Sync</div>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: T.ink }}>No tasks yet</div>
+                        <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginTop: 8 }}>Add your Asana Personal Access Token in ⚙ Settings, then hit Sync</div>
                       </div>
                     ) : (
                       <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-                        <div style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
-                          {renderColumn(<OutsideIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Outside", allOutside, "factory")}
-                          {renderColumn(<InsideIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Inside", allInside, "creative")}
-                          {renderColumn(<UncatIcon width={44} height={44} style={{ color: C.peach, flexShrink: 0 }} />, "Uncategorized", allUncategorized, null, true)}
+                        <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
+                          {renderColumn(<OutsideIcon width={30} height={30} style={{ color: T.outside, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
+                          {renderColumn(<InsideIcon width={30} height={30} style={{ color: T.inside, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
+                          {renderColumn(<UncatIcon width={30} height={30} style={{ color: T.uncat, flexShrink: 0 }} />, "Uncategorized", allUncategorized, null, T.uncat, true)}
                         </div>
                       </div>
                     )}
@@ -1999,44 +2037,44 @@ export default function App() {
 
             {/* Todo panel — always visible on home screen */}
             {!openTask && !openTodoId && (
-              <div style={{ borderLeft: "1px solid rgba(255,255,255,0.08)", backgroundColor: C.dark, backgroundImage: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "24px 24px", display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 260 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
+              <div style={{ borderLeft: tb(2), backgroundColor: T.surfaceMuted, display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 272 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
                 {todosPanelOpen ? (
                   <>
-                    <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 12, background: C.dark }}>
+                    <div style={{ padding: "20px 16px 14px", borderBottom: tb(1.5, T.borderMuted), display: "flex", flexDirection: "column", gap: 12, background: T.surfaceMuted }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: C.peach }}>Quick Tasks</div>
-                        <button onClick={() => setTodosPanelOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "2px 4px" }}>‹</button>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>Quick Tasks</div>
+                        <button onClick={() => setTodosPanelOpen(false)} title="Collapse" aria-label="Collapse Quick Tasks panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
                       </div>
                       <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                         <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
-                          style={{ flex: 1, fontFamily: "monospace", fontSize: 12, color: C.peach, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 0, padding: "7px 10px", outline: "none", minWidth: 0 }} />
-                        <button type="submit" style={{ background: C.main, color: C.white, border: "none", borderRadius: 0, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                          style={{ flex: 1, fontFamily: FONT, fontSize: 12, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "7px 10px", outline: "none", minWidth: 0 }} />
+                        <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                       </form>
                     </div>
-                    <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+                    <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
                       {todos.filter(t => !t.done).map(t => (
                         <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: true }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
                       ))}
                       {todos.filter(t => t.done).length > 0 && (
                         <>
-                          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: 1.5, paddingTop: 12, paddingBottom: 2 }}>DONE</div>
+                          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5, paddingTop: 12, paddingBottom: 2 }}>DONE</div>
                           {todos.filter(t => t.done).map(t => (
                             <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: false }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
                           ))}
                         </>
                       )}
                       {todos.length === 0 && (
-                        <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", paddingTop: 32 }}>No tasks yet</div>
+                        <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, textAlign: "center", paddingTop: 32 }}>No tasks yet</div>
                       )}
                     </div>
                   </>
                 ) : (
-                  <button onClick={() => setTodosPanelOpen(true)}
-                    style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: "rgba(255,255,255,0.3)" }}>
+                  <button onClick={() => setTodosPanelOpen(true)} title="Expand Quick Tasks" aria-label="Expand Quick Tasks panel"
+                    style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: T.inkMuted }}>
                     <span style={{ fontSize: 16 }}>‹</span>
-                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.2)", writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
+                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
                     {todos.filter(t => !t.done).length > 0 && (
-                      <div style={{ background: C.main, color: C.white, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
+                      <div style={{ background: T.ink, color: T.surface, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
                         {todos.filter(t => !t.done).length}
                       </div>
                     )}
@@ -2050,8 +2088,9 @@ export default function App() {
 
       {/* Prayer FAB — desktop only */}
       {!isMobile && (
-        <button onClick={() => setShowPrayer(true)} style={{ position: "fixed", bottom: 28, right: 28, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: C.white, zIndex: 50 }}>
-          <PrayerIcon width={44} height={44} />
+        <button onClick={() => setShowPrayer(true)} title="Morning Prayer" aria-label="Morning Prayer"
+          style={{ position: "fixed", bottom: 28, right: 28, width: 56, height: 56, background: T.ink, border: tb(2, T.ink), borderRadius: "50%", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.surface, zIndex: 50, boxShadow: "0 4px 12px rgba(34,32,29,0.25)" }}>
+          <PrayerIcon width={26} height={26} />
         </button>
       )}
 
@@ -2060,22 +2099,10 @@ export default function App() {
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { margin: 0; overflow: hidden; }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(140,130,110,0.4); border-radius: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         .glass-card {
           position: relative;
-        }
-        .glass-card::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          pointer-events: none;
-          opacity: 0.06;
-          mix-blend-mode: overlay;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          background-repeat: repeat;
-          background-size: 160px 160px;
         }
         .graph-bg {
           background-color: #242329;
@@ -2085,10 +2112,24 @@ export default function App() {
           background-repeat: no-repeat, repeat;
           background-attachment: local, local;
         }
+        /* Light board canvas — main dashboard, sidebars, Quick Tasks. A faint dot
+           grid is the only texture left; everything else is a flat, crisp surface. */
+        .board-canvas {
+          background-color: ${T.canvas};
+          background-image: radial-gradient(${T.borderMuted} 1px, transparent 1px);
+          background-size: 22px 22px;
+        }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         [style*="-webkit-app-region: drag"] { -webkit-app-region: drag; }
         .mind-node:hover .node-delete { opacity: 1 !important; }
         .mind-node:hover .node-resize { opacity: 1 !important; }
+        /* Visible keyboard focus everywhere on the board — never rely on hover alone. */
+        button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+          outline: 2px solid ${T.focus};
+          outline-offset: 2px;
+        }
+        .board-card:hover { border-color: ${T.ink} !important; transform: translateY(-2px); }
+        .board-card:focus-visible { transform: translateY(-2px); }
       `}</style>
     </div>
   );
