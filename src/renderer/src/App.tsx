@@ -77,8 +77,11 @@ const C = {
   factory:  "#242329",
   creative: "#657946",
 };
-const FONT = "'Bricolage Grotesque', system-ui, sans-serif";
-const FONT_DISPLAY = "'Cormorant', Georgia, serif";
+// One rounded, friendly sans-serif family for the whole app — headings and body
+// alike lean on weight (not a second, sharper display face) for hierarchy, which
+// keeps the overall voice calmer and less busy.
+const FONT = "'Poppins', system-ui, sans-serif";
+const FONT_DISPLAY = "'Poppins', system-ui, sans-serif";
 const b = (w = 2, col = C.brown) => `${w}px solid ${col}`;
 
 // Board tokens — the light, restrained-neo-brutalist surface used by the
@@ -93,16 +96,17 @@ const T = {
   surfaceMuted: "var(--surface-muted)",// quiet fill for completed items, recessed panels
   ink:          "var(--ink)",          // primary text — near-black warm ink
   inkMuted:     "var(--ink-muted)",    // secondary text
-  border:       "var(--border)",       // crisp default border (ink)
-  borderMuted:  "var(--border-muted)", // soft divider line
-  outside:      "var(--outside)",      // Outside/factory accent — terracotta
-  inside:       "var(--inside)",       // Inside/creative accent — deep moss
+  border:       "var(--border)",       // soft default border — a warm tint, not ink; definition comes from fills/shadows, not hard lines
+  borderMuted:  "var(--border-muted)", // even softer divider line
+  outside:      "var(--outside)",      // Outside/factory accent — warm terracotta (fills/icons only — not text-safe)
+  inside:       "var(--inside)",       // Inside/creative accent — deep forest green
   uncat:        "var(--uncat)",        // Uncategorized accent — warm stone
-  urgent:       "var(--urgent)",       // overdue / due today
-  soon:         "var(--soon)",         // due within a week
+  urgent:       "var(--urgent)",       // overdue / due today (text-safe)
+  soon:         "var(--soon)",         // due within a week (text-safe)
   focus:        "var(--focus)",        // keyboard focus ring — distinct from all category colors
-  radius:       6,
-  radiusSm:     3,
+  radius:       18,    // soft rounded corners — cards, panels, modals, inputs
+  radiusSm:     22,    // buttons/badges/chips — larger than `radius` on purpose: at typical
+                        // button heights this clamps to a full pill, which is the point
   slotHeight:   142, // uniform ProjectCard / column-slot height
 };
 const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
@@ -1653,20 +1657,20 @@ export default function App() {
       )}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
         :root {
-          --canvas: #F7F3EC;
+          --canvas: #F7E9DA;
           --surface: #FFFFFF;
-          --surface-muted: #ECE6D9;
-          --ink: #22201D;
-          --ink-muted: #6B655C;
-          --border: #22201D;
-          --border-muted: #DDD5C6;
-          --outside: #B4502C;
-          --inside: #4B6B3A;
-          --uncat: #6A6252;
-          --urgent: #A8371F;
-          --soon: #95631A;
+          --surface-muted: #EFDFCC;
+          --ink: #211D18;
+          --ink-muted: #7D7062;
+          --border: #E6D5C0;
+          --border-muted: #EFE2D2;
+          --outside: #D3652F;
+          --inside: #204A31;
+          --uncat: #7A6852;
+          --urgent: #B93A22;
+          --soon: #8A5818;
           --focus: #2452C8;
         }
         [data-theme="dark"] {
@@ -1675,7 +1679,7 @@ export default function App() {
           --surface-muted: #17150F;
           --ink: #F0EBE3;
           --ink-muted: #A79C8E;
-          --border: #F0EBE3;
+          --border: #4A4238;
           --border-muted: #3A342C;
           --outside: #E0763F;
           --inside: #7FA85E;
