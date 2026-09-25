@@ -108,6 +108,11 @@ const T = {
   radiusSm:     22,    // buttons/badges/chips — larger than `radius` on purpose: at typical
                         // button heights this clamps to a full pill, which is the point
   slotHeight:   142, // uniform ProjectCard / column-slot height
+  // Soft, warm-toned elevation — the primary way surfaces read as "raised" now
+  // that hard borders are gone. Three weights: resting cards, hover/lift, modals.
+  shadowSm: "var(--shadow-sm)",
+  shadow:   "var(--shadow-md)",
+  shadowLg: "var(--shadow-lg)",
 };
 const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
 // Alpha-tinted color — works with the CSS-variable T.* tokens (a hex-alpha suffix
@@ -224,7 +229,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(34,32,29,0.55)" }}>
-      <div style={{ background: T.surface, border: tb(2.5), borderRadius: T.radius, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
+      <div style={{ background: T.surface, border: "none", boxShadow: T.shadowLg, borderRadius: T.radius, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ fontFamily: FONT, fontSize: 20, fontWeight: 900, color: T.ink, marginBottom: 6 }}>Settings</div>
 
         {isElectron ? (
@@ -232,7 +237,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
             <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="1/…"
-                style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.canvas, color: T.ink, boxSizing: "border-box" }} />
+                style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box" }} />
               <button onClick={loadSections} disabled={!pat.trim() || loadingSections}
                 style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
                 {loadingSections ? "Loading…" : "Load Sections"}
@@ -240,7 +245,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
             </div>
             <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Anthropic API Key (for AI mind maps)</div>
             <input type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…"
-              style={{ width: "100%", fontFamily: FONT, fontSize: 13, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.canvas, color: T.ink, boxSizing: "border-box", marginBottom: 20 }} />
+              style={{ width: "100%", fontFamily: FONT, fontSize: 13, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box", marginBottom: 20 }} />
           </>
         ) : (
           <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -268,7 +273,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
             {sections.map(sec => {
               const checked = selectedGids.includes(sec.gid);
               return (
-                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: checked ? tint(T.inside, 12) : T.canvas, border: tb(1.5, checked ? T.inside : T.borderMuted), transition: "all 0.15s" }}>
+                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: checked ? tint(T.inside, 14) : T.surfaceMuted, border: "none", transition: "all 0.15s" }}>
                   <input type="checkbox" checked={checked} onChange={() => toggleSection(sec.gid)} style={{ width: 16, height: 16, accentColor: T.inside, flexShrink: 0 }} />
                   <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: checked ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
@@ -281,12 +286,12 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
           <>
             <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 8 }}>Quick Tasks Section</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: !quickTaskGid ? tint(T.inside, 12) : T.canvas, border: tb(1.5, !quickTaskGid ? T.inside : T.borderMuted) }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: !quickTaskGid ? tint(T.inside, 14) : T.surfaceMuted, border: "none" }}>
                 <input type="radio" checked={!quickTaskGid} onChange={() => setQuickTaskGid("")} style={{ accentColor: T.inside }} />
                 <span style={{ fontFamily: FONT, fontSize: 13, color: T.ink }}>None</span>
               </label>
               {sections.map(sec => (
-                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: quickTaskGid === sec.gid ? tint(T.inside, 12) : T.canvas, border: tb(1.5, quickTaskGid === sec.gid ? T.inside : T.borderMuted) }}>
+                <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: quickTaskGid === sec.gid ? tint(T.inside, 14) : T.surfaceMuted, border: "none" }}>
                   <input type="radio" checked={quickTaskGid === sec.gid} onChange={() => setQuickTaskGid(sec.gid)} style={{ accentColor: T.inside }} />
                   <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: quickTaskGid === sec.gid ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
@@ -299,7 +304,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
           <button onClick={save} style={{ flex: 1, background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
             {saved ? "✓ Saved!" : "Save"}
           </button>
-          <button onClick={onClose} style={{ background: "transparent", border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: T.inkMuted, cursor: "pointer" }}>Done</button>
+          <button onClick={onClose} style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: T.inkMuted, cursor: "pointer" }}>Done</button>
         </div>
       </div>
     </div>
@@ -583,7 +588,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             </div>
           );
         })() : (
-        <div style={{ background: T.surface, borderRadius: T.radius, border: `${isCentral ? 3 : isNextStep ? 2.5 : 2}px solid ${isFirst ? T.focus : T.border}`, boxShadow: isFirst ? `0 0 0 3px ${tint(T.focus, 20)}` : 'none', transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+        <div style={{ background: T.surface, borderRadius: T.radius, border: isFirst ? `2.5px solid ${T.focus}` : 'none', boxShadow: isFirst ? `0 0 0 3px ${tint(T.focus, 20)}` : isCentral ? T.shadowLg : isNextStep ? T.shadow : T.shadowSm, transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
           {/* Accent bar + drag handle */}
           <div onMouseDown={e => onMD(e, node.id)}
             style={{ height: isCentral ? 8 : 6, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab', flexShrink: 0 }} />
@@ -604,7 +609,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
               </div>
               <button onMouseDown={e => e.stopPropagation()}
                 onClick={() => node.filePath ? platformFiles.openPath(node.filePath) : window.open(node.url, '_blank')}
-                style={{ background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: '5px 0', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, cursor: 'pointer', width: '100%' }}>
+                style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: '5px 0', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, cursor: 'pointer', width: '100%' }}>
                 Open ↗
               </button>
             </div>
@@ -629,11 +634,11 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>
-                  <div style={{ width: 18, height: 18, background: cardColor, borderRadius: '50%', border: tb(1.5, T.borderMuted), flexShrink: 0 }} />
+                  <div style={{ width: 18, height: 18, background: cardColor, borderRadius: '50%', border: "none", boxShadow: T.shadowSm, flexShrink: 0 }} />
                   <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted }}>▾</span>
                 </button>
                 {colorPickerNode === node.id && (
-                  <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: T.surface, border: tb(1.5, T.border), borderRadius: 8, padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: '0 8px 24px rgba(34,32,29,0.25)' }}>
+                  <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: T.surface, border: "none", borderRadius: 8, padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: T.shadowLg }}>
                     {MIND_COLORS.map(col => (
                       <div key={col} onClick={() => { updateNode(node.id, { color: col }); setColorPickerNode(null); }}
                         style={{ width: 14, height: 14, background: col, border: `2px solid ${cardColor === col ? T.ink : 'transparent'}`, cursor: 'pointer', borderRadius: '50%' }} />
@@ -659,13 +664,13 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         </div>
         <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }} title="Delete node" aria-label="Delete node"
           className="node-delete"
-          style={{ position: 'absolute', top: -8, right: -8, width: 18, height: 18, borderRadius: '50%', background: T.surface, border: tb(1.5, T.border), color: T.ink, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, opacity: 0, transition: 'opacity 0.15s' }}>×</button>
+          style={{ position: 'absolute', top: -8, right: -8, width: 18, height: 18, borderRadius: '50%', background: T.surface, border: "none", boxShadow: T.shadowSm, color: T.ink, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, opacity: 0, transition: 'opacity 0.15s' }}>×</button>
       </div>
     );
   });
 
   const toolbar = (
-    <div style={{ borderBottom: tb(2), background: T.surface, flexShrink: 0 }}>
+    <div style={{ border: "none", boxShadow: T.shadowSm, background: T.surface, flexShrink: 0, position: "relative", zIndex: 1 }}>
       <div style={{ padding: '8px 12px', display: 'flex', gap: 6, alignItems: 'center' }}>
         {/* Node type chips */}
         {(['vibe', 'person', 'visual', 'nextstep', 'thought'] as MindNodeType[]).map(nt => {
@@ -685,11 +690,11 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         {/* + menu */}
         <div style={{ position: 'relative' }}>
           <button onClick={() => setShowAddMenu(v => !v)} title="Add other node" aria-label="Add other node" aria-expanded={showAddMenu}
-            style={{ background: showAddMenu ? T.surfaceMuted : T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: 20, width: 30, height: 28, fontFamily: FONT, fontSize: 16, fontWeight: 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>
+            style={{ background: showAddMenu ? T.ink : T.surfaceMuted, color: showAddMenu ? T.surface : T.ink, border: "none", borderRadius: 20, width: 30, height: 28, fontFamily: FONT, fontSize: 16, fontWeight: 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>
             +
           </button>
           {showAddMenu && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: T.surface, border: tb(1.5, T.border), borderRadius: 10, padding: '4px 0', zIndex: 100, minWidth: 130, boxShadow: '0 8px 24px rgba(34,32,29,0.2)' }}>
+            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: T.surface, border: "none", borderRadius: 10, padding: '4px 0', zIndex: 100, minWidth: 130, boxShadow: T.shadowLg }}>
               {[
                 { label: 'Note', action: () => { addTextNode(); setShowAddMenu(false) } },
                 { label: 'Icon', action: () => { setShowIconPicker(v => !v); setShowImgInput(false); setShowAddMenu(false) } },
@@ -710,7 +715,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
         {/* Link toggle */}
         <button onClick={() => { setConnectMode(v => !v); setConnecting(null); setShowAddMenu(false) }} title="Draw a connection between two nodes" aria-pressed={connectMode}
-          style={{ background: connectMode ? T.ink : T.canvas, color: connectMode ? T.surface : T.ink, border: tb(1.5, connectMode ? T.ink : T.borderMuted), borderRadius: 20, padding: '5px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ background: connectMode ? T.ink : T.surfaceMuted, color: connectMode ? T.surface : T.ink, border: "none", borderRadius: 20, padding: '5px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
           {connectMode ? (connecting ? '→ pick 2nd' : '→ pick 1st') : '⤢ Link'}
         </button>
 
@@ -723,12 +728,12 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
       {/* Icon picker */}
       {showIconPicker && (
-        <div style={{ padding: '8px 12px 10px', borderTop: tb(1.5, T.borderMuted), display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ padding: '8px 12px 10px', border: "none", display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           {Object.entries(ICON_MAP).map(([key, IconComp]) => (
             <button key={key} onClick={() => { addIconNode(key); setShowIconPicker(false); }} title={key} aria-label={`Add ${key} icon`}
-              style={{ width: 34, height: 34, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.ink, padding: 0, transition: 'background 0.12s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = T.surfaceMuted)}
-              onMouseLeave={e => (e.currentTarget.style.background = T.canvas)}>
+              style={{ width: 34, height: 34, background: T.surfaceMuted, border: "none", borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.ink, padding: 0, transition: 'background 0.12s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = tint(T.ink, 12))}
+              onMouseLeave={e => (e.currentTarget.style.background = T.surfaceMuted)}>
               <IconComp width={18} height={18} />
             </button>
           ))}
@@ -737,9 +742,9 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
       {/* Image URL input */}
       {showImgInput && (
-        <div style={{ padding: '6px 12px 8px', borderTop: tb(1.5, T.borderMuted), display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ padding: '6px 12px 8px', border: "none", display: 'flex', gap: 8, alignItems: 'center' }}>
           <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus
-            style={{ fontFamily: FONT, fontSize: 11, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: 6, padding: '5px 10px', outline: 'none', color: T.ink, flex: 1 }} />
+            style={{ fontFamily: FONT, fontSize: 11, background: T.surfaceMuted, border: "none", borderRadius: 6, padding: '5px 10px', outline: 'none', color: T.ink, flex: 1 }} />
           <button onClick={addImageNode} style={{ background: T.ink, color: T.surface, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
           <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} title="Cancel" aria-label="Cancel" style={{ background: 'transparent', color: T.inkMuted, border: 'none', fontSize: 14, cursor: 'pointer', padding: '0 2px' }}>✕</button>
         </div>
@@ -759,7 +764,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
           <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>Get it out of your head — vibes, people, next step</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {(['vibe', 'person', 'nextstep'] as MindNodeType[]).map(nt => (
-              <div key={nt} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, padding: '3px 8px', border: tb(1, T.borderMuted) }}>
+              <div key={nt} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, padding: '3px 8px', borderRadius: 12, background: T.surfaceMuted }}>
                 {NODE_TYPE_STYLES[nt].prefix} {NODE_TYPE_STYLES[nt].label}
               </div>
             ))}
@@ -772,7 +777,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: fullscreen ? 1 : undefined, border: fullscreen ? 'none' : tb(1.5, T.borderMuted), marginTop: fullscreen ? 0 : 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: fullscreen ? 1 : undefined, border: "none", boxShadow: fullscreen ? 'none' : T.shadow, borderRadius: fullscreen ? 0 : T.radius, overflow: fullscreen ? 'visible' : 'hidden', marginTop: fullscreen ? 0 : 16 }}>
       {toolbar}
       {nextStepNode && (
         <div style={{ background: NODE_TYPE_STYLES.nextstep.bg, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
@@ -921,8 +926,8 @@ function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ background: T.surface, borderBottom: tb(2), padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap" }}>
-        <button onClick={onBack} style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
+      <div style={{ background: T.surface, border: "none", boxShadow: T.shadowSm, padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
+        <button onClick={onBack} style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
@@ -931,20 +936,20 @@ function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; 
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
             {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
-            {ul && <div style={{ color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
+            {ul && <div style={{ color: uc, background: tint(uc, 14), borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
           <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
-          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.canvas, color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
+          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} style={{ background: T.surfaceMuted, color: T.ink, border: "none", borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
         </div>
       </div>
 
       {/* Brief / Mind Map switcher */}
-      <div style={{ background: T.surface, borderBottom: tb(1.5, T.borderMuted), padding: "10px 20px", display: "flex", gap: 8, flexShrink: 0 }}>
+      <div style={{ background: T.surface, padding: "10px 20px", display: "flex", gap: 8, flexShrink: 0 }}>
         {(["brief", "mindmap"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} aria-pressed={tab === t}
-            style={{ background: tab === t ? T.ink : T.canvas, color: tab === t ? T.surface : T.inkMuted, border: tb(1.5, tab === t ? T.ink : T.borderMuted), borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+            style={{ background: tab === t ? T.ink : T.surfaceMuted, color: tab === t ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
             {t === "brief" ? "Brief" : "Mind Map"}
           </button>
         ))}
@@ -972,7 +977,7 @@ function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; 
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {comments.map(c => (
-                  <div key={c.gid} style={{ background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 14px" }}>
+                  <div key={c.gid} style={{ background: T.surface, border: "none", boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "12px 14px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
                       <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink }}>{c.author || "Someone"}</div>
                       <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, flexShrink: 0 }}>{new Date(c.created_at).toLocaleDateString()}</div>
@@ -1003,7 +1008,7 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
       onDragEnd={onDragEnd}
       onClick={() => onOpen(task)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
-      style={{ background: T.surface, border: tb(2), borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, border-color 0.15s ease" }}>
+      style={{ background: T.surface, border: "none", borderRadius: T.radius, boxShadow: T.shadow, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, box-shadow 0.15s ease" }}>
       <div style={{ height: 8, background: catCfg ? catCfg.color : T.borderMuted, flexShrink: 0 }} />
       <div style={{ padding: "10px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
@@ -1011,7 +1016,7 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
             {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
             {ul && (
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: uc, border: `1.5px solid ${uc}`, borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: uc, background: tint(uc, 14), borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
             )}
           </div>
           <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
@@ -1026,7 +1031,7 @@ function TodoCard({ item, onOpen, onToggle, onClose }: { item: TodoItem; onOpen?
   return (
     <div className={onOpen ? "board-card" : undefined} role={onOpen ? "button" : undefined} tabIndex={onOpen ? 0 : undefined} onClick={onOpen}
       onKeyDown={e => { if (onOpen && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onOpen(); } }}
-      style={{ background: item.done ? T.surfaceMuted : T.surface, border: tb(1.5, item.done ? T.borderMuted : T.border), borderRadius: T.radiusSm, cursor: onOpen ? "pointer" : "default", transition: "border-color 0.15s, background 0.15s" }}>
+      style={{ background: item.done ? T.surfaceMuted : T.surface, border: "none", boxShadow: item.done ? "none" : T.shadowSm, borderRadius: T.radiusSm, cursor: onOpen ? "pointer" : "default", transition: "box-shadow 0.15s, background 0.15s" }}>
       <div style={{ padding: "9px 10px", display: "flex", alignItems: "flex-start", gap: 9 }}>
         <button onClick={onToggle} title={item.done ? "Mark not done" : "Mark done"} aria-label={item.done ? "Mark not done" : "Mark done"}
           style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, marginTop: 2, border: tb(1.5, item.done ? T.inside : T.inkMuted), background: item.done ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s", padding: 0 }}>
@@ -1052,23 +1057,23 @@ function TodoDetail({ item, onUpdate, onDelete, onBack }: { item: TodoItem; onUp
   useEffect(() => { setTitle(item.title); setNotes(item.notes); }, [item.id]);
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ background: T.surface, borderBottom: tb(2), padding: "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: 14 }}>
-        <button onClick={onBack} title="Back to Quick Tasks" style={{ background: T.canvas, border: tb(1.5), borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer" }}>← Back</button>
+      <div style={{ background: T.surface, border: "none", boxShadow: T.shadowSm, padding: "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: 14, position: "relative", zIndex: 1 }}>
+        <button onClick={onBack} title="Back to Quick Tasks" style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer" }}>← Back</button>
         <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => title.trim() && onUpdate({ title: title.trim() })} onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           style={{ flex: 1, fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, background: "transparent", border: "none", outline: "none", minWidth: 0 }} />
         <button onClick={() => onUpdate({ done: !item.done })}
-          style={{ background: item.done ? T.canvas : T.inside, color: item.done ? T.ink : T.surface, border: tb(1.5, item.done ? T.border : T.inside), borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+          style={{ background: item.done ? T.surfaceMuted : T.inside, color: item.done ? T.ink : T.surface, border: "none", borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
           {item.done ? "↩ Reopen" : "✓ Done"}
         </button>
         <button onClick={() => { onDelete(); onBack(); }} title="Delete this task"
-          style={{ background: "transparent", border: tb(1.5, T.borderMuted), color: T.inkMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
+          style={{ background: T.surfaceMuted, border: "none", color: T.inkMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
           Delete
         </button>
       </div>
       <div className="board-canvas" style={{ flex: 1, overflowY: "auto", padding: "48px 64px" }}>
         <textarea value={notes} onChange={e => { setNotes(e.target.value); onUpdate({ notes: e.target.value }); }}
           placeholder="Add notes…"
-          style={{ width: "100%", maxWidth: 560, minHeight: 200, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radius, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.8, display: "block" }} />
+          style={{ width: "100%", maxWidth: 560, minHeight: 200, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surface, border: "none", boxShadow: T.shadowSm, borderRadius: T.radius, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.8, display: "block" }} />
       </div>
     </div>
   );
@@ -1095,9 +1100,9 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(34,32,29,0.55)" }} onClick={onClose}>
-      <div style={{ background: T.surface, border: tb(2.5), borderRadius: T.radius, width: 480, maxWidth: "90vw", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: T.surface, border: "none", boxShadow: T.shadowLg, borderRadius: T.radius, width: 480, maxWidth: "90vw", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ background: T.surfaceMuted, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: tb(2) }}>
+        <div style={{ background: T.surfaceMuted, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>New Project</div>
           <button onClick={onClose} title="Close" aria-label="Close" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
         </div>
@@ -1108,14 +1113,14 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>PROJECT NAME</label>
             <input autoFocus value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCreate()} placeholder="Name your project…"
-              style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
           </div>
 
           {/* Description */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>DESCRIPTION</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project about…"
-              style={{ fontFamily: FONT, fontSize: 13, color: T.ink, background: T.canvas, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 90, lineHeight: 1.7 }} />
+              style={{ fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 90, lineHeight: 1.7 }} />
           </div>
 
           {/* Category */}
@@ -1126,7 +1131,7 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
                 const isSelected = cat === key;
                 return (
                   <button key={String(key)} onClick={() => setCat(key)} aria-pressed={isSelected}
-                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? tint(color, 12) : T.canvas, border: tb(1.5, isSelected ? color : T.borderMuted), borderRadius: T.radiusSm, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}>
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? tint(color, 16) : T.surfaceMuted, border: "none", boxShadow: isSelected ? `inset 0 0 0 2px ${color}` : "none", borderRadius: T.radiusSm, cursor: "pointer", transition: "box-shadow 0.15s, background 0.15s" }}>
                     <div style={{ color: isSelected ? color : T.inkMuted, display: "flex" }}>
                       {key === "factory" ? <OutsideIcon width={28} height={28} /> : key === "creative" ? <InsideIcon width={28} height={28} /> : <UncatIcon width={28} height={28} />}
                     </div>
@@ -1139,8 +1144,8 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
         </div>
 
         {/* Footer */}
-        <div style={{ padding: "16px 24px", borderTop: tb(1.5, T.borderMuted), display: "flex", justifyContent: "flex-end", gap: 10 }}>
-          <button onClick={onClose} style={{ background: "transparent", border: tb(1.5, T.borderMuted), color: T.inkMuted, borderRadius: T.radiusSm, padding: "10px 20px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+        <div style={{ padding: "16px 24px", display: "flex", justifyContent: "flex-end", gap: 10 }}>
+          <button onClick={onClose} style={{ background: T.surfaceMuted, border: "none", color: T.inkMuted, borderRadius: T.radiusSm, padding: "10px 20px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleCreate} disabled={!name.trim()}
             style={{ background: name.trim() ? T.ink : T.surfaceMuted, color: name.trim() ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "10px 24px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
             Create Project
@@ -1336,7 +1341,7 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, paddingBottom: 12, borderBottom: `2.5px solid ${accentColor}` }}>
           {icon}
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, flex: 1 }}>{label}</div>
-          <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: muted ? T.inkMuted : T.surface, background: muted ? T.surface : accentColor, border: muted ? tb(1.5, T.borderMuted) : "none", borderRadius: 10, padding: "2px 8px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
+          <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: muted ? T.inkMuted : T.surface, background: muted ? T.surfaceMuted : accentColor, border: "none", borderRadius: 10, padding: "2px 8px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
           {items.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
@@ -1359,7 +1364,7 @@ export default function App() {
       {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreate={createProject} />}
 
       {/* Title bar */}
-      <div style={{ background: T.surface, borderBottom: tb(2), padding: "0 12px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, height: 54, flexShrink: 0, minWidth: 0, overflow: "hidden" }}>
+      <div style={{ background: T.surface, boxShadow: T.shadowSm, padding: "0 12px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, height: 54, flexShrink: 0, minWidth: 0, overflow: "hidden", position: "relative", zIndex: 1 }}>
         {/* Traffic light spacer on Mac — skip on mobile */}
         {!isMobile && <div style={{ width: 60, flexShrink: 0 }} />}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, minWidth: 0 }}>
@@ -1370,9 +1375,9 @@ export default function App() {
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
-          <button onClick={() => syncTasks()} disabled={syncing} title="Sync tasks from Asana" aria-label="Sync tasks from Asana" style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 16 : 12, fontWeight: 800, color: T.ink, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1, opacity: syncing ? 0.5 : 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
-          <button onClick={toggleTheme} title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>{theme === "light" ? "☾" : "☀"}</button>
-          <button onClick={() => setShowSettings(true)} title="Settings" aria-label="Settings" style={{ background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>⚙</button>
+          <button onClick={() => syncTasks()} disabled={syncing} title="Sync tasks from Asana" aria-label="Sync tasks from Asana" style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 16 : 12, fontWeight: 800, color: T.ink, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1, opacity: syncing ? 0.5 : 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
+          <button onClick={toggleTheme} title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>{theme === "light" ? "☾" : "☀"}</button>
+          <button onClick={() => setShowSettings(true)} title="Settings" aria-label="Settings" style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: isMobile ? "5px 8px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>⚙</button>
         </div>
       </div>
 
@@ -1399,7 +1404,7 @@ export default function App() {
                 const active = mobileTab === tab;
                 return (
                   <button key={tab} onClick={() => setMobileTab(p => p === tab ? null : tab)} title={tab === "create" ? "New project" : tab === "tasks" ? "Quick Tasks" : "Prayer"}
-                    style={{ width: 52, height: 58, background: active ? T.ink : T.surface, border: tb(1.5, active ? T.ink : T.borderMuted), borderRight: active ? "none" : undefined, borderRadius: `${T.radius}px 0 0 ${T.radius}px`, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: active ? T.surface : T.inkMuted, transition: "background 0.15s, color 0.15s, border-color 0.15s" }}>
+                    style={{ width: 52, height: 58, background: active ? T.ink : T.surfaceMuted, border: "none", boxShadow: active ? T.shadowSm : "none", borderRadius: `${T.radius}px 0 0 ${T.radius}px`, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: active ? T.surface : T.inkMuted, transition: "background 0.15s, color 0.15s" }}>
                     {tab === "prayer" ? <PrayerIcon width={18} height={18} /> : tab === "create" ? <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> : <span style={{ fontSize: 14 }}>☑</span>}
                     <span style={{ fontFamily: FONT, fontSize: 8, fontWeight: 800, letterSpacing: 0.4 }}>{tab === "create" ? "Create" : tab === "tasks" ? "Tasks" : "Prayer"}</span>
                   </button>
@@ -1413,7 +1418,7 @@ export default function App() {
               <div style={{ position: "absolute", inset: 0, overflow: "hidden", zIndex: 5, pointerEvents: mobileTab ? "auto" : "none" }}>
                 <div style={{ position: "absolute", inset: 0, background: T.canvas, transform: mobileTab ? "translateX(0)" : "translateX(100%)", transition: "transform 0.22s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
                   {/* Panel header */}
-                  <div style={{ background: T.surface, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: tb(2), flexShrink: 0 }}>
+                  <div style={{ background: T.surface, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: T.shadowSm, flexShrink: 0, position: "relative", zIndex: 1 }}>
                     <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>
                       {mobileTab === "create" ? "New Project" : mobileTab === "tasks" ? "Quick Tasks" : "Prayer"}
                     </div>
@@ -1426,7 +1431,7 @@ export default function App() {
                       <input autoFocus value={mobileCreateName} onChange={e => setMobileCreateName(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && mobileCreateName.trim()) { createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); } }}
                         placeholder="Project name…"
-                        style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                        style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
                       <button onClick={() => { if (!mobileCreateName.trim()) return; createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); }} disabled={!mobileCreateName.trim()}
                         style={{ background: mobileCreateName.trim() ? T.ink : T.surfaceMuted, color: mobileCreateName.trim() ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
                         Create Project
@@ -1437,10 +1442,10 @@ export default function App() {
                   {/* Tasks panel */}
                   {mobileTab === "tasks" && (
                     <>
-                      <div style={{ padding: "16px 20px", borderBottom: tb(1, T.borderMuted), flexShrink: 0 }}>
+                      <div style={{ padding: "16px 20px", flexShrink: 0 }}>
                         <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                           <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
-                            style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "9px 12px", outline: "none", minWidth: 0 }} />
+                            style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "9px 12px", outline: "none", minWidth: 0 }} />
                           <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                         </form>
                       </div>
@@ -1500,10 +1505,10 @@ export default function App() {
           <>
             {/* Projects panel — visible when a project is open */}
             {openTask && (
-              <div style={{ borderRight: tb(2), backgroundColor: T.surfaceMuted, display: "flex", flexDirection: "column", flexShrink: 0, width: projectsPanelOpen ? 280 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
+              <div style={{ border: "none", boxShadow: "4px 0 12px rgba(120,90,60,0.06)", backgroundColor: T.surfaceMuted, display: "flex", flexDirection: "column", flexShrink: 0, width: projectsPanelOpen ? 280 : 40, transition: "width 0.2s ease", overflow: "hidden", position: "relative", zIndex: 1 }}>
                 {projectsPanelOpen ? (
                   <>
-                    <div style={{ padding: "16px 14px 10px", borderBottom: tb(1.5, T.borderMuted), display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                    <div style={{ padding: "16px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
                       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: T.ink }}>Projects</div>
                       <button onClick={() => setProjectsPanelOpen(false)} title="Collapse" aria-label="Collapse projects panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
                     </div>
@@ -1519,7 +1524,7 @@ export default function App() {
                               const isCurrent = openTask.gid === p.gid;
                               return (
                                 <button key={p.gid} onClick={() => setOpenTask(p)}
-                                  style={{ width: "calc(100% - 20px)", margin: "0 10px 10px", background: T.surface, border: tb(1.5, isCurrent ? T.ink : T.borderMuted), borderRadius: T.radiusSm, padding: 0, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", overflow: "hidden", transition: "border-color 0.15s" }}>
+                                  style={{ width: "calc(100% - 20px)", margin: "0 10px 10px", background: T.surface, border: "none", boxShadow: isCurrent ? `inset 0 0 0 2px ${T.ink}` : T.shadowSm, borderRadius: T.radiusSm, padding: 0, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", overflow: "hidden", transition: "box-shadow 0.15s" }}>
                                   <div style={{ height: 5, background: color, flexShrink: 0 }} />
                                   <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
                                     <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: T.ink, lineHeight: 1.35 }}>{p.name}</div>
@@ -1568,7 +1573,7 @@ export default function App() {
                       <>
                         {quickApprovals.length > 0 && (
                           // maxWidth matches the 3 columns below: 256px each + 28px gaps (256*3 + 28*2)
-                          <div style={{ background: tint(T.soon, 7), border: `2.5px solid ${T.soon}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32, maxWidth: 824, marginLeft: "auto", marginRight: "auto" }}>
+                          <div style={{ background: tint(T.soon, 10), border: "none", boxShadow: `${T.shadow}, inset 0 0 0 1.5px ${tint(T.soon, 55)}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32, maxWidth: 824, marginLeft: "auto", marginRight: "auto" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                               <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
                               <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
@@ -1600,17 +1605,17 @@ export default function App() {
 
             {/* Todo panel — always visible on home screen */}
             {!openTask && !openTodoId && (
-              <div style={{ borderLeft: tb(2), backgroundColor: T.surfaceMuted, display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 272 : 40, transition: "width 0.2s ease", overflow: "hidden" }}>
+              <div style={{ border: "none", boxShadow: "-4px 0 12px rgba(120,90,60,0.06)", backgroundColor: T.surfaceMuted, display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 272 : 40, transition: "width 0.2s ease", overflow: "hidden", position: "relative", zIndex: 1 }}>
                 {todosPanelOpen ? (
                   <>
-                    <div style={{ padding: "20px 16px 14px", borderBottom: tb(1.5, T.borderMuted), display: "flex", flexDirection: "column", gap: 12, background: T.surfaceMuted }}>
+                    <div style={{ padding: "20px 16px 14px", display: "flex", flexDirection: "column", gap: 12, background: T.surfaceMuted }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>Quick Tasks</div>
                         <button onClick={() => setTodosPanelOpen(false)} title="Collapse" aria-label="Collapse Quick Tasks panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
                       </div>
                       <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                         <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
-                          style={{ flex: 1, fontFamily: FONT, fontSize: 12, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "7px 10px", outline: "none", minWidth: 0 }} />
+                          style={{ flex: 1, fontFamily: FONT, fontSize: 12, color: T.ink, background: T.surface, border: "none", boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "7px 10px", outline: "none", minWidth: 0 }} />
                         <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                       </form>
                     </div>
@@ -1673,6 +1678,9 @@ export default function App() {
           --urgent: #B93A22;
           --soon: #8A5818;
           --focus: #2452C8;
+          --shadow-sm: 0 2px 8px rgba(120,90,60,0.10);
+          --shadow-md: 0 6px 20px rgba(120,90,60,0.14);
+          --shadow-lg: 0 16px 48px rgba(90,65,45,0.22);
         }
         [data-theme="dark"] {
           --canvas: #1E1B18;
@@ -1688,6 +1696,9 @@ export default function App() {
           --urgent: #E67056;
           --soon: #D9A244;
           --focus: #7AA2FF;
+          --shadow-sm: 0 2px 8px rgba(0,0,0,0.28);
+          --shadow-md: 0 6px 20px rgba(0,0,0,0.34);
+          --shadow-lg: 0 16px 48px rgba(0,0,0,0.45);
         }
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { margin: 0; overflow: hidden; }
@@ -1721,7 +1732,7 @@ export default function App() {
           outline: 2px solid ${T.focus};
           outline-offset: 2px;
         }
-        .board-card:hover { border-color: ${T.ink} !important; transform: translateY(-2px); }
+        .board-card:hover { box-shadow: ${T.shadowLg} !important; transform: translateY(-2px); }
         .board-card:focus-visible { transform: translateY(-2px); }
         /* Card lands in its column slot with a little bounce — plays on every mount,
            including when a card is re-categorized into a new column. */
