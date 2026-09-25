@@ -117,6 +117,9 @@ const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
 // Alpha-tinted color — works with the CSS-variable T.* tokens (a hex-alpha suffix
 // like `${T.inside}1f` can't be appended to a var() reference).
 const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, transparent)`;
+// Moss-green accent for the "Needs Your Approval" background animation — a fixed
+// brand color (not a theme token), so it reads the same in light and dark mode.
+const MOSS = "#98C683";
 
 const CATEGORIES = {
   factory:  { label: "Outside", emoji: "⚙️", color: T.outside, text: T.ink },
@@ -1361,6 +1364,7 @@ export default function App() {
   const allInside        = projects.filter(p => categories[p.gid] === "creative").sort(byDueDate);
   const allUncategorized = projects.filter(p => !categories[p.gid]).sort(byDueDate);
   const quickApprovals   = projects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
+  const hasUrgentApproval = quickApprovals.some(p => { const d = daysLeft(p.due_on); return d !== null && d <= 3; });
 
   const EMPTY_SLOTS = 2;
   function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string) {
@@ -1613,19 +1617,27 @@ export default function App() {
                       <>
                         {quickApprovals.length > 0 && (
                           // maxWidth matches the 3 columns below: 256px each + 28px gaps (256*3 + 28*2)
-                          <div style={{ background: tint(T.soon, 10), border: "none", boxShadow: `${T.shadow}, inset 0 0 0 1.5px ${tint(T.soon, 55)}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32, maxWidth: 824, marginLeft: "auto", marginRight: "auto" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                              <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
-                              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
-                              <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, background: T.soon, borderRadius: 10, padding: "2px 10px", minWidth: 22, textAlign: "center" }}>{quickApprovals.length}</div>
+                          <div style={{ position: "relative", overflow: "hidden", boxShadow: `${T.shadow}, inset 0 0 0 1.5px ${tint(MOSS, 45)}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32, maxWidth: 824, marginLeft: "auto", marginRight: "auto" }}>
+                            <div className={`moss-bg${hasUrgentApproval ? " moss-bg--urgent" : ""}`}>
+                              <div className="moss-blob moss-blob--a" />
+                              <div className="moss-blob moss-blob--b" />
+                              <div className="moss-blob moss-blob--c" />
+                              <div className="moss-blob moss-blob--d" />
                             </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                              {quickApprovals.map(p => (
-                                <div key={p.gid} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
-                                  <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.soon, letterSpacing: 0.5, textTransform: "uppercase" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
-                                  <ProjectCard task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />
-                                </div>
-                              ))}
+                            <div style={{ position: "relative", zIndex: 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                                <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
+                                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
+                                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, background: T.soon, borderRadius: 10, padding: "2px 10px", minWidth: 22, textAlign: "center" }}>{quickApprovals.length}</div>
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                                {quickApprovals.map(p => (
+                                  <div key={p.gid} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
+                                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.soon, letterSpacing: 0.5, textTransform: "uppercase" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
+                                    <ProjectCard task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         )}
@@ -1721,6 +1733,7 @@ export default function App() {
           --shadow-sm: 0 3px 10px rgba(110,80,50,0.16);
           --shadow-md: 0 8px 26px rgba(110,80,50,0.22);
           --shadow-lg: 0 20px 56px rgba(80,55,35,0.32);
+          --moss-blend: multiply;
         }
         [data-theme="dark"] {
           --canvas: #1E1B18;
@@ -1739,6 +1752,7 @@ export default function App() {
           --shadow-sm: 0 3px 10px rgba(0,0,0,0.32);
           --shadow-md: 0 8px 26px rgba(0,0,0,0.38);
           --shadow-lg: 0 20px 56px rgba(0,0,0,0.5);
+          --moss-blend: screen;
         }
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { margin: 0; overflow: hidden; }
@@ -1780,6 +1794,68 @@ export default function App() {
         .slot-card { animation: slotIn 0.32s cubic-bezier(.34,1.56,.64,1); }
         @keyframes slotPulse { 0%, 100% { border-color: var(--slot-accent); } 50% { border-color: ${T.borderMuted}; } }
         .slot-empty--active { animation: slotPulse 1s ease-in-out infinite; }
+
+        /* "Needs Your Approval" background — soft, overlapping moss-green blobs that
+           drift and breathe at their own uneven pace, like light moving across moss.
+           When something on the list is actually due soon, every blob speeds up so
+           the whole background gets visibly more alive without ever "flashing". */
+        .moss-bg {
+          position: absolute; inset: 0; overflow: hidden;
+          background: color-mix(in srgb, ${MOSS} 14%, ${T.surface} 86%);
+        }
+        .moss-blob { position: absolute; border-radius: 50%; filter: blur(28px); mix-blend-mode: var(--moss-blend); will-change: transform, opacity; }
+        .moss-blob--a {
+          top: -35%; left: -12%; width: 62%; height: 175%;
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 75%, white 25%) 0%, transparent 70%);
+          animation: mossDriftA 24s cubic-bezier(0.37,0,0.63,1) infinite;
+        }
+        .moss-blob--b {
+          bottom: -42%; right: -10%; width: 54%; height: 165%;
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 65%, #2E4420 35%) 0%, transparent 72%);
+          animation: mossDriftB 31s ease-in-out infinite; animation-delay: -9s;
+        }
+        .moss-blob--c {
+          top: 8%; right: 18%; width: 38%; height: 135%;
+          background: radial-gradient(circle, ${MOSS} 0%, transparent 68%);
+          animation: mossDriftC 18s ease-in-out infinite; animation-delay: -4s;
+        }
+        .moss-blob--d {
+          bottom: -22%; left: 22%; width: 34%; height: 125%;
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, #4A3B22 25%) 0%, transparent 70%);
+          animation: mossDriftD 27s ease-in-out infinite; animation-delay: -14s;
+        }
+        .moss-bg--urgent .moss-blob--a { animation-duration: 9s; }
+        .moss-bg--urgent .moss-blob--b { animation-duration: 12s; }
+        .moss-bg--urgent .moss-blob--c { animation-duration: 7s; }
+        .moss-bg--urgent .moss-blob--d { animation-duration: 10s; }
+        @keyframes mossDriftA {
+          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.5; }
+          19%  { transform: translate(7%, 9%) scale(1.14) rotate(4deg); opacity: 0.68; }
+          46%  { transform: translate(-6%, 4%) scale(0.9) rotate(-3deg); opacity: 0.38; }
+          71%  { transform: translate(9%, -7%) scale(1.08) rotate(2deg); opacity: 0.6; }
+          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.5; }
+        }
+        @keyframes mossDriftB {
+          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.4; }
+          27%  { transform: translate(-9%, -6%) scale(1.2) rotate(-5deg); opacity: 0.58; }
+          55%  { transform: translate(5%, 8%) scale(0.86) rotate(3deg); opacity: 0.3; }
+          82%  { transform: translate(-6%, -3%) scale(1.1) rotate(-2deg); opacity: 0.5; }
+          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.4; }
+        }
+        @keyframes mossDriftC {
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
+          15%  { transform: translate(6%, -8%) scale(1.16); opacity: 0.5; }
+          51%  { transform: translate(-8%, 5%) scale(0.9); opacity: 0.24; }
+          80%  { transform: translate(4%, 9%) scale(1.12); opacity: 0.44; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
+        }
+        @keyframes mossDriftD {
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.35; }
+          24%  { transform: translate(-7%, 6%) scale(1.1); opacity: 0.5; }
+          60%  { transform: translate(8%, -5%) scale(0.88); opacity: 0.26; }
+          88%  { transform: translate(-4%, -8%) scale(1.14); opacity: 0.46; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.35; }
+        }
       `}</style>
     </div>
   );
