@@ -117,9 +117,11 @@ const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
 // Alpha-tinted color — works with the CSS-variable T.* tokens (a hex-alpha suffix
 // like `${T.inside}1f` can't be appended to a var() reference).
 const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, transparent)`;
-// Moss-green accent for the "Needs Your Approval" background animation — a fixed
-// brand color (not a theme token), so it reads the same in light and dark mode.
+// Moss green + water blue accents for the shared background animation (Needs Your
+// Approval and the prayer lock) — fixed brand colors, not theme tokens, so they
+// read the same in light and dark mode.
 const MOSS = "#98C683";
+const MOSS_BLUE = "#4F8FA6";
 
 const CATEGORIES = {
   factory:  { label: "Outside", emoji: "⚙️", color: T.outside, text: T.ink },
@@ -917,7 +919,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         }
         .prayer-moss-blob--b {
           bottom: -18%; right: 6%; width: 46vw; height: 46vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 65%, #2E4420 35%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_BLUE} 45%) 0%, transparent 70%);
           animation: mossDriftB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
@@ -929,7 +931,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         }
         .prayer-moss-blob--d {
           bottom: 4%; left: -6%; width: 30vw; height: 30vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, #4A3B22 25%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_BLUE} 65%, ${MOSS} 35%) 0%, transparent 70%);
           animation: mossDriftD 24s ease-in-out infinite;
           animation-delay: -14s;
         }
@@ -1801,7 +1803,7 @@ export default function App() {
         }
         .moss-blob--b {
           bottom: -42%; right: -10%; width: 54%; height: 165%;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 65%, #2E4420 35%) 0%, transparent 72%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_BLUE} 45%) 0%, transparent 72%);
           animation: mossDriftB 31s ease-in-out infinite; animation-delay: -9s;
         }
         .moss-blob--c {
@@ -1811,7 +1813,7 @@ export default function App() {
         }
         .moss-blob--d {
           bottom: -22%; left: 22%; width: 34%; height: 125%;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, #4A3B22 25%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_BLUE} 65%, ${MOSS} 35%) 0%, transparent 70%);
           animation: mossDriftD 27s ease-in-out infinite; animation-delay: -14s;
         }
         .moss-bg--urgent .moss-blob--a { animation-duration: 9s; }
