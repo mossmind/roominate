@@ -1882,12 +1882,23 @@ export default function App() {
         )}
       </div>
 
-      {/* Prayer FAB — desktop only */}
+      {/* Prayer FAB — desktop only. A peaceful radiating orb: soft ripple rings
+          and a few drifting, twinkling particles around a slowly breathing glow. */}
       {!isMobile && (
-        <button onClick={() => setShowPrayer(true)} title="Morning Prayer" aria-label="Morning Prayer"
-          style={{ position: "fixed", bottom: 28, right: 28, width: 56, height: 56, background: T.inside, border: tb(2, T.inside), borderRadius: "50%", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.surface, zIndex: 50, boxShadow: "0 4px 12px rgba(34,32,29,0.25)" }}>
-          <PrayerIcon width={26} height={26} />
-        </button>
+        <div style={{ position: "fixed", bottom: 8, right: 8, width: 96, height: 96, zIndex: 50, pointerEvents: "none" }}>
+          <div className="prayer-fab-ring prayer-fab-ring--a" />
+          <div className="prayer-fab-ring prayer-fab-ring--b" />
+          <div className="prayer-fab-ring prayer-fab-ring--c" />
+          <span className="prayer-fab-particle prayer-fab-particle--1" />
+          <span className="prayer-fab-particle prayer-fab-particle--2" />
+          <span className="prayer-fab-particle prayer-fab-particle--3" />
+          <span className="prayer-fab-particle prayer-fab-particle--4" />
+          <span className="prayer-fab-particle prayer-fab-particle--5" />
+          <button onClick={() => setShowPrayer(true)} title="Morning Prayer" aria-label="Morning Prayer" className="prayer-fab-btn"
+            style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 56, height: 56, borderRadius: "50%", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.surface, pointerEvents: "auto" }}>
+            <PrayerIcon width={26} height={26} style={{ position: "relative", zIndex: 1 }} />
+          </button>
+        </div>
       )}
 
       <style>{`
@@ -2057,6 +2068,73 @@ export default function App() {
           60%  { transform: translate(8%, -5%) scale(0.88); opacity: 0.26; }
           88%  { transform: translate(-4%, -8%) scale(1.14); opacity: 0.46; }
           100% { transform: translate(0%, 0%) scale(1); opacity: 0.35; }
+        }
+
+        /* ── Prayer FAB — radiating "orb" ─────────────────────────────────────
+           A breathing glow, three staggered ripple rings, and five small
+           particles that each drift on their own irregular, asynchronous path
+           (never a rigid circular orbit) so the whole thing reads as a calm,
+           organic point of light rather than a mechanical loading spinner. */
+        .prayer-fab-btn {
+          border: none;
+          background: radial-gradient(circle at 32% 28%, color-mix(in srgb, ${MOSS} 70%, white 30%) 0%, ${T.inside} 62%, color-mix(in srgb, ${T.inside} 80%, black 20%) 100%);
+          animation: prayerFabBreathe 5.5s ease-in-out infinite;
+        }
+        @keyframes prayerFabBreathe {
+          0%, 100% { box-shadow: 0 4px 14px rgba(34,32,29,0.28), 0 0 0 0 ${tint(MOSS, 0)}; transform: translate(-50%, -50%) scale(1); }
+          50%      { box-shadow: 0 4px 18px rgba(34,32,29,0.32), 0 0 18px 5px ${tint(MOSS, 35)}; transform: translate(-50%, -50%) scale(1.04); }
+        }
+        .prayer-fab-ring {
+          position: absolute; top: 50%; left: 50%; width: 56px; height: 56px; border-radius: 50%;
+          transform: translate(-50%, -50%); pointer-events: none;
+          animation: prayerRingPulse 4.2s ease-out infinite;
+        }
+        .prayer-fab-ring--a { border: 1.5px solid ${MOSS}; animation-delay: 0s; }
+        .prayer-fab-ring--b { border: 1.5px solid ${MOSS_BLUE}; animation-delay: -1.4s; }
+        .prayer-fab-ring--c { border: 1.5px solid ${MOSS}; animation-delay: -2.8s; }
+        @keyframes prayerRingPulse {
+          0%   { transform: translate(-50%, -50%) scale(0.85); opacity: 0.5; }
+          65%  { opacity: 0.14; }
+          100% { transform: translate(-50%, -50%) scale(2.3); opacity: 0; }
+        }
+        .prayer-fab-particle {
+          position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; border-radius: 50%;
+          pointer-events: none; background: ${MOSS}; box-shadow: 0 0 6px 1px ${tint(MOSS, 60)};
+        }
+        .prayer-fab-particle--1 { animation: prayerParticleA 6.5s ease-in-out infinite; }
+        .prayer-fab-particle--2 { background: ${MOSS_BLUE}; box-shadow: 0 0 6px 1px ${tint(MOSS_BLUE, 60)}; animation: prayerParticleB 7.8s ease-in-out infinite; animation-delay: -2s; }
+        .prayer-fab-particle--3 { animation: prayerParticleC 5.6s ease-in-out infinite; animation-delay: -3.5s; }
+        .prayer-fab-particle--4 { background: ${MOSS_BLUE}; box-shadow: 0 0 6px 1px ${tint(MOSS_BLUE, 60)}; animation: prayerParticleD 7s ease-in-out infinite; animation-delay: -1.2s; }
+        .prayer-fab-particle--5 { animation: prayerParticleE 6.2s ease-in-out infinite; animation-delay: -4.4s; }
+        @keyframes prayerParticleA {
+          0%   { opacity: 0.25; transform: translate(-50%, -50%) translate(30px, -18px) scale(0.8); }
+          30%  { opacity: 0.9;  transform: translate(-50%, -50%) translate(36px, -24px) scale(1.15); }
+          60%  { opacity: 0.4;  transform: translate(-50%, -50%) translate(26px, -14px) scale(0.9); }
+          100% { opacity: 0.25; transform: translate(-50%, -50%) translate(30px, -18px) scale(0.8); }
+        }
+        @keyframes prayerParticleB {
+          0%   { opacity: 0.3;  transform: translate(-50%, -50%) translate(-34px, -8px) scale(0.85); }
+          40%  { opacity: 0.85; transform: translate(-50%, -50%) translate(-40px, -2px) scale(1.1); }
+          70%  { opacity: 0.35; transform: translate(-50%, -50%) translate(-30px, -12px) scale(0.9); }
+          100% { opacity: 0.3;  transform: translate(-50%, -50%) translate(-34px, -8px) scale(0.85); }
+        }
+        @keyframes prayerParticleC {
+          0%   { opacity: 0.28; transform: translate(-50%, -50%) translate(6px, 32px) scale(0.8); }
+          35%  { opacity: 0.9;  transform: translate(-50%, -50%) translate(2px, 38px) scale(1.2); }
+          75%  { opacity: 0.4;  transform: translate(-50%, -50%) translate(10px, 28px) scale(0.9); }
+          100% { opacity: 0.28; transform: translate(-50%, -50%) translate(6px, 32px) scale(0.8); }
+        }
+        @keyframes prayerParticleD {
+          0%   { opacity: 0.26; transform: translate(-50%, -50%) translate(-22px, -30px) scale(0.8); }
+          32%  { opacity: 0.85; transform: translate(-50%, -50%) translate(-28px, -36px) scale(1.15); }
+          68%  { opacity: 0.38; transform: translate(-50%, -50%) translate(-16px, -24px) scale(0.9); }
+          100% { opacity: 0.26; transform: translate(-50%, -50%) translate(-22px, -30px) scale(0.8); }
+        }
+        @keyframes prayerParticleE {
+          0%   { opacity: 0.3;  transform: translate(-50%, -50%) translate(20px, 30px) scale(0.85); }
+          45%  { opacity: 0.88; transform: translate(-50%, -50%) translate(26px, 36px) scale(1.1); }
+          80%  { opacity: 0.4;  transform: translate(-50%, -50%) translate(14px, 24px) scale(0.9); }
+          100% { opacity: 0.3;  transform: translate(-50%, -50%) translate(20px, 30px) scale(0.85); }
         }
 
         /* Respect the OS-level "reduce motion" preference — everything animated
