@@ -1417,17 +1417,25 @@ export default function App() {
         </div>
       </div>
 
-      {/* Pinned approvals reminder — shown on every page except the board itself, which already has the full banner */}
+      {/* Pinned approvals reminder — shown on every page except the board itself, which already has the full banner. Same moss animation as that banner. */}
       {(openTask || openTodoId) && quickApprovals.length > 0 && (
-        <div style={{ background: T.urgent, padding: "7px 16px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-          <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>⚡</span>
-          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, flex: 1, minWidth: 0 }}>
-            {quickApprovals.length} task{quickApprovals.length === 1 ? "" : "s"} waiting on your approval
+        <div style={{ position: "relative", overflow: "hidden", flexShrink: 0 }}>
+          <div className={`moss-bg${hasUrgentApproval ? " moss-bg--urgent" : ""}`}>
+            <div className="moss-blob moss-blob--a" />
+            <div className="moss-blob moss-blob--b" />
+            <div className="moss-blob moss-blob--c" />
+            <div className="moss-blob moss-blob--d" />
           </div>
-          <button onClick={() => { setOpenTask(null); setOpenTodoId(null); }}
-            style={{ background: T.surface, color: T.urgent, border: "none", borderRadius: T.radiusSm, padding: "4px 12px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
-            View →
-          </button>
+          <div style={{ position: "relative", zIndex: 1, padding: "7px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>⚡</span>
+            <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, flex: 1, minWidth: 0 }}>
+              {quickApprovals.length} task{quickApprovals.length === 1 ? "" : "s"} waiting on your approval
+            </div>
+            <button onClick={() => { setOpenTask(null); setOpenTodoId(null); }}
+              style={{ background: T.inside, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "4px 12px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              View →
+            </button>
+          </div>
         </div>
       )}
 
