@@ -1567,7 +1567,8 @@ export default function App() {
                     ) : (
                       <>
                         {quickApprovals.length > 0 && (
-                          <div style={{ background: tint(T.soon, 7), border: `2.5px solid ${T.soon}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32 }}>
+                          // maxWidth matches the 3 columns below: 256px each + 28px gaps (256*3 + 28*2)
+                          <div style={{ background: tint(T.soon, 7), border: `2.5px solid ${T.soon}`, borderRadius: T.radius, padding: "16px 20px 20px", marginBottom: 32, maxWidth: 824, marginLeft: "auto", marginRight: "auto" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                               <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
                               <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
