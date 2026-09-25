@@ -35,6 +35,8 @@ declare global {
       fetchTasks: (sectionGid: string) => Promise<AsanaApiTask[]>
       fetchSections: (projectGid: string) => Promise<{ gid: string; name: string }[]>
       fetchComments: (taskGid: string) => Promise<AsanaComment[]>
+      setCompleted: (taskGid: string, completed: boolean) => Promise<void>
+      addComment: (taskGid: string, text: string) => Promise<AsanaComment>
     }
   }
 }
@@ -147,6 +149,8 @@ interface Task {
   notes: string
   url: string
   sectionGid?: string
+  completed?: boolean  // only ever true for a task marked done in-app this session — a
+                        // synced task is never completed (the sync itself excludes those)
 }
 
 interface TodoItem {
@@ -956,17 +960,47 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
 
 // ── Task Detail ───────────────────────────────────────────────────────────
 // Every task opens here — just a Brief (Asana description + comments) and a Mind Map.
-function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void }) {
+function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete }: { task: Task; category: CategoryKey; onCategoryChange: (c: CategoryKey) => void; onBack: () => void; onToggleComplete: (completed: boolean) => Promise<void> }) {
   const isMobile = useIsMobile();
   const [tab, setTab] = useState<"brief" | "mindmap">("brief");
   const [comments, setComments] = useState<AsanaComment[] | null>(null);
   const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState<string | null>(null);
   const uc = urgColorLight(task.due_on); const ul = urgLabel(task.due_on);
+  // A task created with "+ Create" only exists locally (gid "local_...") until Asana
+  // task creation is supported — comments/completion can't be pushed anywhere for it.
+  const isAsanaTask = !task.gid.startsWith("local_");
 
   useEffect(() => {
+    if (!isAsanaTask) { setComments([]); return; }
     setComments(null); setCommentsError(null);
     platformAsana.fetchComments(task.gid).then(setComments).catch(e => setCommentsError(e instanceof Error ? e.message : String(e)));
   }, [task.gid]);
+
+  async function handleToggleComplete() {
+    setCompleting(true); setCompleteError(null);
+    try { await onToggleComplete(!task.completed); }
+    catch (e) { setCompleteError(e instanceof Error ? e.message : String(e)); }
+    setCompleting(false);
+  }
+
+  async function handlePostComment() {
+    const text = replyText.trim();
+    if (!text) return;
+    setPosting(true); setPostError(null);
+    try {
+      const comment = await platformAsana.addComment(task.gid, text);
+      setComments(prev => [...(prev ?? []), comment]);
+      setReplyText("");
+    } catch (e) {
+      setPostError(e instanceof Error ? e.message : String(e));
+    }
+    setPosting(false);
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -974,19 +1008,28 @@ function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; 
         <button onClick={onBack} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: task.completed ? "line-through" : "none" }}>{task.name}</div>
             {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.outside }} />}
             {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.inside }} />}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
+            {task.completed && <div style={{ color: T.inside, background: tint(T.inside, 14), borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>✓ Completed in Asana</div>}
             {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
             {ul && <div style={{ color: uc, background: tint(uc, 14), borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
           <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
+          {isAsanaTask && (
+            <button onClick={handleToggleComplete} disabled={completing} title={task.completed ? "Reopen in Asana" : "Mark complete in Asana"}
+              className={task.completed ? "btn-secondary" : "btn-primary"}
+              style={{ background: task.completed ? T.surfaceMuted : T.inside, color: task.completed ? T.inkMuted : T.surface, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: completing ? "default" : "pointer", opacity: completing ? 0.6 : 1, flexShrink: 0 }}>
+              {completing ? "…" : task.completed ? "↩ Reopen" : "✓ Mark Complete"}
+            </button>
+          )}
           {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} className="btn-secondary" style={{ background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
         </div>
+        {completeError && <div style={{ flexBasis: "100%", fontFamily: FONT, fontSize: 11, color: T.urgent }}>⚠ {completeError}</div>}
       </div>
 
       {/* Brief / Mind Map switcher */}
@@ -1029,6 +1072,22 @@ function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; 
                     <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{c.text}</div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {isAsanaTask && (
+              <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                <textarea value={replyText} onChange={e => setReplyText(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handlePostComment(); }}
+                  placeholder="Add a comment — it's posted to this task in Asana…"
+                  style={{ width: "100%", minHeight: 64, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: "10px 12px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.6 }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <button onClick={handlePostComment} disabled={!replyText.trim() || posting} className={replyText.trim() ? "btn-primary" : "btn-secondary"}
+                    style={{ background: replyText.trim() ? T.inside : T.surfaceMuted, color: replyText.trim() ? T.surface : T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: replyText.trim() && !posting ? "pointer" : "default", opacity: posting ? 0.6 : 1 }}>
+                    {posting ? "Posting…" : "Post Comment"}
+                  </button>
+                  {postError && <div style={{ fontFamily: FONT, fontSize: 11, color: T.urgent }}>⚠ {postError}</div>}
+                </div>
               </div>
             )}
           </div>
@@ -1298,6 +1357,22 @@ export default function App() {
     try { await storageSet("mossmind_categories", JSON.stringify(updated)); } catch (_) {}
   }
 
+  // Marks a task complete/reopened both locally and in Asana itself. Optimistic —
+  // reverts and rethrows on failure so the caller can surface the error.
+  async function setTaskCompleted(gid: string, completed: boolean) {
+    const prevProjects = projects;
+    const updated = projects.map(p => p.gid === gid ? { ...p, completed } : p);
+    setProjects(updated);
+    await storageSet("mossmind_tasks", JSON.stringify({ projects: updated, ts: Date.now() }));
+    try {
+      await platformAsana.setCompleted(gid, completed);
+    } catch (e) {
+      setProjects(prevProjects);
+      await storageSet("mossmind_tasks", JSON.stringify({ projects: prevProjects, ts: Date.now() }));
+      throw e;
+    }
+  }
+
   function handleBack() { setOpenTask(null); }
 
   async function saveTodos(updated: TodoItem[]) { setTodos(updated); try { await storageSet("mossmind_todos", JSON.stringify(updated)); } catch (_) {} }
@@ -1366,10 +1441,11 @@ export default function App() {
     if (!b.due_on) return -1;
     return a.due_on.localeCompare(b.due_on);
   }
-  const allOutside       = projects.filter(p => categories[p.gid] === "factory").sort(byDueDate);
-  const allInside        = projects.filter(p => categories[p.gid] === "creative").sort(byDueDate);
-  const allUncategorized = projects.filter(p => !categories[p.gid]).sort(byDueDate);
-  const quickApprovals   = projects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
+  const openProjects     = projects.filter(p => !p.completed);
+  const allOutside       = openProjects.filter(p => categories[p.gid] === "factory").sort(byDueDate);
+  const allInside        = openProjects.filter(p => categories[p.gid] === "creative").sort(byDueDate);
+  const allUncategorized = openProjects.filter(p => !categories[p.gid]).sort(byDueDate);
+  const quickApprovals   = openProjects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
   const hasUrgentApproval = quickApprovals.some(p => { const d = daysLeft(p.due_on); return d !== null && d <= 3; });
 
   const EMPTY_SLOTS = 2;
@@ -1633,7 +1709,8 @@ export default function App() {
                   <TodoDetail item={openTodo} onUpdate={u => updateTodo(openTodo.id, u)} onDelete={() => deleteTodo(openTodo.id)} onBack={() => setOpenTodoId(null)} />
                 );
                 if (openTask) return (
-                  <TaskDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack} />
+                  <TaskDetail task={openTask} category={categories[openTask.gid] || null} onCategoryChange={cat => updateCategory(openTask.gid, cat)} onBack={handleBack}
+                    onToggleComplete={async completed => { await setTaskCompleted(openTask.gid, completed); setOpenTask(t => t ? { ...t, completed } : t); }} />
                 );
                 return (
                   <div style={{ padding: "32px 48px", minHeight: "100%" }}>

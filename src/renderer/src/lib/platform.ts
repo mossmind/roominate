@@ -179,4 +179,30 @@ export const asana = {
       .filter((s: any) => s.type === 'comment' && s.text)
       .map((s: any) => ({ gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }))
   },
+
+  setCompleted: async (taskGid: string, completed: boolean): Promise<void> => {
+    if (isElectron) { await (window as any).asana.setCompleted(taskGid, completed); return }
+    const res = await fetch(`/api/asana/tasks/${taskGid}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ data: { completed } }),
+    })
+    const json = await res.json() as any
+    if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
+    if (json.error) throw new Error(json.error)
+  },
+
+  addComment: async (taskGid: string, text: string): Promise<AsanaComment> => {
+    if (isElectron) return (window as any).asana.addComment(taskGid, text)
+    const res = await fetch(`/api/asana/tasks/${taskGid}/stories`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ data: { text } }),
+    })
+    const json = await res.json() as any
+    if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
+    if (json.error) throw new Error(json.error)
+    const s = json.data
+    return { gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }
+  },
 }

@@ -95,6 +95,34 @@ app.get('/api/asana/*', (req, res, next) => {
   }
 });
 
+// Write-back proxy (mark complete/reopen, post comments, etc.) — same auth
+// gate and PAT as the read proxy above; forwards the JSON body as-is.
+async function asanaWriteProxy(req, res) {
+  const pat = process.env.ASANA_PAT;
+  if (!pat) return res.status(500).json({ error: 'ASANA_PAT not set on server' });
+  const asanaPath = req.params[0];
+  const url = `https://app.asana.com/api/1.0/${asanaPath}`;
+  try {
+    const response = await fetch(url, {
+      method: req.method,
+      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+app.put('/api/asana/*', (req, res, next) => {
+  if (!isAuthenticated(req)) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}, asanaWriteProxy);
+app.post('/api/asana/*', (req, res, next) => {
+  if (!isAuthenticated(req)) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}, asanaWriteProxy);
+
 // ── Static files (auth required) ────────────────────────────────────────────
 
 app.use((req, res, next) => {
