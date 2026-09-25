@@ -1665,22 +1665,22 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
         :root {
-          --canvas: #F7E9DA;
-          --surface: #FFFFFF;
-          --surface-muted: #EFDFCC;
+          --canvas: #FBF8F3;
+          --surface: #F2E7D6;
+          --surface-muted: #E8D8BE;
           --ink: #211D18;
-          --ink-muted: #7D7062;
+          --ink-muted: #6B5F4F;
           --border: #E6D5C0;
           --border-muted: #EFE2D2;
           --outside: #D3652F;
-          --inside: #204A31;
+          --inside: #357048;
           --uncat: #7A6852;
           --urgent: #B93A22;
           --soon: #8A5818;
           --focus: #2452C8;
-          --shadow-sm: 0 2px 8px rgba(120,90,60,0.10);
-          --shadow-md: 0 6px 20px rgba(120,90,60,0.14);
-          --shadow-lg: 0 16px 48px rgba(90,65,45,0.22);
+          --shadow-sm: 0 3px 10px rgba(110,80,50,0.16);
+          --shadow-md: 0 8px 26px rgba(110,80,50,0.22);
+          --shadow-lg: 0 20px 56px rgba(80,55,35,0.32);
         }
         [data-theme="dark"] {
           --canvas: #1E1B18;
@@ -1691,14 +1691,14 @@ export default function App() {
           --border: #4A4238;
           --border-muted: #3A342C;
           --outside: #E0763F;
-          --inside: #7FA85E;
+          --inside: #8FBB70;
           --uncat: #B0A692;
           --urgent: #E67056;
           --soon: #D9A244;
           --focus: #7AA2FF;
-          --shadow-sm: 0 2px 8px rgba(0,0,0,0.28);
-          --shadow-md: 0 6px 20px rgba(0,0,0,0.34);
-          --shadow-lg: 0 16px 48px rgba(0,0,0,0.45);
+          --shadow-sm: 0 3px 10px rgba(0,0,0,0.32);
+          --shadow-md: 0 8px 26px rgba(0,0,0,0.38);
+          --shadow-lg: 0 20px 56px rgba(0,0,0,0.5);
         }
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { margin: 0; overflow: hidden; }
