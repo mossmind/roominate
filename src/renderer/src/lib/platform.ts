@@ -87,6 +87,28 @@ export interface AsanaComment {
   author: string | null
 }
 
+// Custom fields (e.g. "Box Folder", "Project Manager"/"Owner") vary per Asana
+// workspace, so these are fetched generically by name rather than hardcoded —
+// whatever custom fields a task actually has just show up.
+export interface AsanaCustomField {
+  gid: string
+  name: string
+  displayValue: string
+}
+
+export interface AsanaSubtask {
+  gid: string
+  name: string
+  completed: boolean
+  due_on: string | null
+}
+
+export interface AsanaTaskDetails {
+  assignee: string | null
+  customFields: AsanaCustomField[]
+  subtasks: AsanaSubtask[]
+}
+
 // ── AI ─────────────────────────────────────────────────────────────────────
 
 async function anthropicFetch(messages: unknown[], system: string): Promise<string> {
@@ -204,5 +226,24 @@ export const asana = {
     if (json.error) throw new Error(json.error)
     const s = json.data
     return { gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }
+  },
+
+  fetchTaskDetails: async (taskGid: string): Promise<AsanaTaskDetails> => {
+    if (isElectron) return (window as any).asana.fetchTaskDetails(taskGid)
+    const [taskRes, subRes] = await Promise.all([
+      fetch(`/api/asana/tasks/${taskGid}?opt_fields=assignee.name,custom_fields.name,custom_fields.display_value`),
+      fetch(`/api/asana/tasks/${taskGid}/subtasks?opt_fields=name,completed,due_on&limit=100`),
+    ])
+    const taskJson = await taskRes.json() as any
+    const subJson = await subRes.json() as any
+    if (taskJson.errors) throw new Error(taskJson.errors[0]?.message || 'Asana API error')
+    if (taskJson.error) throw new Error(taskJson.error)
+    const t = taskJson.data ?? {}
+    const customFields: AsanaCustomField[] = (t.custom_fields ?? [])
+      .filter((f: any) => f.display_value)
+      .map((f: any) => ({ gid: f.gid, name: f.name, displayValue: String(f.display_value) }))
+    const subtasks: AsanaSubtask[] = (subJson.data ?? [])
+      .map((s: any) => ({ gid: s.gid, name: s.name, completed: !!s.completed, due_on: s.due_on ?? null }))
+    return { assignee: t.assignee?.name ?? null, customFields, subtasks }
   },
 }

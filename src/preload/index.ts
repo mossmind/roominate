@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('asana', {
   fetchComments: (taskGid: string) => ipcRenderer.invoke('asana:fetchComments', taskGid),
   setCompleted: (taskGid: string, completed: boolean) => ipcRenderer.invoke('asana:setCompleted', taskGid, completed),
   addComment: (taskGid: string, text: string) => ipcRenderer.invoke('asana:addComment', taskGid, text),
+  fetchTaskDetails: (taskGid: string) => ipcRenderer.invoke('asana:fetchTaskDetails', taskGid),
 })
 
 contextBridge.exposeInMainWorld('anthropic', {

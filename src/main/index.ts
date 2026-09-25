@@ -194,6 +194,42 @@ app.whenReady().then(() => {
     })
   })
 
+  // ── Asana: task details (assignee, custom fields, subtasks) ──────────────
+  ipcMain.handle('asana:fetchTaskDetails', async (_, taskGid: string) => {
+    const pat = store.get('asana_pat') as string | undefined
+    if (!pat) throw new Error('No Asana token set.')
+
+    function get(url: string): Promise<any> {
+      return new Promise((resolve, reject) => {
+        const req = net.request({ method: 'GET', url })
+        req.setHeader('Authorization', `Bearer ${pat}`)
+        req.setHeader('Accept', 'application/json')
+        let data = ''
+        req.on('response', (res) => {
+          res.on('data', (chunk) => (data += chunk.toString()))
+          res.on('end', () => {
+            try { resolve(JSON.parse(data)) } catch { reject(new Error('Invalid response from Asana')) }
+          })
+        })
+        req.on('error', reject)
+        req.end()
+      })
+    }
+
+    const [taskJson, subJson] = await Promise.all([
+      get(`https://app.asana.com/api/1.0/tasks/${taskGid}?opt_fields=assignee.name,custom_fields.name,custom_fields.display_value`),
+      get(`https://app.asana.com/api/1.0/tasks/${taskGid}/subtasks?opt_fields=name,completed,due_on&limit=100`),
+    ])
+    if (taskJson.errors) throw new Error(taskJson.errors[0]?.message || 'Asana API error')
+    const t = taskJson.data ?? {}
+    const customFields = (t.custom_fields ?? [])
+      .filter((f: any) => f.display_value)
+      .map((f: any) => ({ gid: f.gid, name: f.name, displayValue: String(f.display_value) }))
+    const subtasks = (subJson.data ?? [])
+      .map((s: any) => ({ gid: s.gid, name: s.name, completed: !!s.completed, due_on: s.due_on ?? null }))
+    return { assignee: t.assignee?.name ?? null, customFields, subtasks }
+  })
+
   // ── Anthropic: generate mind map ─────────────────────────────────────────
   ipcMain.handle('anthropic:generate', async (_, { brief, taskName }: { brief: string; taskName: string }) => {
     const apiKey = store.get('anthropic_key') as string | undefined

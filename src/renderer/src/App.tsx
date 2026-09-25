@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles, isElectron, type AsanaComment } from './lib/platform';
+import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles, isElectron, type AsanaComment, type AsanaTaskDetails } from './lib/platform';
 import bgPhoto from './assets/bg2.png';
 import PrayerIcon from './assets/icons/prayer.svg?react';
 import InsideIcon from './assets/icons/Pot.svg?react';
@@ -37,6 +37,7 @@ declare global {
       fetchComments: (taskGid: string) => Promise<AsanaComment[]>
       setCompleted: (taskGid: string, completed: boolean) => Promise<void>
       addComment: (taskGid: string, text: string) => Promise<AsanaComment>
+      fetchTaskDetails: (taskGid: string) => Promise<AsanaTaskDetails>
     }
   }
 }
@@ -970,6 +971,9 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
   const [postError, setPostError] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
   const [completeError, setCompleteError] = useState<string | null>(null);
+  const [details, setDetails] = useState<AsanaTaskDetails | null>(null);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [togglingSubtask, setTogglingSubtask] = useState<string | null>(null);
   const uc = urgColorLight(task.due_on); const ul = urgLabel(task.due_on);
   // A task created with "+ Create" only exists locally (gid "local_...") until Asana
   // task creation is supported — comments/completion can't be pushed anywhere for it.
@@ -980,6 +984,24 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
     setComments(null); setCommentsError(null);
     platformAsana.fetchComments(task.gid).then(setComments).catch(e => setCommentsError(e instanceof Error ? e.message : String(e)));
   }, [task.gid]);
+
+  useEffect(() => {
+    if (!isAsanaTask) { setDetails(null); return; }
+    setDetails(null); setDetailsError(null);
+    platformAsana.fetchTaskDetails(task.gid).then(setDetails).catch(e => setDetailsError(e instanceof Error ? e.message : String(e)));
+  }, [task.gid]);
+
+  async function handleToggleSubtask(subGid: string, completed: boolean) {
+    setTogglingSubtask(subGid);
+    setDetails(d => d ? { ...d, subtasks: d.subtasks.map(s => s.gid === subGid ? { ...s, completed } : s) } : d);
+    try {
+      await platformAsana.setCompleted(subGid, completed);
+    } catch (e) {
+      setDetails(d => d ? { ...d, subtasks: d.subtasks.map(s => s.gid === subGid ? { ...s, completed: !completed } : s) } : d);
+      setDetailsError(e instanceof Error ? e.message : String(e));
+    }
+    setTogglingSubtask(null);
+  }
 
   async function handleToggleComplete() {
     setCompleting(true); setCompleteError(null);
@@ -1051,6 +1073,53 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
             ) : (
               <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic", marginBottom: 36 }}>No description in Asana yet.</div>
             )}
+
+            {isAsanaTask && (details?.assignee || (details?.customFields.length ?? 0) > 0) && (
+              <>
+                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>DETAILS</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 36 }}>
+                  {details?.assignee && (
+                    <div style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
+                      <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, minWidth: 120, flexShrink: 0 }}>Assignee</div>
+                      <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, fontWeight: 600 }}>{details.assignee}</div>
+                    </div>
+                  )}
+                  {details?.customFields.map(f => (
+                    <div key={f.gid} style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
+                      <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, minWidth: 120, flexShrink: 0 }}>{f.name}</div>
+                      {/^https?:\/\//.test(f.displayValue) ? (
+                        <a href={f.displayValue} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT, fontSize: 13, color: T.focus, fontWeight: 600, wordBreak: "break-all" }}>{f.displayValue} ↗</a>
+                      ) : (
+                        <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, fontWeight: 600 }}>{f.displayValue}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {isAsanaTask && details && details.subtasks.length > 0 && (
+              <>
+                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>
+                  SUBTASKS ({details.subtasks.filter(s => !s.completed).length}/{details.subtasks.length})
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 36 }}>
+                  {details.subtasks.map(s => (
+                    <div key={s.gid} style={{ display: "flex", alignItems: "center", gap: 10, background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: "9px 12px" }}>
+                      <button onClick={() => handleToggleSubtask(s.gid, !s.completed)} disabled={togglingSubtask === s.gid}
+                        title={s.completed ? "Mark not done" : "Mark done"} aria-label={s.completed ? "Mark not done" : "Mark done"}
+                        style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, border: tb(1.5, s.completed ? T.inside : T.inkMuted), background: s.completed ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}>
+                        {s.completed && <span style={{ color: T.surface, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                      </button>
+                      <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 500, color: s.completed ? T.inkMuted : T.ink, textDecoration: s.completed ? "line-through" : "none", flex: 1, minWidth: 0 }}>{s.name}</div>
+                      {s.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted, flexShrink: 0 }}>{s.due_on}</div>}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {isAsanaTask && detailsError && <div style={{ fontFamily: FONT, fontSize: 12, color: T.urgent, marginBottom: 20 }}>⚠ {detailsError}</div>}
 
             <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>
               COMMENTS{comments && comments.length > 0 ? ` (${comments.length})` : ""}
