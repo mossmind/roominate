@@ -1882,18 +1882,12 @@ export default function App() {
         )}
       </div>
 
-      {/* Prayer FAB — desktop only. A peaceful radiating orb with no hard edge:
-          a soft masked glow (fades to nothing rather than cutting off), heavy
-          grain for an organic lofi feel, and rings pulsing outward. No icon —
-          just the glow itself. */}
+      {/* Prayer FAB — desktop only. One soft, single radiating circle — deep
+          green core fading smoothly through pale green to nothing, grainy,
+          slowly breathing/expanding outward. No rings, no icon, no edge. */}
       {!isMobile && (
-        <div style={{ position: "fixed", bottom: 8, right: 8, width: 110, height: 110, zIndex: 50, pointerEvents: "none" }}>
-          <div className="prayer-fab-ring prayer-fab-ring--a" />
-          <div className="prayer-fab-ring prayer-fab-ring--b" />
-          <div className="prayer-fab-ring prayer-fab-ring--c" />
-          <div className="prayer-fab-ring prayer-fab-ring--d" />
-          <div className="prayer-fab-halo" />
-          <div className="prayer-fab-core" />
+        <div style={{ position: "fixed", bottom: -24, right: -24, width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
+          <div className="prayer-fab-orb" />
           <button onClick={() => setShowPrayer(true)} title="Morning Prayer" aria-label="Morning Prayer" className="prayer-fab-btn"
             style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 56, height: 56, borderRadius: "50%", cursor: "pointer", padding: 0, background: "transparent", pointerEvents: "auto" }}>
           </button>
@@ -2069,74 +2063,38 @@ export default function App() {
           100% { transform: translate(0%, 0%) scale(1); opacity: 0.35; }
         }
 
-        /* ── Prayer FAB — radiating "orb" ─────────────────────────────────────
-           A breathing glow, three staggered ripple rings, and five small
-           particles that each drift on their own irregular, asynchronous path
-           (never a rigid circular orbit) so the whole thing reads as a calm,
-           organic point of light rather than a mechanical loading spinner. */
+        /* ── Prayer FAB — a single soft radiating orb ─────────────────────────
+           Modeled on a reference clip of one smooth green circle breathing
+           outward: a deep green core fading evenly through pale green to
+           nothing, no separate rings or particles, grainy rather than clean. */
         .prayer-fab-btn {
           border: none;
           position: relative;
         }
-        /* The visible "body" of the orb — no hard circular cutoff anywhere.
-           A radial-gradient mask fades the whole thing to nothing well before
-           its own bounding box, so the edge is a genuine fade, not a blurred
-           line pretending to be one. */
-        .prayer-fab-core {
-          position: absolute; top: 50%; left: 50%; width: 84px; height: 84px;
+        .prayer-fab-orb {
+          position: absolute; top: 50%; left: 50%; width: 150px; height: 150px;
           transform: translate(-50%, -50%);
           pointer-events: none;
-          background: radial-gradient(circle at 32% 28%, color-mix(in srgb, ${MOSS} 70%, white 30%) 0%, ${T.inside} 45%, color-mix(in srgb, ${T.inside} 75%, black 25%) 70%, transparent 100%);
-          -webkit-mask-image: radial-gradient(circle, black 0%, black 35%, transparent 75%);
-          mask-image: radial-gradient(circle, black 0%, black 35%, transparent 75%);
-          filter: blur(3px);
-          animation: prayerFabBreathe 5.5s ease-in-out infinite;
+          background: radial-gradient(circle, ${T.inside} 0%, ${MOSS} 34%, color-mix(in srgb, ${MOSS} 45%, transparent) 56%, transparent 78%);
+          filter: blur(2px);
+          animation: prayerOrbBreathe 5s ease-in-out infinite;
         }
-        /* Heavy grain for a lofi, unpolished feel — layered over the core glow,
-           itself faded at the edge the same way so the grain has no edge either. */
-        .prayer-fab-core::after {
+        /* Heavy grain for a lofi, unpolished feel — masked so the texture fades
+           out with the same soft edge as the glow itself. */
+        .prayer-fab-orb::after {
           content: "";
-          position: absolute; inset: -10px;
-          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-          background-size: 60px 60px;
+          position: absolute; inset: -14px;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+          background-size: 70px 70px;
           mix-blend-mode: overlay;
-          opacity: 0.85;
-          -webkit-mask-image: radial-gradient(circle, black 0%, black 30%, transparent 68%);
-          mask-image: radial-gradient(circle, black 0%, black 30%, transparent 68%);
+          opacity: 0.8;
+          -webkit-mask-image: radial-gradient(circle, black 0%, black 30%, transparent 70%);
+          mask-image: radial-gradient(circle, black 0%, black 30%, transparent 70%);
           pointer-events: none;
         }
-        @keyframes prayerFabBreathe {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); }
-          50%      { transform: translate(-50%, -50%) scale(1.06); }
-        }
-        /* Broadest, softest layer — extra ambient bleed beyond the core so the
-           glow feels boundless rather than contained in a circle at all. */
-        .prayer-fab-halo {
-          position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; border-radius: 50%;
-          transform: translate(-50%, -50%);
-          background: radial-gradient(circle, ${tint(MOSS, 45)} 0%, ${tint(T.inside, 30)} 50%, transparent 75%);
-          filter: blur(14px);
-          pointer-events: none;
-          animation: prayerHaloBreathe 5.5s ease-in-out infinite;
-        }
-        @keyframes prayerHaloBreathe {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-          50%      { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
-        }
-        .prayer-fab-ring {
-          position: absolute; top: 50%; left: 50%; width: 56px; height: 56px; border-radius: 50%;
-          transform: translate(-50%, -50%); pointer-events: none;
-          filter: blur(1.5px);
-          animation: prayerRingPulse 3.6s ease-out infinite;
-        }
-        .prayer-fab-ring--a { border: 2px solid ${MOSS}; animation-delay: 0s; }
-        .prayer-fab-ring--b { border: 2px solid ${MOSS_BLUE}; animation-delay: -0.9s; }
-        .prayer-fab-ring--c { border: 2px solid ${MOSS}; animation-delay: -1.8s; }
-        .prayer-fab-ring--d { border: 2px solid ${MOSS_BLUE}; animation-delay: -2.7s; }
-        @keyframes prayerRingPulse {
-          0%   { transform: translate(-50%, -50%) scale(0.8); opacity: 0.65; }
-          60%  { opacity: 0.16; }
-          100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+        @keyframes prayerOrbBreathe {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+          50%      { transform: translate(-50%, -50%) scale(1.18); opacity: 1; }
         }
 
         /* Respect the OS-level "reduce motion" preference — everything animated
