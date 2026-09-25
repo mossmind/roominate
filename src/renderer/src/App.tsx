@@ -1882,16 +1882,20 @@ export default function App() {
         )}
       </div>
 
-      {/* Prayer FAB — desktop only. One soft, single radiating circle — deep
-          green core fading smoothly through pale green to nothing, grainy,
-          slowly breathing/expanding outward. No rings, no icon, no edge. */}
+      {/* Prayer FAB — desktop only. A flat, bold-outlined shape (matching the
+          app's simple hand-drawn icon set and hard-shadow button system) that
+          slowly morphs between a circle, a soft scalloped blob, and a spiky
+          burst and back — a gradual pulse through forms rather than a static
+          icon. All three shapes share the same 20-point path structure so the
+          browser can interpolate smoothly between them via the CSS `d` property. */}
       {!isMobile && (
-        <div style={{ position: "fixed", bottom: -24, right: -24, width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
-          <div className="prayer-fab-orb" />
-          <button onClick={() => setShowPrayer(true)} title="Morning Prayer" aria-label="Morning Prayer" className="prayer-fab-btn"
-            style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 56, height: 56, borderRadius: "50%", cursor: "pointer", padding: 0, background: "transparent", pointerEvents: "auto" }}>
-          </button>
-        </div>
+        <button onClick={() => setShowPrayer(true)} title="Morning Prayer" aria-label="Morning Prayer"
+          style={{ position: "fixed", bottom: 20, right: 20, width: 76, height: 76, border: "none", background: "transparent", padding: 0, cursor: "pointer", zIndex: 50, filter: `drop-shadow(4px 4px 0 ${T.ink})` }}>
+          <svg viewBox="-10 -10 120 120" width="76" height="76" style={{ display: "block" }}>
+            <path className="prayer-fab-shape" fill={T.inside} stroke={T.ink} strokeWidth={5} strokeLinejoin="round"
+              d="M 50.00 8.00 C 57.28 8.00 56.05 7.80 62.98 10.06 C 69.91 12.31 68.79 11.74 74.69 16.02 C 80.58 20.30 79.70 19.42 83.98 25.31 C 88.26 31.21 87.69 30.09 89.94 37.02 C 92.20 43.95 92.00 42.72 92.00 50.00 C 92.00 57.28 92.20 56.05 89.94 62.98 C 87.69 69.91 88.26 68.79 83.98 74.69 C 79.70 80.58 80.58 79.70 74.69 83.98 C 68.79 88.26 69.91 87.69 62.98 89.94 C 56.05 92.20 57.28 92.00 50.00 92.00 C 42.72 92.00 43.95 92.20 37.02 89.94 C 30.09 87.69 31.21 88.26 25.31 83.98 C 19.42 79.70 20.30 80.58 16.02 74.69 C 11.74 68.79 12.31 69.91 10.06 62.98 C 7.80 56.05 8.00 57.28 8.00 50.00 C 8.00 42.72 7.80 43.95 10.06 37.02 C 12.31 30.09 11.74 31.21 16.02 25.31 C 20.30 19.42 19.42 20.30 25.31 16.02 C 31.21 11.74 30.09 12.31 37.02 10.06 C 43.95 7.80 42.72 8.00 50.00 8.00 Z" />
+          </svg>
+        </button>
       )}
 
       <style>{`
@@ -2063,38 +2067,36 @@ export default function App() {
           100% { transform: translate(0%, 0%) scale(1); opacity: 0.35; }
         }
 
-        /* ── Prayer FAB — a single soft radiating orb ─────────────────────────
-           Modeled on a reference clip of one smooth green circle breathing
-           outward: a deep green core fading evenly through pale green to
-           nothing, no separate rings or particles, grainy rather than clean. */
-        .prayer-fab-btn {
-          border: none;
-          position: relative;
+        /* ── Prayer FAB — a shape-morphing icon ───────────────────────────────
+           Same flat-fill, bold-outline language as the app's other simple
+           icons and the hard-shadow button system, but the path itself pulses
+           between a circle, a soft scalloped blob and a spiky burst. All three
+           states share one 20-point path structure (10 "peaks" + 10 "valleys"
+           joined by cubic beziers) that only differ in radius/handle-length,
+           so the SVG "d" property can interpolate between them smoothly
+           instead of jump-cutting. Falls back to a static circle wherever
+           "d" isn't animatable. */
+        .prayer-fab-shape {
+          transform-origin: 50% 50%;
+          animation: prayerMorph 8s ease-in-out infinite;
         }
-        .prayer-fab-orb {
-          position: absolute; top: 50%; left: 50%; width: 150px; height: 150px;
-          transform: translate(-50%, -50%);
-          pointer-events: none;
-          background: radial-gradient(circle, ${T.inside} 0%, ${MOSS} 34%, color-mix(in srgb, ${MOSS} 45%, transparent) 56%, transparent 78%);
-          filter: blur(2px);
-          animation: prayerOrbBreathe 5s ease-in-out infinite;
-        }
-        /* Heavy grain for a lofi, unpolished feel — masked so the texture fades
-           out with the same soft edge as the glow itself. */
-        .prayer-fab-orb::after {
-          content: "";
-          position: absolute; inset: -14px;
-          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-          background-size: 70px 70px;
-          mix-blend-mode: overlay;
-          opacity: 0.8;
-          -webkit-mask-image: radial-gradient(circle, black 0%, black 30%, transparent 70%);
-          mask-image: radial-gradient(circle, black 0%, black 30%, transparent 70%);
-          pointer-events: none;
-        }
-        @keyframes prayerOrbBreathe {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
-          50%      { transform: translate(-50%, -50%) scale(1.18); opacity: 1; }
+        @keyframes prayerMorph {
+          0%, 100% {
+            d: path("M 50.00 8.00 C 57.28 8.00 56.05 7.80 62.98 10.06 C 69.91 12.31 68.79 11.74 74.69 16.02 C 80.58 20.30 79.70 19.42 83.98 25.31 C 88.26 31.21 87.69 30.09 89.94 37.02 C 92.20 43.95 92.00 42.72 92.00 50.00 C 92.00 57.28 92.20 56.05 89.94 62.98 C 87.69 69.91 88.26 68.79 83.98 74.69 C 79.70 80.58 80.58 79.70 74.69 83.98 C 68.79 88.26 69.91 87.69 62.98 89.94 C 56.05 92.20 57.28 92.00 50.00 92.00 C 42.72 92.00 43.95 92.20 37.02 89.94 C 30.09 87.69 31.21 88.26 25.31 83.98 C 19.42 79.70 20.30 80.58 16.02 74.69 C 11.74 68.79 12.31 69.91 10.06 62.98 C 7.80 56.05 8.00 57.28 8.00 50.00 C 8.00 42.72 7.80 43.95 10.06 37.02 C 12.31 30.09 11.74 31.21 16.02 25.31 C 20.30 19.42 19.42 20.30 25.31 16.02 C 31.21 11.74 30.09 12.31 37.02 10.06 C 43.95 7.80 42.72 8.00 50.00 8.00 Z");
+            transform: scale(1);
+          }
+          25% {
+            d: path("M 50.00 4.00 C 57.95 4.00 55.50 11.83 61.74 13.86 C 67.99 15.89 70.61 8.11 77.04 12.79 C 83.47 17.46 76.88 22.35 80.74 27.66 C 84.60 32.98 91.29 28.23 93.75 35.79 C 96.20 43.34 88.00 43.43 88.00 50.00 C 88.00 56.57 96.20 56.66 93.75 64.21 C 91.29 71.77 84.60 67.02 80.74 72.34 C 76.88 77.65 83.47 82.54 77.04 87.21 C 70.61 91.89 67.99 84.11 61.74 86.14 C 55.50 88.17 57.95 96.00 50.00 96.00 C 42.05 96.00 44.50 88.17 38.26 86.14 C 32.01 84.11 29.39 91.89 22.96 87.21 C 16.53 82.54 23.12 77.65 19.26 72.34 C 15.40 67.02 8.71 71.77 6.25 64.21 C 3.80 56.66 12.00 56.57 12.00 50.00 C 12.00 43.43 3.80 43.34 6.25 35.79 C 8.71 28.23 15.40 32.98 19.26 27.66 C 23.12 22.35 16.53 17.46 22.96 12.79 C 29.39 8.11 32.01 15.89 38.26 13.86 C 44.50 11.83 42.05 4.00 50.00 4.00 Z");
+            transform: scale(1.02);
+          }
+          50% {
+            d: path("M 50.00 -6.00 C 54.40 -6.00 56.00 30.92 56.18 30.98 C 56.36 31.04 79.36 2.11 82.92 4.70 C 86.47 7.28 66.07 38.09 66.18 38.24 C 66.29 38.40 101.90 28.51 103.26 32.70 C 104.62 36.88 70.00 49.81 70.00 50.00 C 70.00 50.19 104.62 63.12 103.26 67.30 C 101.90 71.49 66.29 61.60 66.18 61.76 C 66.07 61.91 86.47 92.72 82.92 95.30 C 79.36 97.89 56.36 68.96 56.18 69.02 C 56.00 69.08 54.40 106.00 50.00 106.00 C 45.60 106.00 44.00 69.08 43.82 69.02 C 43.64 68.96 20.64 97.89 17.08 95.30 C 13.53 92.72 33.93 61.91 33.82 61.76 C 33.71 61.60 -1.90 71.49 -3.26 67.30 C -4.62 63.12 30.00 50.19 30.00 50.00 C 30.00 49.81 -4.62 36.88 -3.26 32.70 C -1.90 28.51 33.71 38.40 33.82 38.24 C 33.93 38.09 13.53 7.28 17.08 4.70 C 20.64 2.11 43.64 31.04 43.82 30.98 C 44.00 30.92 45.60 -6.00 50.00 -6.00 Z");
+            transform: scale(1.06);
+          }
+          75% {
+            d: path("M 50.00 4.00 C 57.95 4.00 55.50 11.83 61.74 13.86 C 67.99 15.89 70.61 8.11 77.04 12.79 C 83.47 17.46 76.88 22.35 80.74 27.66 C 84.60 32.98 91.29 28.23 93.75 35.79 C 96.20 43.34 88.00 43.43 88.00 50.00 C 88.00 56.57 96.20 56.66 93.75 64.21 C 91.29 71.77 84.60 67.02 80.74 72.34 C 76.88 77.65 83.47 82.54 77.04 87.21 C 70.61 91.89 67.99 84.11 61.74 86.14 C 55.50 88.17 57.95 96.00 50.00 96.00 C 42.05 96.00 44.50 88.17 38.26 86.14 C 32.01 84.11 29.39 91.89 22.96 87.21 C 16.53 82.54 23.12 77.65 19.26 72.34 C 15.40 67.02 8.71 71.77 6.25 64.21 C 3.80 56.66 12.00 56.57 12.00 50.00 C 12.00 43.43 3.80 43.34 6.25 35.79 C 8.71 28.23 15.40 32.98 19.26 27.66 C 23.12 22.35 16.53 17.46 22.96 12.79 C 29.39 8.11 32.01 15.89 38.26 13.86 C 44.50 11.83 42.05 4.00 50.00 4.00 Z");
+            transform: scale(1.02);
+          }
         }
 
         /* Respect the OS-level "reduce motion" preference — everything animated
