@@ -307,7 +307,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 }
 
 // ── Category Toggle ────────────────────────────────────────────────────────
-const CATEGORY_TOGGLE_LABEL: Record<string, string> = { factory: "Outside", creative: "Inside", none: "Uncategorized" };
+const CATEGORY_TOGGLE_LABEL: Record<string, string> = { factory: "Outside", creative: "Inside", none: "Incoming" };
 function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryKey; onChange: (v: CategoryKey) => void; size?: "normal" | "small" }) {
   const small = size === "small";
   const base = small ? 16 : 22;
@@ -1122,7 +1122,7 @@ function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCrea
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>CATEGORY</label>
             <div style={{ display: "flex", gap: 10 }}>
-              {([["factory", "Outside", T.outside], ["creative", "Inside", T.inside], [null, "Uncategorized", T.uncat]] as [CategoryKey, string, string][]).map(([key, label, color]) => {
+              {([["factory", "Outside", T.outside], ["creative", "Inside", T.inside], [null, "Incoming", T.uncat]] as [CategoryKey, string, string][]).map(([key, label, color]) => {
                 const isSelected = cat === key;
                 return (
                   <button key={String(key)} onClick={() => setCat(key)} aria-pressed={isSelected}
@@ -1588,7 +1588,7 @@ export default function App() {
                           <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
                             {renderColumn(<OutsideIcon width={30} height={30} style={{ color: T.outside, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
                             {renderColumn(<InsideIcon width={30} height={30} style={{ color: T.inside, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
-                            {renderColumn(<UncatIcon width={30} height={30} style={{ color: T.uncat, flexShrink: 0 }} />, "Uncategorized", allUncategorized, null, T.uncat, true)}
+                            {renderColumn(<UncatIcon width={30} height={30} style={{ color: T.uncat, flexShrink: 0 }} />, "Incoming", allUncategorized, null, T.uncat, true)}
                           </div>
                         </div>
                       </>
