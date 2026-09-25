@@ -243,7 +243,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
               <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="1/…"
                 style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box" }} />
               <button onClick={loadSections} disabled={!pat.trim() || loadingSections}
-                style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
+                style={{ background: T.inside, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
                 {loadingSections ? "Loading…" : "Load Sections"}
               </button>
             </div>
@@ -254,7 +254,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
         ) : (
           <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
             <button onClick={loadSections} disabled={loadingSections}
-              style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              style={{ background: T.inside, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
               {loadingSections ? "Loading…" : "Load Sections"}
             </button>
           </div>
@@ -305,7 +305,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
         )}
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={save} style={{ flex: 1, background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+          <button onClick={save} style={{ flex: 1, background: T.inside, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
             {saved ? "✓ Saved!" : "Save"}
           </button>
           <button onClick={onClose} style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: T.inkMuted, cursor: "pointer" }}>Done</button>
@@ -749,7 +749,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <div style={{ padding: '6px 12px 8px', border: "none", display: 'flex', gap: 8, alignItems: 'center' }}>
           <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus
             style={{ fontFamily: FONT, fontSize: 11, background: T.surfaceMuted, border: "none", borderRadius: 6, padding: '5px 10px', outline: 'none', color: T.ink, flex: 1 }} />
-          <button onClick={addImageNode} style={{ background: T.ink, color: T.surface, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+          <button onClick={addImageNode} style={{ background: T.inside, color: T.surface, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
           <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} title="Cancel" aria-label="Cancel" style={{ background: 'transparent', color: T.inkMuted, border: 'none', fontSize: 14, cursor: 'pointer', padding: '0 2px' }}>✕</button>
         </div>
       )}
@@ -1407,7 +1407,7 @@ export default function App() {
           <MossIcon width={isMobile ? 28 : 42} height={isMobile ? 28 : 42} style={{ color: T.inside, flexShrink: 0 }} />
           {!isMobile && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>MossMind</div>}
         </div>
-        {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} style={{ background: T.ink, border: "none", borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
+        {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} style={{ background: T.inside, border: "none", borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
@@ -1482,7 +1482,7 @@ export default function App() {
                         <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                           <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
                             style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: "9px 12px", outline: "none", minWidth: 0 }} />
-                          <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                          <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.inside, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                         </form>
                       </div>
                       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1513,7 +1513,7 @@ export default function App() {
                         <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "normal", fontWeight: 700, marginTop: 4 }}>Rev 3:20</div>
                       </div>
                       <button onClick={() => { setMobileTab(null); setShowPrayer(true); }}
-                        style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
+                        style={{ background: T.inside, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
                         Begin Prayer →
                       </button>
                     </div>
@@ -1660,7 +1660,7 @@ export default function App() {
                       <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                         <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
                           style={{ flex: 1, fontFamily: FONT, fontSize: 12, color: T.ink, background: T.surface, border: "none", boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "7px 10px", outline: "none", minWidth: 0 }} />
-                        <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.ink, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                        <button type="submit" title="Add task" aria-label="Add task" style={{ background: T.inside, color: T.surface, border: "none", borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                       </form>
                     </div>
                     <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1686,7 +1686,7 @@ export default function App() {
                     <span style={{ fontSize: 16 }}>‹</span>
                     <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
                     {todos.filter(t => !t.done).length > 0 && (
-                      <div style={{ background: T.ink, color: T.surface, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
+                      <div style={{ background: T.inside, color: T.surface, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
                         {todos.filter(t => !t.done).length}
                       </div>
                     )}
@@ -1701,7 +1701,7 @@ export default function App() {
       {/* Prayer FAB — desktop only */}
       {!isMobile && (
         <button onClick={() => setShowPrayer(true)} title="Morning Prayer" aria-label="Morning Prayer"
-          style={{ position: "fixed", bottom: 28, right: 28, width: 56, height: 56, background: T.ink, border: tb(2, T.ink), borderRadius: "50%", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.surface, zIndex: 50, boxShadow: "0 4px 12px rgba(34,32,29,0.25)" }}>
+          style={{ position: "fixed", bottom: 28, right: 28, width: 56, height: 56, background: T.inside, border: tb(2, T.inside), borderRadius: "50%", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.surface, zIndex: 50, boxShadow: "0 4px 12px rgba(34,32,29,0.25)" }}>
           <PrayerIcon width={26} height={26} />
         </button>
       )}
@@ -1716,12 +1716,12 @@ export default function App() {
           --ink-muted: #6B5F4F;
           --border: #E6D5C0;
           --border-muted: #DDD7C9;
-          --outside: #D3652F;
-          --inside: #357048;
-          --uncat: #7A6852;
-          --urgent: #B93A22;
-          --soon: #8A5818;
-          --focus: #2452C8;
+          --outside: #C4703F;
+          --inside: #3A754A;
+          --uncat: #74664F;
+          --urgent: #B04432;
+          --soon: #8A6222;
+          --focus: #3A6C99;
           --shadow-sm: 0 3px 10px rgba(110,80,50,0.16);
           --shadow-md: 0 8px 26px rgba(110,80,50,0.22);
           --shadow-lg: 0 20px 56px rgba(80,55,35,0.32);
@@ -1735,12 +1735,12 @@ export default function App() {
           --ink-muted: #A79C8E;
           --border: #4A4238;
           --border-muted: #3A342C;
-          --outside: #E0763F;
+          --outside: #D6875A;
           --inside: #8FBB70;
-          --uncat: #B0A692;
-          --urgent: #E67056;
+          --uncat: #B3A98F;
+          --urgent: #E2836C;
           --soon: #D9A244;
-          --focus: #7AA2FF;
+          --focus: #6FA0D9;
           --shadow-sm: 0 3px 10px rgba(0,0,0,0.32);
           --shadow-md: 0 8px 26px rgba(0,0,0,0.38);
           --shadow-lg: 0 20px 56px rgba(0,0,0,0.5);
