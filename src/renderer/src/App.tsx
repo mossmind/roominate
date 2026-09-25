@@ -998,7 +998,6 @@ function TaskDetail({ task, category, onCategoryChange, onBack }: { task: Task; 
 
 // ── Project Card ───────────────────────────────────────────────────────────
 function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, onDragEnd }: { task: Task; category: CategoryKey; onOpen: (t: Task) => void; onCategoryChange: (c: CategoryKey) => void; onDragStart?: () => void; onDragEnd?: () => void }) {
-  const catCfg = category ? CATEGORIES[category] : null;
   const due = task.due_on ? new Date(task.due_on + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
   const ul = urgLabel(task.due_on);
   const uc = urgColorLight(task.due_on);
@@ -1009,10 +1008,9 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
       onClick={() => onOpen(task)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
       style={{ background: T.surface, border: "none", borderRadius: T.radius, boxShadow: T.shadow, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, box-shadow 0.15s ease" }}>
-      <div style={{ height: 8, background: catCfg ? catCfg.color : T.borderMuted, flexShrink: 0 }} />
-      <div style={{ padding: "10px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
-        <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+      <div style={{ padding: "16px 16px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
+        <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
             {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
             {ul && (
@@ -1080,10 +1078,10 @@ function TodoDetail({ item, onUpdate, onDelete, onBack }: { item: TodoItem; onUp
 }
 
 // ── Create Project Modal ───────────────────────────────────────────────────
-function CreateProjectModal({ onClose, onCreate }: { onClose: () => void; onCreate: (task: Task, cat: CategoryKey) => void }) {
+function CreateProjectModal({ onClose, onCreate, initialCategory = null }: { onClose: () => void; onCreate: (task: Task, cat: CategoryKey) => void; initialCategory?: CategoryKey }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [cat, setCat] = useState<CategoryKey>(null);
+  const [cat, setCat] = useState<CategoryKey>(initialCategory);
 
   function handleCreate() {
     if (!name.trim()) return;
@@ -1186,6 +1184,7 @@ export default function App() {
   const [dragGid, setDragGid] = useState<string | null>(null);
   const [dragOverCat, setDragOverCat] = useState<CategoryKey | undefined>(undefined);
   const [showCreate, setShowCreate] = useState(false);
+  const [createCategory, setCreateCategory] = useState<CategoryKey>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const hasFetched = useRef(false);
   const syncInFlight = useRef(false);
@@ -1329,7 +1328,7 @@ export default function App() {
   const quickApprovals   = projects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
 
   const EMPTY_SLOTS = 2;
-  function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string, muted = false) {
+  function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string) {
     const isOver = dragGid !== null && dragOverCat === targetCat;
     return (
       <div
@@ -1340,16 +1339,22 @@ export default function App() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, paddingBottom: 12, borderBottom: `2.5px solid ${accentColor}` }}>
           {icon}
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, flex: 1 }}>{label}</div>
-          <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: muted ? T.inkMuted : T.surface, background: muted ? T.surfaceMuted : accentColor, border: "none", borderRadius: 10, padding: "2px 8px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
+          <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 800, color: T.ink, flex: 1 }}>{label}</div>
+          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: accentColor, background: tint(accentColor, 16), border: "none", borderRadius: 999, padding: "3px 11px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
           {items.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
           {Array.from({ length: EMPTY_SLOTS }).map((_, i) => {
             const active = isOver && i === 0;
             return (
-              <div key={i} className={active ? "slot-empty--active" : undefined}
-                style={{ '--slot-accent': accentColor, height: T.slotHeight, flexShrink: 0, border: `2px dashed ${active ? accentColor : T.borderMuted}`, borderRadius: T.radius, background: T.surfaceMuted, transition: "border-color 0.15s" } as React.CSSProperties} />
+              <button key={i} onClick={() => { setCreateCategory(targetCat); setShowCreate(true); }}
+                className={active ? "slot-empty--active" : undefined}
+                style={{ '--slot-accent': accentColor, height: T.slotHeight, flexShrink: 0, border: `2px dashed ${active ? accentColor : T.borderMuted}`, borderRadius: T.radius, background: T.surfaceMuted, transition: "border-color 0.15s, background 0.15s", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 0 } as React.CSSProperties}
+                onMouseEnter={e => (e.currentTarget.style.background = tint(accentColor, 10))}
+                onMouseLeave={e => (e.currentTarget.style.background = T.surfaceMuted)}>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${T.inkMuted}`, color: T.inkMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, lineHeight: 1, flexShrink: 0 }}>+</span>
+                <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: T.inkMuted }}>Add a task</span>
+              </button>
             );
           })}
         </div>
@@ -1361,7 +1366,7 @@ export default function App() {
     <div className="board-canvas" style={{ display: "flex", flexDirection: "column", height: "100vh", fontFamily: FONT, overflow: "hidden" }}>
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} onSaved={(gids, quickGid) => { setSectionGids(gids); setQuickTaskSectionGid(quickGid); syncTasks(gids); syncQuickTasks(quickGid); }} />}
       {showPrayer && <MorningPrayerLock onUnlock={() => setShowPrayer(false)} />}
-      {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreate={createProject} />}
+      {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreate={createProject} initialCategory={createCategory} />}
 
       {/* Title bar */}
       <div style={{ background: T.surface, boxShadow: T.shadowSm, padding: "0 12px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, height: 54, flexShrink: 0, minWidth: 0, overflow: "hidden", position: "relative", zIndex: 1 }}>
@@ -1371,7 +1376,7 @@ export default function App() {
           <MossIcon width={isMobile ? 28 : 42} height={isMobile ? 28 : 42} style={{ color: T.inside, flexShrink: 0 }} />
           {!isMobile && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>MossMind</div>}
         </div>
-        {!isMobile && <button onClick={() => setShowCreate(true)} style={{ background: T.ink, border: "none", borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
+        {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} style={{ background: T.ink, border: "none", borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
@@ -1591,9 +1596,9 @@ export default function App() {
                         )}
                         <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
                           <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
-                            {renderColumn(<OutsideIcon width={30} height={30} style={{ color: T.outside, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
-                            {renderColumn(<InsideIcon width={30} height={30} style={{ color: T.inside, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
-                            {renderColumn(<UncatIcon width={30} height={30} style={{ color: T.uncat, flexShrink: 0 }} />, "Incoming", allUncategorized, null, T.uncat, true)}
+                            {renderColumn(<OutsideIcon width={34} height={34} style={{ color: T.outside, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
+                            {renderColumn(<InsideIcon width={34} height={34} style={{ color: T.inside, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
+                            {renderColumn(<UncatIcon width={34} height={34} style={{ color: T.uncat, flexShrink: 0 }} />, "Incoming", allUncategorized, null, T.uncat)}
                           </div>
                         </div>
                       </>
@@ -1665,13 +1670,13 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
         :root {
-          --canvas: #FBF8F3;
-          --surface: #F2E7D6;
-          --surface-muted: #E8D8BE;
+          --canvas: #EDEAE3;
+          --surface: #FBF9F6;
+          --surface-muted: #E4E0D6;
           --ink: #211D18;
           --ink-muted: #6B5F4F;
           --border: #E6D5C0;
-          --border-muted: #EFE2D2;
+          --border-muted: #DDD7C9;
           --outside: #D3652F;
           --inside: #357048;
           --uncat: #7A6852;
