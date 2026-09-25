@@ -838,10 +838,12 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: "linear-gradient(150deg, #12151c 0%, #1a212b 50%, #14171d 100%)" }}>
-      {/* Calming, asynchronous pulsing gradient — three slow-breathing color blobs, each on its own uneven rhythm */}
-      <div className="prayer-blob prayer-blob--a" />
-      <div className="prayer-blob prayer-blob--b" />
-      <div className="prayer-blob prayer-blob--c" />
+      {/* Same organic moss-green animation as the Needs Your Approval background —
+          soft blobs drifting and breathing on independent, uneven cycles */}
+      <div className="prayer-moss-blob prayer-moss-blob--a" />
+      <div className="prayer-moss-blob prayer-moss-blob--b" />
+      <div className="prayer-moss-blob prayer-moss-blob--c" />
+      <div className="prayer-moss-blob prayer-moss-blob--d" />
       {/* Vignette so the left-aligned text stays readable */}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(15,14,18,0.8) 0%, rgba(15,14,18,0.45) 40%, rgba(15,14,18,0.15) 72%, rgba(15,14,18,0.05) 100%)" }} />
 
@@ -904,44 +906,32 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
       </button>
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-        .prayer-blob { position: absolute; border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; will-change: transform, opacity; }
-        .prayer-blob--a {
+        /* Reuses the mossDriftA-D keyframes defined in the main app stylesheet — same
+           moss-green (#98c683) motion as the Needs Your Approval background, just
+           recolored/sized here for a full-screen dark backdrop instead of a card. */
+        .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; will-change: transform, opacity; }
+        .prayer-moss-blob--a {
           top: -12%; right: -8%; width: 62vw; height: 62vw;
-          background: radial-gradient(circle, rgba(143,187,112,0.55) 0%, rgba(143,187,112,0) 68%);
-          animation: prayerBlobA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 75%, white 25%) 0%, transparent 68%);
+          animation: mossDriftA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
-        .prayer-blob--b {
+        .prayer-moss-blob--b {
           bottom: -18%; right: 6%; width: 46vw; height: 46vw;
-          background: radial-gradient(circle, rgba(217,162,68,0.4) 0%, rgba(217,162,68,0) 70%);
-          animation: prayerBlobB 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 65%, #2E4420 35%) 0%, transparent 70%);
+          animation: mossDriftB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
-        .prayer-blob--c {
+        .prayer-moss-blob--c {
           top: 30%; right: 22%; width: 34vw; height: 34vw;
-          background: radial-gradient(circle, rgba(139,123,168,0.45) 0%, rgba(139,123,168,0) 72%);
-          animation: prayerBlobC 21s ease-in-out infinite;
+          background: radial-gradient(circle, ${MOSS} 0%, transparent 72%);
+          animation: mossDriftC 21s ease-in-out infinite;
           animation-delay: -6s;
         }
-        @keyframes prayerBlobA {
-          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.5; }
-          21%  { transform: translate(-7%, 5%) scale(1.16); opacity: 0.68; }
-          48%  { transform: translate(3%, 11%) scale(0.9); opacity: 0.42; }
-          74%  { transform: translate(-9%, -4%) scale(1.08); opacity: 0.62; }
-          100% { transform: translate(0%, 0%) scale(1); opacity: 0.5; }
-        }
-        @keyframes prayerBlobB {
-          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.38; }
-          30%  { transform: translate(8%, -6%) scale(1.22); opacity: 0.55; }
-          57%  { transform: translate(-4%, 8%) scale(0.86); opacity: 0.3; }
-          83%  { transform: translate(6%, 4%) scale(1.1); opacity: 0.5; }
-          100% { transform: translate(0%, 0%) scale(1); opacity: 0.38; }
-        }
-        @keyframes prayerBlobC {
-          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
-          16%  { transform: translate(-6%, -9%) scale(1.12); opacity: 0.48; }
-          52%  { transform: translate(10%, 5%) scale(0.94); opacity: 0.26; }
-          81%  { transform: translate(-4%, 8%) scale(1.18); opacity: 0.44; }
-          100% { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
+        .prayer-moss-blob--d {
+          bottom: 4%; left: -6%; width: 30vw; height: 30vw;
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, #4A3B22 25%) 0%, transparent 70%);
+          animation: mossDriftD 24s ease-in-out infinite;
+          animation-delay: -14s;
         }
       `}</style>
     </div>
