@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { storage as platformStorage, asana as platformAsana, ai as platformAI, files as platformFiles, isElectron, type AsanaComment } from './lib/platform';
-import prayerVideo from './assets/Prayer Motion 1.mp4';
 import bgPhoto from './assets/bg2.png';
 import PrayerIcon from './assets/icons/prayer.svg?react';
 import InsideIcon from './assets/icons/Pot.svg?react';
@@ -835,18 +834,13 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
   const displayed = prayerContent ?? FALLBACK_PRAYER;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden" }}>
-      {/* Full-screen video */}
-      <video
-        src={prayerVideo}
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "right center" }}
-      />
-      {/* Dark scrim so text stays readable */}
-      <div style={{ position: "absolute", inset: 0, background: "rgba(36,35,41,0.55)" }} />
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: "linear-gradient(150deg, #12151c 0%, #1a212b 50%, #14171d 100%)" }}>
+      {/* Calming, asynchronous pulsing gradient — three slow-breathing color blobs, each on its own uneven rhythm */}
+      <div className="prayer-blob prayer-blob--a" />
+      <div className="prayer-blob prayer-blob--b" />
+      <div className="prayer-blob prayer-blob--c" />
+      {/* Vignette so the left-aligned text stays readable */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(15,14,18,0.8) 0%, rgba(15,14,18,0.45) 40%, rgba(15,14,18,0.15) 72%, rgba(15,14,18,0.05) 100%)" }} />
 
       {/* Left-aligned content */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", height: "100%", padding: "40px 40px 60px" }}>
@@ -905,7 +899,48 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}>
         {muted ? "♪ Unmute" : "♪ Mute"}
       </button>
-      <style>{`@keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <style>{`
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        .prayer-blob { position: absolute; border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; will-change: transform, opacity; }
+        .prayer-blob--a {
+          top: -12%; right: -8%; width: 62vw; height: 62vw;
+          background: radial-gradient(circle, rgba(143,187,112,0.55) 0%, rgba(143,187,112,0) 68%);
+          animation: prayerBlobA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+        }
+        .prayer-blob--b {
+          bottom: -18%; right: 6%; width: 46vw; height: 46vw;
+          background: radial-gradient(circle, rgba(217,162,68,0.4) 0%, rgba(217,162,68,0) 70%);
+          animation: prayerBlobB 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+          animation-delay: -11s;
+        }
+        .prayer-blob--c {
+          top: 30%; right: 22%; width: 34vw; height: 34vw;
+          background: radial-gradient(circle, rgba(139,123,168,0.45) 0%, rgba(139,123,168,0) 72%);
+          animation: prayerBlobC 21s ease-in-out infinite;
+          animation-delay: -6s;
+        }
+        @keyframes prayerBlobA {
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.5; }
+          21%  { transform: translate(-7%, 5%) scale(1.16); opacity: 0.68; }
+          48%  { transform: translate(3%, 11%) scale(0.9); opacity: 0.42; }
+          74%  { transform: translate(-9%, -4%) scale(1.08); opacity: 0.62; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.5; }
+        }
+        @keyframes prayerBlobB {
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.38; }
+          30%  { transform: translate(8%, -6%) scale(1.22); opacity: 0.55; }
+          57%  { transform: translate(-4%, 8%) scale(0.86); opacity: 0.3; }
+          83%  { transform: translate(6%, 4%) scale(1.1); opacity: 0.5; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.38; }
+        }
+        @keyframes prayerBlobC {
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
+          16%  { transform: translate(-6%, -9%) scale(1.12); opacity: 0.48; }
+          52%  { transform: translate(10%, 5%) scale(0.94); opacity: 0.26; }
+          81%  { transform: translate(-4%, 8%) scale(1.18); opacity: 0.44; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
+        }
+      `}</style>
     </div>
   );
 }
