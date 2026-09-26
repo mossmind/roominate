@@ -15,6 +15,7 @@ import LifIcon from './assets/icons/Lif.svg?react';
 import MumIcon from './assets/icons/Mum.svg?react';
 import Sqig2Icon from './assets/icons/Sqig2.svg?react';
 import prayerMusic from './assets/Prayer Motion Music 1.mp3';
+import prayerFigureSvg from './assets/prayer-figure.svg';
 import PrayBird1 from './assets/PrayIcon/SVG/Bird1.svg?react';
 import PrayBird2 from './assets/PrayIcon/SVG/Bird2.svg?react';
 import PrayBird3 from './assets/PrayIcon/SVG/Bird3.svg?react';
@@ -866,12 +867,27 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: "linear-gradient(150deg, #221816 0%, #1B1311 50%, #201714 100%)" }}>
-      {/* Same organic moss-green animation as the Needs Your Approval background —
-          soft blobs drifting and breathing on independent, uneven cycles */}
+      {/* Same organic animation as the Needs Your Approval background — soft
+          blobs drifting and breathing on independent, uneven cycles — now
+          pulling from the full palette (gold/orange/red/sage) instead of one
+          or two accents. */}
       <div className="prayer-moss-blob prayer-moss-blob--a" />
       <div className="prayer-moss-blob prayer-moss-blob--b" />
       <div className="prayer-moss-blob prayer-moss-blob--c" />
       <div className="prayer-moss-blob prayer-moss-blob--d" />
+      {/* The praying-figure artwork as a mask over a solid ink layer: wherever
+          the artwork is solid, this blocks the animation; wherever it's cut
+          away (the figure, the wavy water lines, the moon), the mask hides
+          this layer and the animated color plays through in that negative
+          space instead. */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "#221816",
+        WebkitMaskImage: `url(${prayerFigureSvg})`, maskImage: `url(${prayerFigureSvg})`,
+        WebkitMaskSize: "cover", maskSize: "cover",
+        WebkitMaskPosition: "62% center", maskPosition: "62% center",
+        WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+      }} />
       {/* Vignette so the left-aligned text stays readable */}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(38,27,24,0.8) 0%, rgba(38,27,24,0.45) 40%, rgba(38,27,24,0.15) 72%, rgba(38,27,24,0.05) 100%)" }} />
 
@@ -925,6 +941,13 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
           )}
         </div>
       </div>
+      {/* Leave button — an explicit way out before the countdown finishes */}
+      <button
+        onClick={() => onUnlock("")}
+        title="Leave prayer"
+        style={{ position: "absolute", top: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}>
+        ✕ Leave
+      </button>
       {/* Mute button */}
       <button
         onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m); }}
@@ -935,29 +958,30 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
         /* Reuses the mossDriftA-D keyframes defined in the main app stylesheet — same
-           moss-green (#98c683) motion as the Needs Your Approval background, just
-           recolored/sized here for a full-screen dark backdrop instead of a card. */
+           drifting motion as the Needs Your Approval background, resized for a
+           full-screen dark backdrop, now drawing from all four accent tokens
+           (gold/orange/red/sage) instead of just one or two. */
         .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; will-change: transform, opacity; }
         .prayer-moss-blob--a {
           top: -12%; right: -8%; width: 62vw; height: 62vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 75%, white 25%) 0%, transparent 68%);
+          background: radial-gradient(circle, color-mix(in srgb, ${T.inside} 75%, white 25%) 0%, transparent 68%);
           animation: mossDriftA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
           bottom: -18%; right: 6%; width: 46vw; height: 46vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_GOLD} 45%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${T.outside} 60%, ${T.urgent} 40%) 0%, transparent 70%);
           animation: mossDriftB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
           top: 30%; right: 22%; width: 34vw; height: 34vw;
-          background: radial-gradient(circle, ${MOSS} 0%, transparent 72%);
+          background: radial-gradient(circle, ${T.urgent} 0%, transparent 72%);
           animation: mossDriftC 21s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
           bottom: 4%; left: -6%; width: 30vw; height: 30vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_GOLD} 65%, ${MOSS} 35%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${T.uncat} 65%, ${T.inside} 35%) 0%, transparent 70%);
           animation: mossDriftD 24s ease-in-out infinite;
           animation-delay: -14s;
         }
