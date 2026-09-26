@@ -875,13 +875,13 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
       <div className="prayer-moss-blob prayer-moss-blob--b" />
       <div className="prayer-moss-blob prayer-moss-blob--c" />
       <div className="prayer-moss-blob prayer-moss-blob--d" />
-      {/* The praying-figure artwork sits directly over the blobs as a plain
-          image rather than a CSS mask — CSS mask-image's luminance/alpha
-          handling is inconsistent across browsers and made the whole effect
-          disappear. The artwork's own solid fill + real transparent cutouts
-          (the figure, the wavy water lines, the moon) do the same job
-          natively: solid blocks the animation, transparent reveals it. */}
-      <img src={prayerFigureSvg} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "62% center" }} />
+      {/* The praying-figure artwork sits directly over the blobs as a CSS
+          background-image (more reliable full-bleed coverage than <img> +
+          object-fit, which was leaving an uncovered strip on one edge) —
+          its own solid fill + real transparent cutouts (the figure, the
+          wavy water lines, the moon) block or reveal the animation beneath
+          natively, no mask API involved. */}
+      <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${prayerFigureSvg})`, backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }} />
       {/* Vignette so the left-aligned text stays readable */}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(38,27,24,0.8) 0%, rgba(38,27,24,0.45) 40%, rgba(38,27,24,0.15) 72%, rgba(38,27,24,0.05) 100%)" }} />
 
@@ -957,24 +957,24 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
            (gold/orange/red/sage) instead of just one or two. */
         .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(40px); mix-blend-mode: screen; will-change: transform, opacity; }
         .prayer-moss-blob--a {
-          top: -12%; right: -8%; width: 62vw; height: 62vw;
+          top: 2%; left: 28%; width: 58vw; height: 58vw;
           background: radial-gradient(circle, color-mix(in srgb, ${T.inside} 85%, white 15%) 0%, color-mix(in srgb, ${T.inside} 40%, transparent) 45%, transparent 60%);
           animation: mossDriftA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
-          bottom: -18%; right: 6%; width: 46vw; height: 46vw;
+          bottom: -8%; left: 34%; width: 48vw; height: 48vw;
           background: radial-gradient(circle, color-mix(in srgb, ${T.outside} 65%, ${T.urgent} 35%) 0%, color-mix(in srgb, ${T.outside} 35%, transparent) 45%, transparent 62%);
           animation: mossDriftB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
-          top: 30%; right: 22%; width: 34vw; height: 34vw;
+          top: 20%; left: 42%; width: 38vw; height: 38vw;
           background: radial-gradient(circle, ${T.urgent} 0%, color-mix(in srgb, ${T.urgent} 40%, transparent) 45%, transparent 64%);
           animation: mossDriftC 21s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
-          bottom: 4%; left: -6%; width: 30vw; height: 30vw;
+          bottom: 6%; left: 16%; width: 36vw; height: 36vw;
           background: radial-gradient(circle, color-mix(in srgb, ${T.uncat} 70%, ${T.inside} 30%) 0%, color-mix(in srgb, ${T.uncat} 35%, transparent) 45%, transparent 62%);
           animation: mossDriftD 24s ease-in-out infinite;
           animation-delay: -14s;
