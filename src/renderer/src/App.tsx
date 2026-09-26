@@ -130,11 +130,11 @@ const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, t
 // tweaked font sizes elsewhere in the file are left alone rather than churned
 // for no visual gain.
 const FS = { caption: 11, label: 12, body: 14, title: 20, display: 28 };
-// Moss green + water blue accents for the shared background animation (Needs Your
-// Approval and the prayer lock) — fixed brand colors, not theme tokens, so they
-// read the same in light and dark mode.
-const MOSS = "#98C683";
-const MOSS_BLUE = "#4F8FA6";
+// Sage + gold accents for the shared background animation (Needs Your Approval
+// and the prayer lock) — fixed brand colors (straight from the palette), not
+// theme tokens, so they read the same in light and dark mode.
+const MOSS = "#A0B0AC";
+const MOSS_GOLD = "#A6974B";
 
 const CATEGORIES = {
   factory:  { label: "Outside", emoji: "⚙️", color: T.outside, text: T.ink },
@@ -247,7 +247,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(34,32,29,0.55)" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(38,27,24,0.55)" }}>
       <div style={{ background: T.surface, border: tb(2.5), boxShadow: T.shadowLg, borderRadius: T.radius, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ fontFamily: FONT, fontSize: FS.display, fontWeight: 900, color: T.ink, marginBottom: 20, paddingBottom: 16, borderBottom: tb(2) }}>Settings</div>
 
@@ -641,7 +641,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
               <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = T.surfaceMuted; }} />
               {node.filePath && (
                 <button onMouseDown={e => e.stopPropagation()} onClick={() => platformFiles.openPath(node.filePath!)}
-                  style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(34,32,29,0.65)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: T.radiusSm, padding: '3px 8px', fontFamily: FONT, fontSize: 9, fontWeight: 700, color: '#FFFFFF', cursor: 'pointer' }}>
+                  style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(38,27,24,0.65)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: T.radiusSm, padding: '3px 8px', fontFamily: FONT, fontSize: 9, fontWeight: 700, color: '#FFFFFF', cursor: 'pointer' }}>
                   Open ↗
                 </button>
               )}
@@ -858,7 +858,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
   const displayed = prayerContent ?? FALLBACK_PRAYER;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: "linear-gradient(150deg, #12151c 0%, #1a212b 50%, #14171d 100%)" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: "linear-gradient(150deg, #221816 0%, #1B1311 50%, #201714 100%)" }}>
       {/* Same organic moss-green animation as the Needs Your Approval background —
           soft blobs drifting and breathing on independent, uneven cycles */}
       <div className="prayer-moss-blob prayer-moss-blob--a" />
@@ -866,7 +866,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
       <div className="prayer-moss-blob prayer-moss-blob--c" />
       <div className="prayer-moss-blob prayer-moss-blob--d" />
       {/* Vignette so the left-aligned text stays readable */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(15,14,18,0.8) 0%, rgba(15,14,18,0.45) 40%, rgba(15,14,18,0.15) 72%, rgba(15,14,18,0.05) 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(38,27,24,0.8) 0%, rgba(38,27,24,0.45) 40%, rgba(38,27,24,0.15) 72%, rgba(38,27,24,0.05) 100%)" }} />
 
       {/* Left-aligned content */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", height: "100%", padding: "40px 40px 60px" }}>
@@ -938,7 +938,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         }
         .prayer-moss-blob--b {
           bottom: -18%; right: 6%; width: 46vw; height: 46vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_BLUE} 45%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_GOLD} 45%) 0%, transparent 70%);
           animation: mossDriftB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
@@ -950,7 +950,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         }
         .prayer-moss-blob--d {
           bottom: 4%; left: -6%; width: 30vw; height: 30vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_BLUE} 65%, ${MOSS} 35%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_GOLD} 65%, ${MOSS} 35%) 0%, transparent 70%);
           animation: mossDriftD 24s ease-in-out infinite;
           animation-delay: -14s;
         }
@@ -1269,7 +1269,7 @@ function CreateProjectModal({ onClose, onCreate, initialCategory = null }: { onC
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(34,32,29,0.55)" }} onClick={onClose}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(38,27,24,0.55)" }} onClick={onClose}>
       <div style={{ background: T.surface, border: tb(2.5), boxShadow: T.shadowLg, borderRadius: T.radius, width: 480, maxWidth: "90vw", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{ background: T.surfaceMuted, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1901,19 +1901,23 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
         :root {
-          --canvas: #EDEAE3;
-          --surface: #FBF9F6;
-          --surface-muted: #E4E0D6;
-          --ink: #211D18;
-          --ink-muted: #6B5F4F;
-          --border: #24211B;
-          --border-muted: #DDD7C9;
-          --outside: #C4703F;
-          --inside: #3A754A;
-          --uncat: #74664F;
-          --urgent: #B04432;
-          --soon: #8A6222;
-          --focus: #3A6C99;
+          /* Design palette: #F1EAE3 (cream) #A6974B (gold) #F29E38 (orange)
+             #D9564A (red) #261B18 (ink) #A0B0AC (sage). Every value below is
+             one of those six hexes or a computed HSL lightness/saturation
+             derivative of one — nothing outside this palette. */
+          --canvas: #F1EAE3;
+          --surface: #F7F3F0;
+          --surface-muted: #D9D1CB;
+          --ink: #261B18;
+          --ink-muted: #736A65;
+          --border: #261B18;
+          --border-muted: #D5CDC7;
+          --outside: #BF6F0D;
+          --inside: #4D665F;
+          --uncat: #705852;
+          --urgent: #A92F23;
+          --soon: #6C622D;
+          --focus: #DE2312;
           /* Neo-brutalist "hard" shadow — flat, offset, no blur, in the ink color.
              Using var(--ink) means it auto-flips from a dark offset in light mode
              to a pale cream offset in dark mode, with zero extra rules. */
@@ -1923,19 +1927,19 @@ export default function App() {
           --moss-blend: multiply;
         }
         [data-theme="dark"] {
-          --canvas: #1E1B18;
-          --surface: #29251F;
-          --surface-muted: #17150F;
-          --ink: #F0EBE3;
-          --ink-muted: #A79C8E;
-          --border: #D8CFC0;
-          --border-muted: #3A342C;
-          --outside: #D6875A;
-          --inside: #8FBB70;
-          --uncat: #B3A98F;
-          --urgent: #E2836C;
-          --soon: #D9A244;
-          --focus: #6FA0D9;
+          --canvas: #261B18;
+          --surface: #403634;
+          --surface-muted: #201714;
+          --ink: #F1EAE3;
+          --ink-muted: #B0A8A2;
+          --border: #A09792;
+          --border-muted: #514946;
+          --outside: #EEB46D;
+          --inside: #9DBEB6;
+          --uncat: #968D88;
+          --urgent: #D3857E;
+          --soon: #B2AC8A;
+          --focus: #E7746A;
           --shadow-sm: 2px 2px 0 var(--ink);
           --shadow-md: 4px 4px 0 var(--ink);
           --shadow-lg: 6px 6px 0 var(--ink);
@@ -2021,7 +2025,7 @@ export default function App() {
         }
         .moss-blob--b {
           bottom: -42%; right: -10%; width: 54%; height: 165%;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_BLUE} 45%) 0%, transparent 72%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_GOLD} 45%) 0%, transparent 72%);
           animation: mossDriftB 31s ease-in-out infinite; animation-delay: -9s;
         }
         .moss-blob--c {
@@ -2031,7 +2035,7 @@ export default function App() {
         }
         .moss-blob--d {
           bottom: -22%; left: 22%; width: 34%; height: 125%;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_BLUE} 65%, ${MOSS} 35%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_GOLD} 65%, ${MOSS} 35%) 0%, transparent 70%);
           animation: mossDriftD 27s ease-in-out infinite; animation-delay: -14s;
         }
         .moss-bg--urgent .moss-blob--a { animation-duration: 9s; }
