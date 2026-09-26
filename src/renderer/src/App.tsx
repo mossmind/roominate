@@ -135,6 +135,13 @@ const FS = { caption: 11, label: 12, body: 14, title: 20, display: 28 };
 // theme tokens, so they read the same in light and dark mode.
 const MOSS = "#A0B0AC";
 const MOSS_GOLD = "#A6974B";
+// None of the four accent hexes (gold/orange/red/sage) are legible as text on
+// the light cream canvas — but ink is legible ON TOP of every one of them, in
+// both themes (verified: 4.3-7.8:1). So every accent is used as a solid fill
+// with fixed dark ink content on top, never as colored text/icon-on-canvas.
+// Fixed (not theme-aware) since it must stay dark even in dark mode, where
+// T.ink itself flips to the light cream.
+const ON_ACCENT = "#261B18";
 
 const CATEGORIES = {
   factory:  { label: "Outside", emoji: "⚙️", color: T.outside, text: T.ink },
@@ -251,7 +258,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
       <div style={{ background: T.surface, border: tb(2.5), boxShadow: T.shadowLg, borderRadius: T.radius, padding: "36px 40px", width: 500, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ fontFamily: FONT, fontSize: FS.display, fontWeight: 900, color: T.ink, marginBottom: 20, paddingBottom: 16, borderBottom: tb(2) }}>Settings</div>
 
-        <div style={{ fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: T.inside, letterSpacing: 1.5, marginBottom: 10 }}>CONNECTION</div>
+        <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 10, padding: "3px 10px", borderRadius: 999 }}>CONNECTION</div>
         {isElectron ? (
           <>
             <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
@@ -259,7 +266,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
               <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="1/…"
                 style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box" }} />
               <button onClick={loadSections} disabled={!pat.trim() || loadingSections} className="btn-primary"
-                style={{ background: T.inside, color: T.surface, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
+                style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
                 {loadingSections ? "Loading…" : "Load Sections"}
               </button>
             </div>
@@ -270,18 +277,18 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
         ) : (
           <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
             <button onClick={loadSections} disabled={loadingSections} className="btn-primary"
-              style={{ background: T.inside, color: T.surface, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
               {loadingSections ? "Loading…" : "Load Sections"}
             </button>
           </div>
         )}
 
         <div style={{ borderTop: tb(1.5, T.borderMuted), margin: "4px 0 16px" }} />
-        <div style={{ fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: T.inside, letterSpacing: 1.5, marginBottom: 8 }}>
+        <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 8, padding: "3px 10px", borderRadius: 999 }}>
           SECTIONS TO SYNC ({selectedGids.length} selected)
         </div>
 
-        {sectionError && <div style={{ fontFamily: FONT, fontSize: 12, color: T.urgent, marginBottom: 10 }}>{sectionError}</div>}
+        {sectionError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", marginBottom: 10 }}>{sectionError}</div>}
 
         {sections.length === 0 && (
           <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginBottom: 16, fontStyle: "italic" }}>
@@ -306,7 +313,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
         {sections.length > 0 && (
           <>
             <div style={{ borderTop: tb(1.5, T.borderMuted), margin: "4px 0 16px" }} />
-            <div style={{ fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: T.inside, letterSpacing: 1.5, marginBottom: 8 }}>QUICK TASKS SECTION</div>
+            <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 8, padding: "3px 10px", borderRadius: 999 }}>QUICK TASKS SECTION</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
               <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: !quickTaskGid ? tint(T.inside, 14) : T.surfaceMuted, border: "none" }}>
                 <input type="radio" checked={!quickTaskGid} onChange={() => setQuickTaskGid("")} style={{ accentColor: T.inside }} />
@@ -324,7 +331,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 
         <div style={{ borderTop: tb(2), margin: "20px 0 20px" }} />
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={save} className="btn-primary" style={{ flex: 1, background: T.inside, color: T.surface, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+          <button onClick={save} className="btn-primary" style={{ flex: 1, background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
             {saved ? "✓ Saved!" : "Save"}
           </button>
           <button onClick={onClose} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "12px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: T.inkMuted, cursor: "pointer" }}>Done</button>
@@ -352,7 +359,7 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
         const activeColor = cat === "creative" ? T.inside : cat === "factory" ? T.outside : T.uncat;
         return (
           <button key={cat ?? "none"} onClick={e => { e.stopPropagation(); onChange(cat); }} title={`Move to ${label}`} aria-label={`Move to ${label}`} aria-pressed={active}
-            style={{ background: active ? `color-mix(in srgb, ${activeColor} 12%, transparent)` : "transparent", border: "none", borderRadius: T.radiusSm, padding: small ? "7px 7px" : "5px 9px", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", color: active ? activeColor : T.inkMuted }}>
+            style={{ background: active ? activeColor : "transparent", border: "none", borderRadius: T.radiusSm, padding: small ? "7px 7px" : "5px 9px", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", color: active ? ON_ACCENT : T.inkMuted }}>
             {cat === "creative" ? <InsideIcon width={sz} height={sz} /> : cat === "factory" ? <OutsideIcon width={sz} height={sz} /> : <UncatIcon width={sz} height={sz} />}
           </button>
         );
@@ -744,7 +751,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
         {/* AI generate */}
         <button onClick={generate} disabled={generating} title="Generate mind map nodes from the project brief"
-          style={{ background: generating ? T.surfaceMuted : T.inside, color: generating ? T.inkMuted : T.surface, border: 'none', borderRadius: 20, padding: '5px 14px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', transition: 'opacity 0.15s' }}>
+          style={{ background: generating ? T.surfaceMuted : T.inside, color: generating ? T.inkMuted : ON_ACCENT, border: 'none', borderRadius: 20, padding: '5px 14px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', transition: 'opacity 0.15s' }}>
           {generating ? 'Generating…' : '✦ AI'}
         </button>
       </div>
@@ -768,12 +775,12 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         <div style={{ padding: '6px 12px 8px', border: "none", display: 'flex', gap: 8, alignItems: 'center' }}>
           <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus
             style={{ fontFamily: FONT, fontSize: 11, background: T.surfaceMuted, border: tb(1.5), borderRadius: 6, padding: '5px 10px', outline: 'none', color: T.ink, flex: 1 }} />
-          <button onClick={addImageNode} style={{ background: T.inside, color: T.surface, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+          <button onClick={addImageNode} style={{ background: T.inside, color: ON_ACCENT, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
           <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} title="Cancel" aria-label="Cancel" style={{ background: 'transparent', color: T.inkMuted, border: 'none', fontSize: 14, cursor: 'pointer', padding: '0 2px' }}>✕</button>
         </div>
       )}
 
-      {genError && <div style={{ padding: '0 12px 6px', fontFamily: FONT, fontSize: 10, color: T.urgent }}>{genError}</div>}
+      {genError && <div style={{ margin: '0 12px 6px', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: '4px 8px' }}>{genError}</div>}
     </div>
   );
 
@@ -1031,13 +1038,13 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: task.completed ? "line-through" : "none" }}>{task.name}</div>
-            {category === "factory" && <OutsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.outside }} />}
-            {category === "creative" && <InsideIcon width={16} height={16} style={{ flexShrink: 0, color: T.inside }} />}
+            {category === "factory" && <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: T.radiusSm, background: T.outside }}><OutsideIcon width={13} height={13} style={{ color: ON_ACCENT }} /></span>}
+            {category === "creative" && <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: T.radiusSm, background: T.inside }}><InsideIcon width={13} height={13} style={{ color: ON_ACCENT }} /></span>}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
-            {task.completed && <div style={{ color: T.inside, background: tint(T.inside, 14), borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>✓ Completed in Asana</div>}
+            {task.completed && <div style={{ color: ON_ACCENT, background: T.inside, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>✓ Completed in Asana</div>}
             {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
-            {ul && <div style={{ color: uc, background: tint(uc, 14), borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
+            {ul && <div style={{ color: ON_ACCENT, background: uc, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
@@ -1045,13 +1052,13 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
           {isAsanaTask && (
             <button onClick={handleToggleComplete} disabled={completing} title={task.completed ? "Reopen in Asana" : "Mark complete in Asana"}
               className={task.completed ? "btn-secondary" : "btn-primary"}
-              style={{ background: task.completed ? T.surfaceMuted : T.inside, color: task.completed ? T.inkMuted : T.surface, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: completing ? "default" : "pointer", opacity: completing ? 0.6 : 1, flexShrink: 0 }}>
+              style={{ background: task.completed ? T.surfaceMuted : T.inside, color: task.completed ? T.inkMuted : ON_ACCENT, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: completing ? "default" : "pointer", opacity: completing ? 0.6 : 1, flexShrink: 0 }}>
               {completing ? "…" : task.completed ? "↩ Reopen" : "✓ Mark Complete"}
             </button>
           )}
           {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} className="btn-secondary" style={{ background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
         </div>
-        {completeError && <div style={{ flexBasis: "100%", fontFamily: FONT, fontSize: 11, color: T.urgent }}>⚠ {completeError}</div>}
+        {completeError && <div style={{ flexBasis: "100%", fontFamily: FONT, fontSize: 11, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {completeError}</div>}
       </div>
 
       {/* Brief / Mind Map switcher */}
@@ -1109,7 +1116,7 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                       <button onClick={() => handleToggleSubtask(s.gid, !s.completed)} disabled={togglingSubtask === s.gid}
                         title={s.completed ? "Mark not done" : "Mark done"} aria-label={s.completed ? "Mark not done" : "Mark done"}
                         style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, border: tb(1.5, s.completed ? T.inside : T.inkMuted), background: s.completed ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}>
-                        {s.completed && <span style={{ color: T.surface, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                        {s.completed && <span style={{ color: ON_ACCENT, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
                       </button>
                       <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 500, color: s.completed ? T.inkMuted : T.ink, textDecoration: s.completed ? "line-through" : "none", flex: 1, minWidth: 0 }}>{s.name}</div>
                       {s.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted, flexShrink: 0 }}>{s.due_on}</div>}
@@ -1119,13 +1126,13 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
               </>
             )}
 
-            {isAsanaTask && detailsError && <div style={{ fontFamily: FONT, fontSize: 12, color: T.urgent, marginBottom: 20 }}>⚠ {detailsError}</div>}
+            {isAsanaTask && detailsError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", marginBottom: 20, display: "inline-block" }}>⚠ {detailsError}</div>}
 
             <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>
               COMMENTS{comments && comments.length > 0 ? ` (${comments.length})` : ""}
             </div>
             {commentsError ? (
-              <div style={{ fontFamily: FONT, fontSize: 12, color: T.urgent }}>⚠ {commentsError}</div>
+              <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {commentsError}</div>
             ) : comments === null ? (
               <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted }}>Loading comments…</div>
             ) : comments.length === 0 ? (
@@ -1152,10 +1159,10 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                   style={{ width: "100%", minHeight: 64, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: "10px 12px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.6 }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <button onClick={handlePostComment} disabled={!replyText.trim() || posting} className={replyText.trim() ? "btn-primary" : "btn-secondary"}
-                    style={{ background: replyText.trim() ? T.inside : T.surfaceMuted, color: replyText.trim() ? T.surface : T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: replyText.trim() && !posting ? "pointer" : "default", opacity: posting ? 0.6 : 1 }}>
+                    style={{ background: replyText.trim() ? T.inside : T.surfaceMuted, color: replyText.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: replyText.trim() && !posting ? "pointer" : "default", opacity: posting ? 0.6 : 1 }}>
                     {posting ? "Posting…" : "Post Comment"}
                   </button>
-                  {postError && <div style={{ fontFamily: FONT, fontSize: 11, color: T.urgent }}>⚠ {postError}</div>}
+                  {postError && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {postError}</div>}
                 </div>
               </div>
             )}
@@ -1186,7 +1193,7 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
             {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
             {ul && (
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: uc, background: tint(uc, 14), borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: ON_ACCENT, background: uc, borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
             )}
           </div>
           <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
@@ -1205,7 +1212,7 @@ function TodoCard({ item, onOpen, onToggle, onClose }: { item: TodoItem; onOpen?
       <div style={{ padding: "9px 10px", display: "flex", alignItems: "flex-start", gap: 9 }}>
         <button onClick={onToggle} title={item.done ? "Mark not done" : "Mark done"} aria-label={item.done ? "Mark not done" : "Mark done"}
           style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, marginTop: 2, border: tb(1.5, item.done ? T.inside : T.inkMuted), background: item.done ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s", padding: 0 }}>
-          {item.done && <span style={{ color: T.surface, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+          {item.done && <span style={{ color: ON_ACCENT, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
         </button>
         <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 500, color: item.done ? T.inkMuted : T.ink, textDecoration: item.done ? "line-through" : "none", flex: 1, minWidth: 0, wordBreak: "break-word" }}>
           {item.title}
@@ -1232,7 +1239,7 @@ function TodoDetail({ item, onUpdate, onDelete, onBack }: { item: TodoItem; onUp
         <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => title.trim() && onUpdate({ title: title.trim() })} onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           style={{ flex: 1, fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, background: "transparent", border: "none", outline: "none", minWidth: 0 }} />
         <button onClick={() => onUpdate({ done: !item.done })} className={item.done ? "btn-secondary" : "btn-primary"}
-          style={{ background: item.done ? T.surfaceMuted : T.inside, color: item.done ? T.ink : T.surface, borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+          style={{ background: item.done ? T.surfaceMuted : T.inside, color: item.done ? T.ink : ON_ACCENT, borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
           {item.done ? "↩ Reopen" : "✓ Done"}
         </button>
         <button onClick={() => { onDelete(); onBack(); }} title="Delete this task" className="btn-secondary"
@@ -1301,11 +1308,11 @@ function CreateProjectModal({ onClose, onCreate, initialCategory = null }: { onC
                 const isSelected = cat === key;
                 return (
                   <button key={String(key)} onClick={() => setCat(key)} aria-pressed={isSelected}
-                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? tint(color, 16) : T.surfaceMuted, border: "none", boxShadow: isSelected ? `inset 0 0 0 2px ${color}` : "none", borderRadius: T.radiusSm, cursor: "pointer", transition: "box-shadow 0.15s, background 0.15s" }}>
-                    <div style={{ color: isSelected ? color : T.inkMuted, display: "flex" }}>
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? color : T.surfaceMuted, border: "none", borderRadius: T.radiusSm, cursor: "pointer", transition: "background 0.15s" }}>
+                    <div style={{ color: isSelected ? ON_ACCENT : T.inkMuted, display: "flex" }}>
                       {key === "factory" ? <OutsideIcon width={28} height={28} /> : key === "creative" ? <InsideIcon width={28} height={28} /> : <UncatIcon width={28} height={28} />}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: isSelected ? T.ink : T.inkMuted }}>{label}</div>
+                    <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: isSelected ? ON_ACCENT : T.inkMuted }}>{label}</div>
                   </button>
                 );
               })}
@@ -1317,7 +1324,7 @@ function CreateProjectModal({ onClose, onCreate, initialCategory = null }: { onC
         <div style={{ padding: "16px 24px", display: "flex", justifyContent: "flex-end", gap: 10 }}>
           <button onClick={onClose} className="btn-secondary" style={{ background: T.surfaceMuted, color: T.inkMuted, borderRadius: T.radiusSm, padding: "10px 20px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleCreate} disabled={!name.trim()} className={name.trim() ? "btn-primary" : "btn-secondary"}
-            style={{ background: name.trim() ? T.inside : T.surfaceMuted, color: name.trim() ? T.surface : T.inkMuted, borderRadius: T.radiusSm, padding: "10px 24px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+            style={{ background: name.trim() ? T.inside : T.surfaceMuted, color: name.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "10px 24px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
             Create Project
           </button>
         </div>
@@ -1528,9 +1535,11 @@ export default function App() {
         onDrop={e => { e.preventDefault(); const gid = e.dataTransfer.getData("text/plain"); if (gid) updateCategory(gid, targetCat); setDragGid(null); setDragOverCat(undefined); }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, paddingBottom: 12, borderBottom: `2.5px solid ${accentColor}` }}>
-          {icon}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 48, height: 48, borderRadius: T.radius, background: accentColor, flexShrink: 0 }}>
+            {icon}
+          </div>
           <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 800, color: T.ink, flex: 1 }}>{label}</div>
-          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: accentColor, background: tint(accentColor, 16), border: "none", borderRadius: 999, padding: "3px 11px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
+          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: accentColor, border: "none", borderRadius: 999, padding: "3px 11px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
           {items.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
@@ -1562,11 +1571,13 @@ export default function App() {
       <div style={{ background: T.surface, borderBottom: tb(2), padding: "0 12px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, height: 54, flexShrink: 0, minWidth: 0, overflow: "hidden", position: "relative", zIndex: 1 }}>
         {/* Traffic light spacer on Mac — skip on mobile */}
         {!isMobile && <div style={{ width: 60, flexShrink: 0 }} />}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, minWidth: 0 }}>
-          <MossIcon width={isMobile ? 28 : 42} height={isMobile ? 28 : 42} style={{ color: T.inside, flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, minWidth: 0 }}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: isMobile ? 34 : 48, height: isMobile ? 34 : 48, borderRadius: T.radius, background: T.inside, flexShrink: 0 }}>
+            <MossIcon width={isMobile ? 20 : 28} height={isMobile ? 20 : 28} style={{ color: ON_ACCENT }} />
+          </span>
           {!isMobile && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>MossMind</div>}
         </div>
-        {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} className="btn-primary" style={{ background: T.inside, borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
+        {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} className="btn-primary" style={{ background: T.inside, borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
@@ -1591,7 +1602,7 @@ export default function App() {
               {quickApprovals.length} task{quickApprovals.length === 1 ? "" : "s"} waiting on your approval
             </div>
             <button onClick={() => { setOpenTask(null); setOpenTodoId(null); }} className="btn-primary"
-              style={{ background: T.inside, color: T.surface, borderRadius: T.radiusSm, padding: "4px 12px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "4px 12px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
               View →
             </button>
           </div>
@@ -1637,7 +1648,7 @@ export default function App() {
                         style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.surfaceMuted, border: tb(2), borderRadius: T.radiusSm, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
                       <button onClick={() => { if (!mobileCreateName.trim()) return; createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); }} disabled={!mobileCreateName.trim()}
                         className={mobileCreateName.trim() ? "btn-primary" : "btn-secondary"}
-                        style={{ background: mobileCreateName.trim() ? T.inside : T.surfaceMuted, color: mobileCreateName.trim() ? T.surface : T.inkMuted, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
+                        style={{ background: mobileCreateName.trim() ? T.inside : T.surfaceMuted, color: mobileCreateName.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
                         Create Project
                       </button>
                     </div>
@@ -1650,7 +1661,7 @@ export default function App() {
                         <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                           <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
                             style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: tb(1.5), borderRadius: T.radiusSm, padding: "9px 12px", outline: "none", minWidth: 0 }} />
-                          <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: T.surface, borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                          <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                         </form>
                       </div>
                       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1681,7 +1692,7 @@ export default function App() {
                         <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "normal", fontWeight: 700, marginTop: 4 }}>Rev 3:20</div>
                       </div>
                       <button onClick={() => { setMobileTab(null); setShowPrayer(true); }} className="btn-primary"
-                        style={{ background: T.inside, color: T.surface, borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
+                        style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
                         Begin Prayer →
                       </button>
                     </div>
@@ -1701,15 +1712,15 @@ export default function App() {
                   </div>
                 ) : (
                   [
-                    { label: "Outside", items: allOutside, color: T.outside, icon: <OutsideIcon width={18} height={18} /> },
-                    { label: "Inside", items: allInside, color: T.inside, icon: <InsideIcon width={18} height={18} /> },
-                    { label: "Incoming", items: allUncategorized, color: T.uncat, icon: <UncatIcon width={18} height={18} /> },
+                    { label: "Outside", items: allOutside, color: T.outside, icon: <OutsideIcon width={14} height={14} /> },
+                    { label: "Inside", items: allInside, color: T.inside, icon: <InsideIcon width={14} height={14} /> },
+                    { label: "Incoming", items: allUncategorized, color: T.uncat, icon: <UncatIcon width={14} height={14} /> },
                   ].map(({ label, items, color, icon }) => items.length === 0 ? null : (
                     <div key={label} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 6, borderBottom: `2.5px solid ${color}` }}>
-                        <span style={{ color, display: "flex" }}>{icon}</span>
+                        <span style={{ color: ON_ACCENT, background: color, display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: T.radiusSm, flexShrink: 0 }}>{icon}</span>
                         <div style={{ fontFamily: FONT, fontSize: FS.body, fontWeight: 800, color: T.ink, flex: 1 }}>{label}</div>
-                        <div style={{ fontFamily: FONT, fontSize: FS.caption, fontWeight: 800, color, background: tint(color, 16), borderRadius: 999, padding: "2px 9px", minWidth: 18, textAlign: "center" }}>{items.length}</div>
+                        <div style={{ fontFamily: FONT, fontSize: FS.caption, fontWeight: 800, color: ON_ACCENT, background: color, borderRadius: 999, padding: "2px 9px", minWidth: 18, textAlign: "center" }}>{items.length}</div>
                       </div>
                       {items.map(p => (
                         <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} />
@@ -1747,7 +1758,7 @@ export default function App() {
                                   <div style={{ height: 5, background: color, flexShrink: 0 }} />
                                   <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
                                     <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: T.ink, lineHeight: 1.35 }}>{p.name}</div>
-                                    {p.due_on && <div style={{ fontFamily: FONT, fontSize: 10, color: urgColorLight(p.due_on), fontWeight: 600 }}>{p.due_on}</div>}
+                                    {p.due_on && <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>{p.due_on}</div>}
                                   </div>
                                 </button>
                               );
@@ -1804,12 +1815,12 @@ export default function App() {
                               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                                 <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
                                 <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
-                                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.surface, background: T.soon, borderRadius: 10, padding: "2px 10px", minWidth: 22, textAlign: "center" }}>{quickApprovals.length}</div>
+                                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: T.soon, borderRadius: 10, padding: "2px 10px", minWidth: 22, textAlign: "center" }}>{quickApprovals.length}</div>
                               </div>
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                                 {quickApprovals.map(p => (
                                   <div key={p.gid} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
-                                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.soon, letterSpacing: 0.5, textTransform: "uppercase" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
+                                    <div style={{ display: "inline-block", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: ON_ACCENT, background: T.soon, letterSpacing: 0.5, textTransform: "uppercase", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
                                     <ProjectCard task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />
                                   </div>
                                 ))}
@@ -1819,9 +1830,9 @@ export default function App() {
                         )}
                         <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
                           <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
-                            {renderColumn(<OutsideIcon width={34} height={34} style={{ color: T.outside, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
-                            {renderColumn(<InsideIcon width={34} height={34} style={{ color: T.inside, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
-                            {renderColumn(<UncatIcon width={34} height={34} style={{ color: T.uncat, flexShrink: 0 }} />, "Incoming", allUncategorized, null, T.uncat)}
+                            {renderColumn(<OutsideIcon width={26} height={26} style={{ color: ON_ACCENT, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
+                            {renderColumn(<InsideIcon width={26} height={26} style={{ color: ON_ACCENT, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
+                            {renderColumn(<UncatIcon width={26} height={26} style={{ color: ON_ACCENT, flexShrink: 0 }} />, "Incoming", allUncategorized, null, T.uncat)}
                           </div>
                         </div>
                       </>
@@ -1844,7 +1855,7 @@ export default function App() {
                       <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                         <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
                           style={{ flex: 1, fontFamily: FONT, fontSize: 12, color: T.ink, background: T.surface, border: tb(1.5), boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "7px 10px", outline: "none", minWidth: 0 }} />
-                        <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: T.surface, borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                        <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                       </form>
                     </div>
                     <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1870,7 +1881,7 @@ export default function App() {
                     <span style={{ fontSize: 16 }}>‹</span>
                     <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
                     {todos.filter(t => !t.done).length > 0 && (
-                      <div style={{ background: T.inside, color: T.surface, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
+                      <div style={{ background: T.inside, color: ON_ACCENT, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
                         {todos.filter(t => !t.done).length}
                       </div>
                     )}
@@ -1901,10 +1912,12 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
         :root {
-          /* Design palette: #F1EAE3 (cream) #A6974B (gold) #F29E38 (orange)
-             #D9564A (red) #261B18 (ink) #A0B0AC (sage). Every value below is
-             one of those six hexes or a computed HSL lightness/saturation
-             derivative of one — nothing outside this palette. */
+          /* The six given hexes, used verbatim — no darkened/lightened variants
+             of gold/orange/red/sage. Gold (#A6974B) is the hero/brand color
+             ("inside"). Accent colors are only ever used as solid fills with
+             dark ink content on top (see ON_ACCENT in App.tsx) since none of
+             them are light-background-text-safe at full saturation — that's
+             a placement choice, not a hex change. */
           --canvas: #F1EAE3;
           --surface: #F7F3F0;
           --surface-muted: #D9D1CB;
@@ -1912,12 +1925,12 @@ export default function App() {
           --ink-muted: #736A65;
           --border: #261B18;
           --border-muted: #D5CDC7;
-          --outside: #BF6F0D;
-          --inside: #4D665F;
-          --uncat: #705852;
-          --urgent: #A92F23;
-          --soon: #6C622D;
-          --focus: #DE2312;
+          --outside: #F29E38;
+          --inside: #A6974B;
+          --uncat: #A0B0AC;
+          --urgent: #D9564A;
+          --soon: #F29E38;
+          --focus: var(--ink);
           /* Neo-brutalist "hard" shadow — flat, offset, no blur, in the ink color.
              Using var(--ink) means it auto-flips from a dark offset in light mode
              to a pale cream offset in dark mode, with zero extra rules. */
@@ -1932,14 +1945,14 @@ export default function App() {
           --surface-muted: #201714;
           --ink: #F1EAE3;
           --ink-muted: #B0A8A2;
-          --border: #A09792;
+          --border: #F1EAE3;
           --border-muted: #514946;
-          --outside: #EEB46D;
-          --inside: #9DBEB6;
-          --uncat: #968D88;
-          --urgent: #D3857E;
-          --soon: #B2AC8A;
-          --focus: #E7746A;
+          --outside: #F29E38;
+          --inside: #A6974B;
+          --uncat: #A0B0AC;
+          --urgent: #D9564A;
+          --soon: #F29E38;
+          --focus: var(--ink);
           --shadow-sm: 2px 2px 0 var(--ink);
           --shadow-md: 4px 4px 0 var(--ink);
           --shadow-lg: 6px 6px 0 var(--ink);
