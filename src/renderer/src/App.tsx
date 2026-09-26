@@ -875,19 +875,13 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
       <div className="prayer-moss-blob prayer-moss-blob--b" />
       <div className="prayer-moss-blob prayer-moss-blob--c" />
       <div className="prayer-moss-blob prayer-moss-blob--d" />
-      {/* The praying-figure artwork as a mask over a solid ink layer: wherever
-          the artwork is solid, this blocks the animation; wherever it's cut
-          away (the figure, the wavy water lines, the moon), the mask hides
-          this layer and the animated color plays through in that negative
-          space instead. */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background: "#221816",
-        WebkitMaskImage: `url(${prayerFigureSvg})`, maskImage: `url(${prayerFigureSvg})`,
-        WebkitMaskSize: "cover", maskSize: "cover",
-        WebkitMaskPosition: "62% center", maskPosition: "62% center",
-        WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-      }} />
+      {/* The praying-figure artwork sits directly over the blobs as a plain
+          image rather than a CSS mask — CSS mask-image's luminance/alpha
+          handling is inconsistent across browsers and made the whole effect
+          disappear. The artwork's own solid fill + real transparent cutouts
+          (the figure, the wavy water lines, the moon) do the same job
+          natively: solid blocks the animation, transparent reveals it. */}
+      <img src={prayerFigureSvg} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "62% center" }} />
       {/* Vignette so the left-aligned text stays readable */}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(38,27,24,0.8) 0%, rgba(38,27,24,0.45) 40%, rgba(38,27,24,0.15) 72%, rgba(38,27,24,0.05) 100%)" }} />
 
@@ -961,27 +955,27 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
            drifting motion as the Needs Your Approval background, resized for a
            full-screen dark backdrop, now drawing from all four accent tokens
            (gold/orange/red/sage) instead of just one or two. */
-        .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; will-change: transform, opacity; }
+        .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(40px); mix-blend-mode: screen; will-change: transform, opacity; }
         .prayer-moss-blob--a {
           top: -12%; right: -8%; width: 62vw; height: 62vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${T.inside} 75%, white 25%) 0%, transparent 68%);
+          background: radial-gradient(circle, color-mix(in srgb, ${T.inside} 85%, white 15%) 0%, color-mix(in srgb, ${T.inside} 40%, transparent) 45%, transparent 60%);
           animation: mossDriftA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
           bottom: -18%; right: 6%; width: 46vw; height: 46vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${T.outside} 60%, ${T.urgent} 40%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${T.outside} 65%, ${T.urgent} 35%) 0%, color-mix(in srgb, ${T.outside} 35%, transparent) 45%, transparent 62%);
           animation: mossDriftB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
           top: 30%; right: 22%; width: 34vw; height: 34vw;
-          background: radial-gradient(circle, ${T.urgent} 0%, transparent 72%);
+          background: radial-gradient(circle, ${T.urgent} 0%, color-mix(in srgb, ${T.urgent} 40%, transparent) 45%, transparent 64%);
           animation: mossDriftC 21s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
           bottom: 4%; left: -6%; width: 30vw; height: 30vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${T.uncat} 65%, ${T.inside} 35%) 0%, transparent 70%);
+          background: radial-gradient(circle, color-mix(in srgb, ${T.uncat} 70%, ${T.inside} 30%) 0%, color-mix(in srgb, ${T.uncat} 35%, transparent) 45%, transparent 62%);
           animation: mossDriftD 24s ease-in-out infinite;
           animation-delay: -14s;
         }
