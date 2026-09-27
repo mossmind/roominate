@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const { Pool } = require('pg');
 
 const app = express();
 app.use(express.json());
@@ -8,6 +9,26 @@ app.use(express.json());
 const APP_PASSWORD = process.env.APP_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const COOKIE_NAME = 'mm_session';
+
+// ── Shared app state (Postgres) ──────────────────────────────────────────────
+// Small key/value blobs (categories, locally-created tasks, todos, section
+// settings) that need to look identical on every computer, not just cached
+// per-browser. Only this fixed set of keys is ever read/written here.
+const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
+const ALLOWED_STATE_KEYS = new Set([
+  'mossmind_categories',
+  'mossmind_todos',
+  'asana_section_gids',
+  'quick_task_section_gid',
+  'mossmind_local_tasks',
+]);
+const stateReady = pool
+  ? pool.query(`CREATE TABLE IF NOT EXISTS app_state (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`)
+  : Promise.resolve();
 
 // ── Auth helpers ────────────────────────────────────────────────────────────
 
@@ -46,6 +67,40 @@ app.post('/api/auth/login', (req, res) => {
 
 app.post('/api/auth/check', (req, res) => {
   res.json({ ok: isAuthenticated(req) });
+});
+
+// ── Shared state proxy (auth required) ──────────────────────────────────────
+
+app.get('/api/state/:key', async (req, res) => {
+  if (!isAuthenticated(req)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!pool) return res.status(500).json({ error: 'DATABASE_URL not set on server' });
+  if (!ALLOWED_STATE_KEYS.has(req.params.key)) return res.status(400).json({ error: 'Unknown key' });
+  try {
+    await stateReady;
+    const result = await pool.query('SELECT value FROM app_state WHERE key = $1', [req.params.key]);
+    res.json({ value: result.rows[0]?.value ?? null });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/state/:key', async (req, res) => {
+  if (!isAuthenticated(req)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!pool) return res.status(500).json({ error: 'DATABASE_URL not set on server' });
+  if (!ALLOWED_STATE_KEYS.has(req.params.key)) return res.status(400).json({ error: 'Unknown key' });
+  const { value } = req.body;
+  if (typeof value !== 'string') return res.status(400).json({ error: 'value must be a string' });
+  try {
+    await stateReady;
+    await pool.query(
+      `INSERT INTO app_state (key, value, updated_at) VALUES ($1, $2, now())
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+      [req.params.key, value]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Anthropic proxy (auth required) ─────────────────────────────────────────

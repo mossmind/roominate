@@ -1418,25 +1418,24 @@ export default function App() {
     if (!hasFetched.current) {
       hasFetched.current = true;
       Promise.all([
-        storageGet("mossmind_tasks").catch(() => null),
+        storageGet("mossmind_local_tasks").catch(() => null),
         storageGet("mossmind_categories").catch(() => null),
         storageGet("asana_section_gids").catch(() => null),
         storageGet("mossmind_todos").catch(() => null),
         storageGet("quick_task_section_gid").catch(() => null),
-      ]).then(([tasksRes, catsRes, sectionsRes, todosRes, quickGidRes]) => {
+      ]).then(([localTasksRes, catsRes, sectionsRes, todosRes, quickGidRes]) => {
         if (catsRes) { try { setCategories(JSON.parse(catsRes)); } catch (_) {} }
         let loadedSectionGids: string[] | undefined;
         if (sectionsRes) { try { const parsed = typeof sectionsRes === "string" ? JSON.parse(sectionsRes) : sectionsRes; if (Array.isArray(parsed)) { setSectionGids(parsed); loadedSectionGids = parsed; } } catch (_) {} }
         if (todosRes) { try { setTodos(JSON.parse(todosRes)); } catch (_) {} }
         if (quickGidRes) setQuickTaskSectionGid(quickGidRes as string);
-        if (tasksRes) {
-          try {
-            // Always trust the cache, regardless of age — it's the only place
-            // locally-created tasks live, and discarding it after 30 minutes
-            // was silently deleting those on reload.
-            const c = JSON.parse(tasksRes);
-            if (c.projects?.length) setProjects(c.projects);
-          } catch (_) {}
+        if (localTasksRes) {
+          // Locally-created ("+ Create") tasks never exist in Asana, so this
+          // is their only source of truth — a small shared blob (server-backed
+          // on web, so it's identical on every computer; IndexedDB in
+          // Electron) rather than the old full-projects cache, which mixed
+          // them with Asana-fetched tasks and went stale/per-browser.
+          try { const parsed = JSON.parse(localTasksRes); if (Array.isArray(parsed)) setProjects(parsed); } catch (_) {}
         }
         // Sync immediately on load rather than waiting for the first 60s
         // interval tick — a brand-new browser/computer has no local cache at
@@ -1458,7 +1457,8 @@ export default function App() {
   async function createProject(task: Task, cat: CategoryKey) {
     const updated = [task, ...projects];
     setProjects(updated);
-    await storageSet("mossmind_tasks", JSON.stringify({ projects: updated, ts: Date.now() }));
+    const updatedLocal = [task, ...updated.filter(p => p.gid.startsWith("local_") && p.gid !== task.gid)];
+    await storageSet("mossmind_local_tasks", JSON.stringify(updatedLocal));
     if (cat) {
       const updatedCats = { ...categories, [task.gid]: cat };
       setCategories(updatedCats);
@@ -1478,12 +1478,17 @@ export default function App() {
     const prevProjects = projects;
     const updated = projects.map(p => p.gid === gid ? { ...p, completed } : p);
     setProjects(updated);
-    await storageSet("mossmind_tasks", JSON.stringify({ projects: updated, ts: Date.now() }));
+    // A "local_..." task only exists here, never in Asana — persist its
+    // completion into the shared local-tasks store instead of calling an
+    // Asana API that would just fail on a gid it's never heard of.
+    if (gid.startsWith("local_")) {
+      await storageSet("mossmind_local_tasks", JSON.stringify(updated.filter(p => p.gid.startsWith("local_"))));
+      return;
+    }
     try {
       await platformAsana.setCompleted(gid, completed);
     } catch (e) {
       setProjects(prevProjects);
-      await storageSet("mossmind_tasks", JSON.stringify({ projects: prevProjects, ts: Date.now() }));
       throw e;
     }
   }
@@ -1538,15 +1543,16 @@ export default function App() {
       // Keep locally-created tasks (gid "local_...") — they only exist here,
       // never in Asana, so replacing `projects` outright on every sync (this
       // runs on a 60s timer) was deleting them within a minute of creation.
+      // No need to persist the merged list here — the local-only subset is
+      // already persisted at creation/completion time (see createProject /
+      // setTaskCompleted), and the Asana subset always comes fresh from Asana.
       // Uses the functional setState form (not the `projects` closure) because
       // the interval effect below only resubscribes when sectionGids/
       // quickTaskSectionGid change, so a plain closure read of `projects` here
       // could go stale and re-drop a task created after the effect last ran.
       setProjects(prev => {
         const localOnly = prev.filter(p => p.gid.startsWith("local_"));
-        const merged = [...localOnly, ...tasks];
-        storageSet("mossmind_tasks", JSON.stringify({ projects: merged, ts: Date.now() })).catch(() => {});
-        return merged;
+        return [...localOnly, ...tasks];
       });
       setSyncMsg(tasks.length > 0 ? "✓ Synced " + tasks.length + " tasks" : "⚠ No incomplete tasks found in that section");
     } catch (e) {
