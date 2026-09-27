@@ -963,28 +963,62 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
            figure — moon/head=gold, torso=orange, waist=red, legs/water=sage —
            so the four colors read as distinct bands instead of one blend. */
         .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(35px); will-change: transform, opacity; }
+        /* Flat, fully-saturated fills (not a fade-to-transparent gradient) —
+           the blur alone softens the edge, so the core of every blob stays
+           at full color strength instead of already fading by mid-radius.
+           Dedicated keyframes (not the shared mossDrift* used by the Needs-
+           Approval card) keep opacity high throughout — that card wants a
+           subtle wash, this wants to read as unmistakably colorful. */
         .prayer-moss-blob--a {
-          top: -8%; left: 26%; width: 50vw; height: 50vw;
-          background: radial-gradient(circle, ${T.inside} 0%, color-mix(in srgb, ${T.inside} 55%, transparent) 55%, transparent 72%);
-          animation: mossDriftA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+          top: -8%; left: 26%; width: 46vw; height: 46vw;
+          background: ${T.inside};
+          animation: prayerBlobA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
-          top: 22%; left: 20%; width: 44vw; height: 44vw;
-          background: radial-gradient(circle, ${T.outside} 0%, color-mix(in srgb, ${T.outside} 55%, transparent) 55%, transparent 72%);
-          animation: mossDriftB 34s ease-in-out infinite;
+          top: 22%; left: 20%; width: 40vw; height: 40vw;
+          background: ${T.outside};
+          animation: prayerBlobB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
-          top: 46%; left: 26%; width: 40vw; height: 40vw;
-          background: radial-gradient(circle, ${T.urgent} 0%, color-mix(in srgb, ${T.urgent} 55%, transparent) 55%, transparent 72%);
-          animation: mossDriftC 21s ease-in-out infinite;
+          top: 46%; left: 26%; width: 37vw; height: 37vw;
+          background: ${T.urgent};
+          animation: prayerBlobC 21s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
-          bottom: -10%; left: 14%; width: 42vw; height: 42vw;
-          background: radial-gradient(circle, ${T.uncat} 0%, color-mix(in srgb, ${T.uncat} 55%, transparent) 55%, transparent 72%);
-          animation: mossDriftD 24s ease-in-out infinite;
+          bottom: -10%; left: 14%; width: 38vw; height: 38vw;
+          background: ${T.uncat};
+          animation: prayerBlobD 24s ease-in-out infinite;
           animation-delay: -14s;
+        }
+        @keyframes prayerBlobA {
+          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
+          19%  { transform: translate(7%, 9%) scale(1.16) rotate(4deg); opacity: 1; }
+          46%  { transform: translate(-6%, 4%) scale(0.92) rotate(-3deg); opacity: 0.75; }
+          71%  { transform: translate(9%, -7%) scale(1.1) rotate(2deg); opacity: 0.95; }
+          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
+        }
+        @keyframes prayerBlobB {
+          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
+          27%  { transform: translate(-9%, -6%) scale(1.22) rotate(-5deg); opacity: 1; }
+          55%  { transform: translate(5%, 8%) scale(0.88) rotate(3deg); opacity: 0.72; }
+          82%  { transform: translate(-6%, -3%) scale(1.12) rotate(-2deg); opacity: 0.92; }
+          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
+        }
+        @keyframes prayerBlobC {
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
+          15%  { transform: translate(6%, -8%) scale(1.18); opacity: 0.98; }
+          51%  { transform: translate(-8%, 5%) scale(0.9); opacity: 0.7; }
+          80%  { transform: translate(4%, 9%) scale(1.14); opacity: 0.9; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
+        }
+        @keyframes prayerBlobD {
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
+          24%  { transform: translate(-7%, 6%) scale(1.12); opacity: 1; }
+          60%  { transform: translate(8%, -5%) scale(0.86); opacity: 0.72; }
+          88%  { transform: translate(-4%, -8%) scale(1.16); opacity: 0.92; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
         }
       `}</style>
     </div>
