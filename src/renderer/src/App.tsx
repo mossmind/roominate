@@ -131,11 +131,6 @@ const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, t
 // tweaked font sizes elsewhere in the file are left alone rather than churned
 // for no visual gain.
 const FS = { caption: 11, label: 12, body: 14, title: 20, display: 28 };
-// Sage + gold accents for the shared background animation (Needs Your Approval
-// and the prayer lock) — fixed brand colors (straight from the palette), not
-// theme tokens, so they read the same in light and dark mode.
-const MOSS = "#A0B0AC";
-const MOSS_GOLD = "#A6974B";
 // None of the four accent hexes (gold/orange/red/sage) are legible as text on
 // the light cream canvas — but ink is legible ON TOP of every one of them, in
 // both themes (verified: 4.3-7.8:1). So every accent is used as a solid fill
@@ -966,59 +961,30 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         /* Flat, fully-saturated fills (not a fade-to-transparent gradient) —
            the blur alone softens the edge, so the core of every blob stays
            at full color strength instead of already fading by mid-radius.
-           Dedicated keyframes (not the shared mossDrift* used by the Needs-
-           Approval card) keep opacity high throughout — that card wants a
-           subtle wash, this wants to read as unmistakably colorful. */
+           Reuses the same mossDriftA-D keyframes (and the same recipe) as
+           the Needs Your Approval background, just resized for full-screen. */
         .prayer-moss-blob--a {
           top: -8%; left: 26%; width: 46vw; height: 46vw;
           background: ${T.inside};
-          animation: prayerBlobA 16s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+          animation: mossDriftA 16s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
           top: 22%; left: 20%; width: 40vw; height: 40vw;
           background: ${T.outside};
-          animation: prayerBlobB 19s ease-in-out infinite;
+          animation: mossDriftB 19s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
           top: 46%; left: 26%; width: 37vw; height: 37vw;
           background: ${T.urgent};
-          animation: prayerBlobC 13s ease-in-out infinite;
+          animation: mossDriftC 13s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
           bottom: -10%; left: 14%; width: 38vw; height: 38vw;
           background: ${T.uncat};
-          animation: prayerBlobD 15s ease-in-out infinite;
+          animation: mossDriftD 15s ease-in-out infinite;
           animation-delay: -14s;
-        }
-        @keyframes prayerBlobA {
-          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
-          19%  { transform: translate(22%, 26%) scale(1.35) rotate(16deg); opacity: 1; }
-          46%  { transform: translate(-18%, 14%) scale(0.72) rotate(-20deg); opacity: 0.75; }
-          71%  { transform: translate(26%, -20%) scale(1.25) rotate(11deg); opacity: 0.95; }
-          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
-        }
-        @keyframes prayerBlobB {
-          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
-          27%  { transform: translate(-26%, -18%) scale(1.4) rotate(-24deg); opacity: 1; }
-          55%  { transform: translate(16%, 24%) scale(0.68) rotate(18deg); opacity: 0.72; }
-          82%  { transform: translate(-20%, -10%) scale(1.3) rotate(-14deg); opacity: 0.92; }
-          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
-        }
-        @keyframes prayerBlobC {
-          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
-          15%  { transform: translate(18%, -24%) scale(1.32); opacity: 0.98; }
-          51%  { transform: translate(-24%, 16%) scale(0.7); opacity: 0.7; }
-          80%  { transform: translate(14%, 26%) scale(1.28); opacity: 0.9; }
-          100% { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
-        }
-        @keyframes prayerBlobD {
-          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
-          24%  { transform: translate(-22%, 18%) scale(1.28); opacity: 1; }
-          60%  { transform: translate(24%, -16%) scale(0.7); opacity: 0.72; }
-          88%  { transform: translate(-14%, -24%) scale(1.3); opacity: 0.92; }
-          100% { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
         }
       `}</style>
     </div>
@@ -1996,7 +1962,6 @@ export default function App() {
           --shadow-sm: 2px 2px 0 var(--ink);
           --shadow-md: 4px 4px 0 var(--ink);
           --shadow-lg: 6px 6px 0 var(--ink);
-          --moss-blend: multiply;
         }
         [data-theme="dark"] {
           --canvas: #261B18;
@@ -2015,7 +1980,6 @@ export default function App() {
           --shadow-sm: 2px 2px 0 var(--ink);
           --shadow-md: 4px 4px 0 var(--ink);
           --shadow-lg: 6px 6px 0 var(--ink);
-          --moss-blend: screen;
         }
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { margin: 0; overflow: hidden; }
@@ -2087,60 +2051,65 @@ export default function App() {
            the whole background gets visibly more alive without ever "flashing". */
         .moss-bg {
           position: absolute; inset: 0; overflow: hidden;
-          background: color-mix(in srgb, ${MOSS} 14%, ${T.surface} 86%);
+          background: color-mix(in srgb, ${T.uncat} 14%, ${T.surface} 86%);
         }
-        .moss-blob { position: absolute; border-radius: 50%; filter: blur(28px); mix-blend-mode: var(--moss-blend); will-change: transform, opacity; }
+        /* Same recipe as the prayer lock's animation: flat, fully-saturated
+           single-accent fills (not gradient fades or cross-mixed pairs) with
+           no blend mode, so all four palette colors read as distinct instead
+           of merging into one muddy tone — plus the same wide movement swings
+           via the shared mossDriftA-D keyframes below. */
+        .moss-blob { position: absolute; border-radius: 50%; filter: blur(28px); will-change: transform, opacity; }
         .moss-blob--a {
           top: -35%; left: -12%; width: 62%; height: 175%;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 75%, white 25%) 0%, transparent 70%);
-          animation: mossDriftA 24s cubic-bezier(0.37,0,0.63,1) infinite;
+          background: ${T.inside};
+          animation: mossDriftA 16s cubic-bezier(0.37,0,0.63,1) infinite;
         }
         .moss-blob--b {
           bottom: -42%; right: -10%; width: 54%; height: 165%;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS} 55%, ${MOSS_GOLD} 45%) 0%, transparent 72%);
-          animation: mossDriftB 31s ease-in-out infinite; animation-delay: -9s;
+          background: ${T.outside};
+          animation: mossDriftB 19s ease-in-out infinite; animation-delay: -9s;
         }
         .moss-blob--c {
           top: 8%; right: 18%; width: 38%; height: 135%;
-          background: radial-gradient(circle, ${MOSS} 0%, transparent 68%);
-          animation: mossDriftC 18s ease-in-out infinite; animation-delay: -4s;
+          background: ${T.urgent};
+          animation: mossDriftC 13s ease-in-out infinite; animation-delay: -4s;
         }
         .moss-blob--d {
           bottom: -22%; left: 22%; width: 34%; height: 125%;
-          background: radial-gradient(circle, color-mix(in srgb, ${MOSS_GOLD} 65%, ${MOSS} 35%) 0%, transparent 70%);
-          animation: mossDriftD 27s ease-in-out infinite; animation-delay: -14s;
+          background: ${T.uncat};
+          animation: mossDriftD 15s ease-in-out infinite; animation-delay: -14s;
         }
-        .moss-bg--urgent .moss-blob--a { animation-duration: 9s; }
-        .moss-bg--urgent .moss-blob--b { animation-duration: 12s; }
-        .moss-bg--urgent .moss-blob--c { animation-duration: 7s; }
-        .moss-bg--urgent .moss-blob--d { animation-duration: 10s; }
+        .moss-bg--urgent .moss-blob--a { animation-duration: 6s; }
+        .moss-bg--urgent .moss-blob--b { animation-duration: 7s; }
+        .moss-bg--urgent .moss-blob--c { animation-duration: 5s; }
+        .moss-bg--urgent .moss-blob--d { animation-duration: 5.5s; }
         @keyframes mossDriftA {
-          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.5; }
-          19%  { transform: translate(7%, 9%) scale(1.14) rotate(4deg); opacity: 0.68; }
-          46%  { transform: translate(-6%, 4%) scale(0.9) rotate(-3deg); opacity: 0.38; }
-          71%  { transform: translate(9%, -7%) scale(1.08) rotate(2deg); opacity: 0.6; }
-          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.5; }
+          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
+          19%  { transform: translate(22%, 26%) scale(1.35) rotate(16deg); opacity: 1; }
+          46%  { transform: translate(-18%, 14%) scale(0.72) rotate(-20deg); opacity: 0.75; }
+          71%  { transform: translate(26%, -20%) scale(1.25) rotate(11deg); opacity: 0.95; }
+          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
         }
         @keyframes mossDriftB {
-          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.4; }
-          27%  { transform: translate(-9%, -6%) scale(1.2) rotate(-5deg); opacity: 0.58; }
-          55%  { transform: translate(5%, 8%) scale(0.86) rotate(3deg); opacity: 0.3; }
-          82%  { transform: translate(-6%, -3%) scale(1.1) rotate(-2deg); opacity: 0.5; }
-          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.4; }
+          0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
+          27%  { transform: translate(-26%, -18%) scale(1.4) rotate(-24deg); opacity: 1; }
+          55%  { transform: translate(16%, 24%) scale(0.68) rotate(18deg); opacity: 0.72; }
+          82%  { transform: translate(-20%, -10%) scale(1.3) rotate(-14deg); opacity: 0.92; }
+          100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
         }
         @keyframes mossDriftC {
-          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
-          15%  { transform: translate(6%, -8%) scale(1.16); opacity: 0.5; }
-          51%  { transform: translate(-8%, 5%) scale(0.9); opacity: 0.24; }
-          80%  { transform: translate(4%, 9%) scale(1.12); opacity: 0.44; }
-          100% { transform: translate(0%, 0%) scale(1); opacity: 0.32; }
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
+          15%  { transform: translate(18%, -24%) scale(1.32); opacity: 0.98; }
+          51%  { transform: translate(-24%, 16%) scale(0.7); opacity: 0.7; }
+          80%  { transform: translate(14%, 26%) scale(1.28); opacity: 0.9; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
         }
         @keyframes mossDriftD {
-          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.35; }
-          24%  { transform: translate(-7%, 6%) scale(1.1); opacity: 0.5; }
-          60%  { transform: translate(8%, -5%) scale(0.88); opacity: 0.26; }
-          88%  { transform: translate(-4%, -8%) scale(1.14); opacity: 0.46; }
-          100% { transform: translate(0%, 0%) scale(1); opacity: 0.35; }
+          0%   { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
+          24%  { transform: translate(-22%, 18%) scale(1.28); opacity: 1; }
+          60%  { transform: translate(24%, -16%) scale(0.7); opacity: 0.72; }
+          88%  { transform: translate(-14%, -24%) scale(1.3); opacity: 0.92; }
+          100% { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
         }
 
         /* ── Prayer FAB — a shape-morphing icon ───────────────────────────────
