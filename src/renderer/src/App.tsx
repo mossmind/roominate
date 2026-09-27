@@ -1564,6 +1564,14 @@ export default function App() {
     ...(dueTodayCount > 0 ? [{ label: `${dueTodayCount} due today`, color: T.soon }] : []),
     ...(unfinishedQuickCount > 0 ? [{ label: `${unfinishedQuickCount} quick task${unfinishedQuickCount === 1 ? "" : "s"} open`, color: T.inside }] : []),
   ];
+  // A simplified "what's coming up" preview — the next few tasks due in the
+  // next week (after today, which the chip above already covers), so the
+  // welcome section previews Asana's upcoming work without re-listing
+  // everything the board's columns already show further down.
+  const upcomingTasks = openProjects
+    .filter(p => { const d = daysLeft(p.due_on); return d !== null && d > 0 && d <= 7; })
+    .sort(byDueDate)
+    .slice(0, 3);
 
   const EMPTY_SLOTS = 2;
   function renderColumn(label: string, items: Task[], targetCat: CategoryKey, accentColor: string) {
@@ -1752,6 +1760,19 @@ export default function App() {
                       <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "5px 12px" }}>Nothing urgent — clear runway ✓</div>
                     )}
                   </div>
+                  {upcomingTasks.length > 0 && (
+                    <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 7 }}>
+                      <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
+                      {upcomingTasks.map(p => (
+                        <button key={p.gid} onClick={() => setOpenTask(p)}
+                          style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", width: "100%" }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.soon, flexShrink: 0 }} />
+                          <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: T.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                          <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, flexShrink: 0 }}>{urgLabel(p.due_on)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {projects.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -1854,6 +1875,19 @@ export default function App() {
                           <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "6px 14px" }}>Nothing urgent — clear runway ✓</div>
                         )}
                       </div>
+                      {upcomingTasks.length > 0 && (
+                        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
+                          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
+                          {upcomingTasks.map(p => (
+                            <button key={p.gid} onClick={() => setOpenTask(p)}
+                              style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", width: "100%" }}>
+                              <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.soon, flexShrink: 0 }} />
+                              <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                              <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, flexShrink: 0 }}>{urgLabel(p.due_on)}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     {!projects.length ? (
                       <div style={{ textAlign: "center", padding: "80px 40px" }}>
