@@ -870,6 +870,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
       <div className="prayer-moss-blob prayer-moss-blob--b" />
       <div className="prayer-moss-blob prayer-moss-blob--c" />
       <div className="prayer-moss-blob prayer-moss-blob--d" />
+      <div className="moss-grain" />
       {/* The praying-figure artwork sits directly over the blobs as a CSS
           background-image (more reliable full-bleed coverage than <img> +
           object-fit, which was leaving an uncovered strip on one edge) —
@@ -966,24 +967,24 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         .prayer-moss-blob--a {
           top: -8%; left: 26%; width: 46vw; height: 46vw;
           background: ${T.inside};
-          animation: mossDriftA 16s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+          animation: mossDriftA 21s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
           top: 22%; left: 20%; width: 40vw; height: 40vw;
           background: ${T.outside};
-          animation: mossDriftB 19s ease-in-out infinite;
+          animation: mossDriftB 25s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
           top: 46%; left: 26%; width: 37vw; height: 37vw;
           background: ${T.urgent};
-          animation: mossDriftC 13s ease-in-out infinite;
+          animation: mossDriftC 17s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
           bottom: -10%; left: 14%; width: 38vw; height: 38vw;
           background: ${T.uncat};
-          animation: mossDriftD 15s ease-in-out infinite;
+          animation: mossDriftD 20s ease-in-out infinite;
           animation-delay: -14s;
         }
       `}</style>
@@ -1620,6 +1621,7 @@ export default function App() {
             <div className="moss-blob moss-blob--b" />
             <div className="moss-blob moss-blob--c" />
             <div className="moss-blob moss-blob--d" />
+            <div className="moss-grain" />
           </div>
           <div style={{ position: "relative", zIndex: 1, padding: "7px 16px", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>⚡</span>
@@ -1835,6 +1837,7 @@ export default function App() {
                               <div className="moss-blob moss-blob--b" />
                               <div className="moss-blob moss-blob--c" />
                               <div className="moss-blob moss-blob--d" />
+                              <div className="moss-grain" />
                             </div>
                             <div style={{ position: "relative", zIndex: 1 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -2053,6 +2056,27 @@ export default function App() {
           position: absolute; inset: 0; overflow: hidden;
           background: color-mix(in srgb, ${T.uncat} 14%, ${T.surface} 86%);
         }
+        /* Organic, filmic grain over the color — a jittery (not smoothly
+           interpolated) fractal-noise texture that jumps between a few fixed
+           offsets like real film grain, rather than drifting. Shared by the
+           Needs Your Approval background, the pinned bar, and the prayer
+           lock (via .moss-grain in each). */
+        .moss-grain {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
+          background-size: 180px 180px;
+          mix-blend-mode: overlay;
+          opacity: 0.55;
+          animation: grainFlicker 0.7s steps(1) infinite;
+        }
+        @keyframes grainFlicker {
+          0%   { background-position: 0px 0px; }
+          20%  { background-position: -37px 21px; }
+          40%  { background-position: 18px -29px; }
+          60%  { background-position: -24px -14px; }
+          80%  { background-position: 31px 9px; }
+          100% { background-position: 0px 0px; }
+        }
         /* Same recipe as the prayer lock's animation: flat, fully-saturated
            single-accent fills (not gradient fades or cross-mixed pairs) with
            no blend mode, so all four palette colors read as distinct instead
@@ -2062,27 +2086,27 @@ export default function App() {
         .moss-blob--a {
           top: -35%; left: -12%; width: 62%; height: 175%;
           background: ${T.inside};
-          animation: mossDriftA 16s cubic-bezier(0.37,0,0.63,1) infinite;
+          animation: mossDriftA 21s cubic-bezier(0.37,0,0.63,1) infinite;
         }
         .moss-blob--b {
           bottom: -42%; right: -10%; width: 54%; height: 165%;
           background: ${T.outside};
-          animation: mossDriftB 19s ease-in-out infinite; animation-delay: -9s;
+          animation: mossDriftB 25s ease-in-out infinite; animation-delay: -9s;
         }
         .moss-blob--c {
           top: 8%; right: 18%; width: 38%; height: 135%;
           background: ${T.urgent};
-          animation: mossDriftC 13s ease-in-out infinite; animation-delay: -4s;
+          animation: mossDriftC 17s ease-in-out infinite; animation-delay: -4s;
         }
         .moss-blob--d {
           bottom: -22%; left: 22%; width: 34%; height: 125%;
           background: ${T.uncat};
-          animation: mossDriftD 15s ease-in-out infinite; animation-delay: -14s;
+          animation: mossDriftD 20s ease-in-out infinite; animation-delay: -14s;
         }
-        .moss-bg--urgent .moss-blob--a { animation-duration: 6s; }
-        .moss-bg--urgent .moss-blob--b { animation-duration: 7s; }
-        .moss-bg--urgent .moss-blob--c { animation-duration: 5s; }
-        .moss-bg--urgent .moss-blob--d { animation-duration: 5.5s; }
+        .moss-bg--urgent .moss-blob--a { animation-duration: 8s; }
+        .moss-bg--urgent .moss-blob--b { animation-duration: 9.5s; }
+        .moss-bg--urgent .moss-blob--c { animation-duration: 6.5s; }
+        .moss-bg--urgent .moss-blob--d { animation-duration: 7.5s; }
         @keyframes mossDriftA {
           0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
           19%  { transform: translate(22%, 26%) scale(1.35) rotate(16deg); opacity: 1; }
