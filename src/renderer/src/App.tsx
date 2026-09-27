@@ -1387,9 +1387,17 @@ export default function App() {
   const isMobile = useIsMobile();
   const [mobileTab, setMobileTab] = useState<'create' | 'tasks' | 'prayer' | null>(null);
   const [mobileCreateName, setMobileCreateName] = useState('');
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     storageGet("theme").then(v => { if (v === "dark" || v === "light") setTheme(v); }).catch(() => {});
+  }, []);
+
+  // Drives the welcome section's clock/greeting — updates every 30s, not
+  // every second, so it stays informative without being a ticking distraction.
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -1540,6 +1548,22 @@ export default function App() {
   const allUncategorized = openProjects.filter(p => !categories[p.gid]).sort(byDueDate);
   const quickApprovals   = openProjects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
   const hasUrgentApproval = quickApprovals.some(p => { const d = daysLeft(p.due_on); return d !== null && d <= 3; });
+
+  // Welcome section — a calm, once-a-glance orientation for the top of the
+  // board: what day it is, and only the three things actually worth flagging
+  // (overdue, due today, unfinished quick tasks) rather than re-listing
+  // everything the columns below already show.
+  const overdueCount = openProjects.filter(p => { const d = daysLeft(p.due_on); return d !== null && d < 0; }).length;
+  const dueTodayCount = openProjects.filter(p => daysLeft(p.due_on) === 0).length;
+  const unfinishedQuickCount = todos.filter(t => !t.done).length;
+  const greeting = now.getHours() < 5 ? "Still up?" : now.getHours() < 12 ? "Good morning" : now.getHours() < 18 ? "Good afternoon" : "Good evening";
+  const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const reminderChips: { label: string; color: string }[] = [
+    ...(overdueCount > 0 ? [{ label: `${overdueCount} overdue`, color: T.urgent }] : []),
+    ...(dueTodayCount > 0 ? [{ label: `${dueTodayCount} due today`, color: T.soon }] : []),
+    ...(unfinishedQuickCount > 0 ? [{ label: `${unfinishedQuickCount} quick task${unfinishedQuickCount === 1 ? "" : "s"} open`, color: T.inside }] : []),
+  ];
 
   const EMPTY_SLOTS = 2;
   function renderColumn(label: string, items: Task[], targetCat: CategoryKey, accentColor: string) {
@@ -1716,6 +1740,19 @@ export default function App() {
                   Outside/Inside/Incoming buckets from the desktop board are still
                   visible at a glance instead of one undifferentiated chronological list. */}
               <div style={{ position: "absolute", inset: 0, overflowY: "auto", overflowX: "hidden", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Welcome section — same orienting purpose as the desktop board's,
+                    condensed for the narrower mobile column. */}
+                <div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: T.ink, lineHeight: 1.15 }}>{greeting}</div>
+                  <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: T.inkMuted, marginTop: 2, marginBottom: 12 }}>{dateStr} · {timeStr}</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {reminderChips.length > 0 ? reminderChips.map(chip => (
+                      <div key={chip.label} style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: ON_ACCENT, background: chip.color, borderRadius: 999, padding: "5px 12px" }}>{chip.label}</div>
+                    )) : (
+                      <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "5px 12px" }}>Nothing urgent — clear runway ✓</div>
+                    )}
+                  </div>
+                </div>
                 {projects.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
                     <div style={{ fontSize: 36, marginBottom: 12 }}>🌿</div>
@@ -1804,6 +1841,20 @@ export default function App() {
                 );
                 return (
                   <div style={{ padding: "32px 48px", minHeight: "100%" }}>
+                    {/* Welcome section — orients the day before anything else: who's
+                        arriving, what day/time it is, and only the handful of things
+                        actually worth flagging right now (not a re-list of every task). */}
+                    <div style={{ marginBottom: 32, maxWidth: 824, marginLeft: "auto", marginRight: "auto" }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 34, fontWeight: 700, color: T.ink, lineHeight: 1.15 }}>{greeting}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.inkMuted, marginTop: 4, marginBottom: 16 }}>{dateStr} · {timeStr}</div>
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        {reminderChips.length > 0 ? reminderChips.map(chip => (
+                          <div key={chip.label} style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: chip.color, borderRadius: 999, padding: "6px 14px" }}>{chip.label}</div>
+                        )) : (
+                          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "6px 14px" }}>Nothing urgent — clear runway ✓</div>
+                        )}
+                      </div>
+                    </div>
                     {!projects.length ? (
                       <div style={{ textAlign: "center", padding: "80px 40px" }}>
                         <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
