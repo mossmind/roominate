@@ -955,27 +955,34 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
            drifting motion as the Needs Your Approval background, resized for a
            full-screen dark backdrop, now drawing from all four accent tokens
            (gold/orange/red/sage) instead of just one or two. */
-        .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(40px); mix-blend-mode: screen; will-change: transform, opacity; }
+        /* "screen" blend was mathematically lightening/adding these together —
+           since gold/orange/red all sit close on the color wheel, that washed
+           them into one indistinct amber glow. Plain compositing (no blend
+           mode) keeps each blob's actual hue, and each one is now a single
+           pure accent (no cross-mixed pairs) stacked vertically down the
+           figure — moon/head=gold, torso=orange, waist=red, legs/water=sage —
+           so the four colors read as distinct bands instead of one blend. */
+        .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(35px); will-change: transform, opacity; }
         .prayer-moss-blob--a {
-          top: 2%; left: 28%; width: 58vw; height: 58vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${T.inside} 85%, white 15%) 0%, color-mix(in srgb, ${T.inside} 40%, transparent) 45%, transparent 60%);
+          top: -8%; left: 26%; width: 50vw; height: 50vw;
+          background: radial-gradient(circle, ${T.inside} 0%, color-mix(in srgb, ${T.inside} 55%, transparent) 55%, transparent 72%);
           animation: mossDriftA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
-          bottom: -8%; left: 34%; width: 48vw; height: 48vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${T.outside} 65%, ${T.urgent} 35%) 0%, color-mix(in srgb, ${T.outside} 35%, transparent) 45%, transparent 62%);
+          top: 22%; left: 20%; width: 44vw; height: 44vw;
+          background: radial-gradient(circle, ${T.outside} 0%, color-mix(in srgb, ${T.outside} 55%, transparent) 55%, transparent 72%);
           animation: mossDriftB 34s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
-          top: 20%; left: 42%; width: 38vw; height: 38vw;
-          background: radial-gradient(circle, ${T.urgent} 0%, color-mix(in srgb, ${T.urgent} 40%, transparent) 45%, transparent 64%);
+          top: 46%; left: 26%; width: 40vw; height: 40vw;
+          background: radial-gradient(circle, ${T.urgent} 0%, color-mix(in srgb, ${T.urgent} 55%, transparent) 55%, transparent 72%);
           animation: mossDriftC 21s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
-          bottom: 6%; left: 16%; width: 36vw; height: 36vw;
-          background: radial-gradient(circle, color-mix(in srgb, ${T.uncat} 70%, ${T.inside} 30%) 0%, color-mix(in srgb, ${T.uncat} 35%, transparent) 45%, transparent 62%);
+          bottom: -10%; left: 14%; width: 42vw; height: 42vw;
+          background: radial-gradient(circle, ${T.uncat} 0%, color-mix(in srgb, ${T.uncat} 55%, transparent) 55%, transparent 72%);
           animation: mossDriftD 24s ease-in-out infinite;
           animation-delay: -14s;
         }
