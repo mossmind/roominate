@@ -1935,7 +1935,7 @@ export default function App() {
                           <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
                             {renderColumn("Outside", allOutside, "factory", T.outside, 1)}
                             {renderColumn("Inside", allInside, "creative", T.inside, 1)}
-                            {renderColumn("Incoming", allUncategorized, null, T.uncat, 0)}
+                            {allUncategorized.length > 0 && renderColumn("Incoming", allUncategorized, null, T.uncat, 0)}
                           </div>
                         </div>
                       </>
