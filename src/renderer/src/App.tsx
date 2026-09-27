@@ -1573,8 +1573,7 @@ export default function App() {
     .sort(byDueDate)
     .slice(0, 3);
 
-  const EMPTY_SLOTS = 2;
-  function renderColumn(label: string, items: Task[], targetCat: CategoryKey, accentColor: string) {
+  function renderColumn(label: string, items: Task[], targetCat: CategoryKey, accentColor: string, emptySlots: number) {
     const isOver = dragGid !== null && dragOverCat === targetCat;
     return (
       <div
@@ -1589,7 +1588,7 @@ export default function App() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
           {items.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
-          {Array.from({ length: EMPTY_SLOTS }).map((_, i) => {
+          {Array.from({ length: emptySlots }).map((_, i) => {
             const active = isOver && i === 0;
             return (
               <button key={i} onClick={() => { setCreateCategory(targetCat); setShowCreate(true); }}
@@ -1926,9 +1925,9 @@ export default function App() {
                         )}
                         <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
                           <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
-                            {renderColumn("Outside", allOutside, "factory", T.outside)}
-                            {renderColumn("Inside", allInside, "creative", T.inside)}
-                            {renderColumn("Incoming", allUncategorized, null, T.uncat)}
+                            {renderColumn("Outside", allOutside, "factory", T.outside, 1)}
+                            {renderColumn("Inside", allInside, "creative", T.inside, 1)}
+                            {renderColumn("Incoming", allUncategorized, null, T.uncat, 0)}
                           </div>
                         </div>
                       </>
