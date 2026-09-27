@@ -131,7 +131,7 @@ const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, t
 // tweaked font sizes elsewhere in the file are left alone rather than churned
 // for no visual gain.
 const FS = { caption: 11, label: 12, body: 14, title: 20, display: 28 };
-// None of the four accent hexes (gold/orange/red/sage) are legible as text on
+// None of the four accent hexes (green/orange/red/sage) are legible as text on
 // the light cream canvas — but ink is legible ON TOP of every one of them, in
 // both themes (verified: 4.3-7.8:1). So every accent is used as a solid fill
 // with fixed dark ink content on top, never as colored text/icon-on-canvas.
@@ -864,7 +864,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: "linear-gradient(150deg, #221816 0%, #1B1311 50%, #201714 100%)" }}>
       {/* Same organic animation as the Needs Your Approval background — soft
           blobs drifting and breathing on independent, uneven cycles — now
-          pulling from the full palette (gold/orange/red/sage) instead of one
+          pulling from the full palette (green/orange/red/sage) instead of one
           or two accents. */}
       <div className="prayer-moss-blob prayer-moss-blob--a" />
       <div className="prayer-moss-blob prayer-moss-blob--b" />
@@ -949,14 +949,12 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
         /* Reuses the mossDriftA-D keyframes defined in the main app stylesheet — same
            drifting motion as the Needs Your Approval background, resized for a
-           full-screen dark backdrop, now drawing from all four accent tokens
-           (gold/orange/red/sage) instead of just one or two. */
-        /* "screen" blend was mathematically lightening/adding these together —
-           since gold/orange/red all sit close on the color wheel, that washed
-           them into one indistinct amber glow. Plain compositing (no blend
-           mode) keeps each blob's actual hue, and each one is now a single
-           pure accent (no cross-mixed pairs) stacked vertically down the
-           figure — moon/head=gold, torso=orange, waist=red, legs/water=sage —
+           full-screen dark backdrop, drawing from all four accent tokens
+           (green/orange/red/sage) instead of just one or two. Flat, pure,
+           un-mixed fills with no blend mode (an earlier version screen-blended
+           these together, which washed adjacent warm hues into one muddy
+           glow) — each blob is a single accent stacked vertically down the
+           figure: moon/head=green, torso=orange, waist=red, legs/water=sage —
            so the four colors read as distinct bands instead of one blend. */
         .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(55px); will-change: transform, opacity; }
         /* Flat, fully-saturated fills (not a fade-to-transparent gradient) —
@@ -1940,12 +1938,17 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
         :root {
-          /* The six given hexes, used verbatim — no darkened/lightened variants
-             of gold/orange/red/sage. Gold (#A6974B) is the hero/brand color
-             ("inside"). Accent colors are only ever used as solid fills with
-             dark ink content on top (see ON_ACCENT in App.tsx) since none of
-             them are light-background-text-safe at full saturation — that's
-             a placement choice, not a hex change. */
+          /* The six given hexes (cream/gold/orange/red/ink/sage), used
+             verbatim, plus one addition: gold didn't work as the hero/brand
+             color in practice, so "inside" is now a warm olive-forest green
+             (#509744) chosen to sit naturally alongside the rest of this
+             palette — a true green, unlike sage's pale near-neutral, but
+             still warm/muted rather than a cool or neon green. Gold itself
+             is no longer used anywhere now that it's freed from that role.
+             Accent colors are only ever used as solid fills with dark ink
+             content on top (see ON_ACCENT in App.tsx) since none of them are
+             light-background-text-safe at full saturation — that's a
+             placement choice, not a hex change. */
           --canvas: #F1EAE3;
           --surface: #F7F3F0;
           --surface-muted: #D9D1CB;
@@ -1954,7 +1957,7 @@ export default function App() {
           --border: #261B18;
           --border-muted: #D5CDC7;
           --outside: #F29E38;
-          --inside: #A6974B;
+          --inside: #509744;
           --uncat: #A0B0AC;
           --urgent: #D9564A;
           --soon: #F29E38;
@@ -1975,7 +1978,7 @@ export default function App() {
           --border: #F1EAE3;
           --border-muted: #514946;
           --outside: #F29E38;
-          --inside: #A6974B;
+          --inside: #509744;
           --uncat: #A0B0AC;
           --urgent: #D9564A;
           --soon: #F29E38;
