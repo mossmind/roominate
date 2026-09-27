@@ -972,52 +972,52 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
         .prayer-moss-blob--a {
           top: -8%; left: 26%; width: 46vw; height: 46vw;
           background: ${T.inside};
-          animation: prayerBlobA 27s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+          animation: prayerBlobA 16s cubic-bezier(0.37, 0, 0.63, 1) infinite;
         }
         .prayer-moss-blob--b {
           top: 22%; left: 20%; width: 40vw; height: 40vw;
           background: ${T.outside};
-          animation: prayerBlobB 34s ease-in-out infinite;
+          animation: prayerBlobB 19s ease-in-out infinite;
           animation-delay: -11s;
         }
         .prayer-moss-blob--c {
           top: 46%; left: 26%; width: 37vw; height: 37vw;
           background: ${T.urgent};
-          animation: prayerBlobC 21s ease-in-out infinite;
+          animation: prayerBlobC 13s ease-in-out infinite;
           animation-delay: -6s;
         }
         .prayer-moss-blob--d {
           bottom: -10%; left: 14%; width: 38vw; height: 38vw;
           background: ${T.uncat};
-          animation: prayerBlobD 24s ease-in-out infinite;
+          animation: prayerBlobD 15s ease-in-out infinite;
           animation-delay: -14s;
         }
         @keyframes prayerBlobA {
           0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
-          19%  { transform: translate(7%, 9%) scale(1.16) rotate(4deg); opacity: 1; }
-          46%  { transform: translate(-6%, 4%) scale(0.92) rotate(-3deg); opacity: 0.75; }
-          71%  { transform: translate(9%, -7%) scale(1.1) rotate(2deg); opacity: 0.95; }
+          19%  { transform: translate(22%, 26%) scale(1.35) rotate(16deg); opacity: 1; }
+          46%  { transform: translate(-18%, 14%) scale(0.72) rotate(-20deg); opacity: 0.75; }
+          71%  { transform: translate(26%, -20%) scale(1.25) rotate(11deg); opacity: 0.95; }
           100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
         }
         @keyframes prayerBlobB {
           0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
-          27%  { transform: translate(-9%, -6%) scale(1.22) rotate(-5deg); opacity: 1; }
-          55%  { transform: translate(5%, 8%) scale(0.88) rotate(3deg); opacity: 0.72; }
-          82%  { transform: translate(-6%, -3%) scale(1.12) rotate(-2deg); opacity: 0.92; }
+          27%  { transform: translate(-26%, -18%) scale(1.4) rotate(-24deg); opacity: 1; }
+          55%  { transform: translate(16%, 24%) scale(0.68) rotate(18deg); opacity: 0.72; }
+          82%  { transform: translate(-20%, -10%) scale(1.3) rotate(-14deg); opacity: 0.92; }
           100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
         }
         @keyframes prayerBlobC {
           0%   { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
-          15%  { transform: translate(6%, -8%) scale(1.18); opacity: 0.98; }
-          51%  { transform: translate(-8%, 5%) scale(0.9); opacity: 0.7; }
-          80%  { transform: translate(4%, 9%) scale(1.14); opacity: 0.9; }
+          15%  { transform: translate(18%, -24%) scale(1.32); opacity: 0.98; }
+          51%  { transform: translate(-24%, 16%) scale(0.7); opacity: 0.7; }
+          80%  { transform: translate(14%, 26%) scale(1.28); opacity: 0.9; }
           100% { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
         }
         @keyframes prayerBlobD {
           0%   { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
-          24%  { transform: translate(-7%, 6%) scale(1.12); opacity: 1; }
-          60%  { transform: translate(8%, -5%) scale(0.86); opacity: 0.72; }
-          88%  { transform: translate(-4%, -8%) scale(1.16); opacity: 0.92; }
+          24%  { transform: translate(-22%, 18%) scale(1.28); opacity: 1; }
+          60%  { transform: translate(24%, -16%) scale(0.7); opacity: 0.72; }
+          88%  { transform: translate(-14%, -24%) scale(1.3); opacity: 0.92; }
           100% { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
         }
       `}</style>
