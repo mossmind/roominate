@@ -55,6 +55,10 @@ interface AsanaApiTask {
 // ── Config ─────────────────────────────────────────────────────────────────
 const PROJECT_GID = "1208321640687989";
 const DEFAULT_SECTION_GIDS = ["1208321358070311"]; // "David is designing - approved by David"
+// The only section whose uncategorized tasks land in the board's "Incoming"
+// column — approval-section tasks (below) surface in their own banner
+// instead, even when they don't have a category yet.
+const INCOMING_SECTION_GID = "1208321358070311"; // "David is designing - approved by David"
 // Sections that hold quick, time-sensitive approvals — always synced and surfaced
 // in a banner above the board regardless of what's checked in Settings.
 const QUICK_APPROVAL_SECTIONS: Record<string, string> = {
@@ -1545,7 +1549,11 @@ export default function App() {
   const openProjects     = projects.filter(p => !p.completed);
   const allOutside       = openProjects.filter(p => categories[p.gid] === "factory").sort(byDueDate);
   const allInside        = openProjects.filter(p => categories[p.gid] === "creative").sort(byDueDate);
-  const allUncategorized = openProjects.filter(p => !categories[p.gid]).sort(byDueDate);
+  // Incoming = uncategorized tasks from "David is designing - approved by
+  // David" (or locally-created ones, which never have a sectionGid at all) —
+  // never approval-section tasks, even before they've been given a category,
+  // since those already have their own "Needs Your Approval" banner.
+  const allUncategorized = openProjects.filter(p => !categories[p.gid] && (!p.sectionGid || p.sectionGid === INCOMING_SECTION_GID)).sort(byDueDate);
   const quickApprovals   = openProjects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
   const hasUrgentApproval = quickApprovals.some(p => { const d = daysLeft(p.due_on); return d !== null && d <= 3; });
 
