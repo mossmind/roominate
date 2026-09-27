@@ -1425,21 +1425,27 @@ export default function App() {
         storageGet("quick_task_section_gid").catch(() => null),
       ]).then(([tasksRes, catsRes, sectionsRes, todosRes, quickGidRes]) => {
         if (catsRes) { try { setCategories(JSON.parse(catsRes)); } catch (_) {} }
-        if (sectionsRes) { try { const parsed = typeof sectionsRes === "string" ? JSON.parse(sectionsRes) : sectionsRes; if (Array.isArray(parsed)) setSectionGids(parsed); } catch (_) {} }
+        let loadedSectionGids: string[] | undefined;
+        if (sectionsRes) { try { const parsed = typeof sectionsRes === "string" ? JSON.parse(sectionsRes) : sectionsRes; if (Array.isArray(parsed)) { setSectionGids(parsed); loadedSectionGids = parsed; } } catch (_) {} }
         if (todosRes) { try { setTodos(JSON.parse(todosRes)); } catch (_) {} }
         if (quickGidRes) setQuickTaskSectionGid(quickGidRes as string);
         if (tasksRes) {
           try {
             // Always trust the cache, regardless of age — it's the only place
             // locally-created tasks live, and discarding it after 30 minutes
-            // was silently deleting those on reload. The periodic/manual sync
-            // below refreshes the Asana-sourced portion soon after anyway.
+            // was silently deleting those on reload.
             const c = JSON.parse(tasksRes);
-            if (c.projects?.length) { setProjects(c.projects); if (quickGidRes) syncQuickTasks(quickGidRes as string); return; }
+            if (c.projects?.length) setProjects(c.projects);
           } catch (_) {}
         }
-        // No cached tasks yet — prompt to sync
-        setSyncMsg("↑ Add your Asana token in ⚙ Settings, then hit Sync");
+        // Sync immediately on load rather than waiting for the first 60s
+        // interval tick — a brand-new browser/computer has no local cache at
+        // all, so without this it sat empty until the user noticed and hit
+        // Sync manually themselves. Passing the just-loaded gids directly
+        // (rather than relying on sectionGids state) avoids a stale-closure
+        // read of state that may not have committed yet in this same tick.
+        syncTasks(loadedSectionGids);
+        if (quickGidRes) syncQuickTasks(quickGidRes as string);
       });
     }
   }, []);
