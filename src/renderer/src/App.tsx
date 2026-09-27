@@ -1430,8 +1430,12 @@ export default function App() {
         if (quickGidRes) setQuickTaskSectionGid(quickGidRes as string);
         if (tasksRes) {
           try {
+            // Always trust the cache, regardless of age — it's the only place
+            // locally-created tasks live, and discarding it after 30 minutes
+            // was silently deleting those on reload. The periodic/manual sync
+            // below refreshes the Asana-sourced portion soon after anyway.
             const c = JSON.parse(tasksRes);
-            if (Date.now() - c.ts < 30 * 60 * 1000 && c.projects?.length) { setProjects(c.projects); if (quickGidRes) syncQuickTasks(quickGidRes as string); return; }
+            if (c.projects?.length) { setProjects(c.projects); if (quickGidRes) syncQuickTasks(quickGidRes as string); return; }
           } catch (_) {}
         }
         // No cached tasks yet — prompt to sync
@@ -1525,13 +1529,20 @@ export default function App() {
         : DEFAULT_SECTION_GIDS;
     try {
       const tasks = await fetchAsanaTasks(gids);
-      if (tasks.length > 0) {
-        setProjects(tasks);
-        await storageSet("mossmind_tasks", JSON.stringify({ projects: tasks, ts: Date.now() }));
-        setSyncMsg("✓ Synced " + tasks.length + " tasks");
-      } else {
-        setSyncMsg("⚠ No incomplete tasks found in that section");
-      }
+      // Keep locally-created tasks (gid "local_...") — they only exist here,
+      // never in Asana, so replacing `projects` outright on every sync (this
+      // runs on a 60s timer) was deleting them within a minute of creation.
+      // Uses the functional setState form (not the `projects` closure) because
+      // the interval effect below only resubscribes when sectionGids/
+      // quickTaskSectionGid change, so a plain closure read of `projects` here
+      // could go stale and re-drop a task created after the effect last ran.
+      setProjects(prev => {
+        const localOnly = prev.filter(p => p.gid.startsWith("local_"));
+        const merged = [...localOnly, ...tasks];
+        storageSet("mossmind_tasks", JSON.stringify({ projects: merged, ts: Date.now() })).catch(() => {});
+        return merged;
+      });
+      setSyncMsg(tasks.length > 0 ? "✓ Synced " + tasks.length + " tasks" : "⚠ No incomplete tasks found in that section");
     } catch (e) {
       setSyncMsg("⚠ " + (e instanceof Error ? e.message.slice(0, 80) : String(e)));
     }
