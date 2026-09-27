@@ -958,7 +958,7 @@ function MorningPrayerLock({ task, onUnlock }: { task?: Task; onUnlock: (note: s
            pure accent (no cross-mixed pairs) stacked vertically down the
            figure — moon/head=gold, torso=orange, waist=red, legs/water=sage —
            so the four colors read as distinct bands instead of one blend. */
-        .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(35px); will-change: transform, opacity; }
+        .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(55px); will-change: transform, opacity; }
         /* Flat, fully-saturated fills (not a fade-to-transparent gradient) —
            the blur alone softens the edge, so the core of every blob stays
            at full color strength instead of already fading by mid-radius.
@@ -2082,7 +2082,7 @@ export default function App() {
            no blend mode, so all four palette colors read as distinct instead
            of merging into one muddy tone — plus the same wide movement swings
            via the shared mossDriftA-D keyframes below. */
-        .moss-blob { position: absolute; border-radius: 50%; filter: blur(28px); will-change: transform, opacity; }
+        .moss-blob { position: absolute; border-radius: 50%; filter: blur(42px); will-change: transform, opacity; }
         .moss-blob--a {
           top: -35%; left: -12%; width: 62%; height: 175%;
           background: ${T.inside};
@@ -2109,30 +2109,30 @@ export default function App() {
         .moss-bg--urgent .moss-blob--d { animation-duration: 7.5s; }
         @keyframes mossDriftA {
           0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
-          19%  { transform: translate(22%, 26%) scale(1.35) rotate(16deg); opacity: 1; }
-          46%  { transform: translate(-18%, 14%) scale(0.72) rotate(-20deg); opacity: 0.75; }
-          71%  { transform: translate(26%, -20%) scale(1.25) rotate(11deg); opacity: 0.95; }
+          19%  { transform: translate(32%, 37%) scale(1.5) rotate(26deg); opacity: 1; }
+          46%  { transform: translate(-27%, 21%) scale(0.6) rotate(-32deg); opacity: 0.75; }
+          71%  { transform: translate(38%, -30%) scale(1.4) rotate(19deg); opacity: 0.95; }
           100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.85; }
         }
         @keyframes mossDriftB {
           0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
-          27%  { transform: translate(-26%, -18%) scale(1.4) rotate(-24deg); opacity: 1; }
-          55%  { transform: translate(16%, 24%) scale(0.68) rotate(18deg); opacity: 0.72; }
-          82%  { transform: translate(-20%, -10%) scale(1.3) rotate(-14deg); opacity: 0.92; }
+          27%  { transform: translate(-38%, -27%) scale(1.55) rotate(-36deg); opacity: 1; }
+          55%  { transform: translate(24%, 35%) scale(0.55) rotate(28deg); opacity: 0.72; }
+          82%  { transform: translate(-30%, -15%) scale(1.45) rotate(-22deg); opacity: 0.92; }
           100% { transform: translate(0%, 0%) scale(1) rotate(0deg); opacity: 0.8; }
         }
         @keyframes mossDriftC {
           0%   { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
-          15%  { transform: translate(18%, -24%) scale(1.32); opacity: 0.98; }
-          51%  { transform: translate(-24%, 16%) scale(0.7); opacity: 0.7; }
-          80%  { transform: translate(14%, 26%) scale(1.28); opacity: 0.9; }
+          15%  { transform: translate(27%, -35%) scale(1.48); opacity: 0.98; }
+          51%  { transform: translate(-35%, 24%) scale(0.58); opacity: 0.7; }
+          80%  { transform: translate(21%, 38%) scale(1.42); opacity: 0.9; }
           100% { transform: translate(0%, 0%) scale(1); opacity: 0.78; }
         }
         @keyframes mossDriftD {
           0%   { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
-          24%  { transform: translate(-22%, 18%) scale(1.28); opacity: 1; }
-          60%  { transform: translate(24%, -16%) scale(0.7); opacity: 0.72; }
-          88%  { transform: translate(-14%, -24%) scale(1.3); opacity: 0.92; }
+          24%  { transform: translate(-32%, 27%) scale(1.44); opacity: 1; }
+          60%  { transform: translate(35%, -24%) scale(0.58); opacity: 0.72; }
+          88%  { transform: translate(-21%, -35%) scale(1.46); opacity: 0.92; }
           100% { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
         }
 
