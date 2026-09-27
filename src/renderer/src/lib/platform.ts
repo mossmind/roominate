@@ -2,10 +2,10 @@
  * Platform abstraction — same API surface whether running in Electron or Capacitor.
  * Electron:  delegates to window.storage / window.asana (IPC bridge)
  * Web:       uses IndexedDB for storage (handles large dataUrls from file uploads),
- *            fetch() for Asana/AI — except the small set of keys in SHARED_STATE_KEYS,
- *            which go to a server-backed store (Postgres) instead, so board state
- *            (categories, locally-created tasks, todos, section settings) looks the
- *            same on every computer rather than being stuck in one browser's IndexedDB.
+ *            fetch() for Asana/AI — except keys covered by isSharedStateKey(), which
+ *            go to a server-backed store (Postgres) instead, so board state (categories,
+ *            locally-created tasks, todos, settings, mind maps) looks the same on every
+ *            computer rather than being stuck in one browser's IndexedDB.
  */
 
 export const isElectron = typeof window !== 'undefined' && !!(window as any).storage
@@ -18,7 +18,16 @@ const SHARED_STATE_KEYS = new Set([
   'asana_section_gids',
   'quick_task_section_gid',
   'mossmind_local_tasks',
+  'asana_pat',
+  'anthropic_key',
 ])
+
+// Mind maps are keyed per-task ("mindmap_<gid>"), so they can't live in a fixed
+// Set — matched by prefix instead. Values can include base64 image dataUrls,
+// hence the raised body-size limit on the server side (see server.js).
+function isSharedStateKey(key: string): boolean {
+  return SHARED_STATE_KEYS.has(key) || key.startsWith('mindmap_')
+}
 
 async function serverStateGet(key: string): Promise<string | null> {
   const res = await fetch(`/api/state/${encodeURIComponent(key)}`)
@@ -83,20 +92,20 @@ async function idbDelete(key: string): Promise<void> {
 export const storage = {
   get: async (key: string): Promise<unknown> => {
     if (isElectron) return (window as any).storage.get(key)
-    if (SHARED_STATE_KEYS.has(key)) return serverStateGet(key)
+    if (isSharedStateKey(key)) return serverStateGet(key)
     return idbGet(key)
   },
 
   set: async (key: string, value: unknown): Promise<boolean> => {
     if (isElectron) return (window as any).storage.set(key, value)
-    if (SHARED_STATE_KEYS.has(key)) { await serverStateSet(key, value as string); return true }
+    if (isSharedStateKey(key)) { await serverStateSet(key, value as string); return true }
     await idbSet(key, value)
     return true
   },
 
   delete: async (key: string): Promise<boolean> => {
     if (isElectron) return (window as any).storage.delete(key)
-    if (SHARED_STATE_KEYS.has(key)) { await serverStateSet(key, ''); return true }
+    if (isSharedStateKey(key)) { await serverStateSet(key, ''); return true }
     await idbDelete(key)
     return true
   },

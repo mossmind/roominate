@@ -4,7 +4,9 @@ const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const app = express();
-app.use(express.json());
+// Raised from Express's 100kb default — mind map data can embed base64 image
+// dataUrls, which comfortably exceed that on a single node.
+app.use(express.json({ limit: '25mb' }));
 
 const APP_PASSWORD = process.env.APP_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
@@ -21,7 +23,14 @@ const ALLOWED_STATE_KEYS = new Set([
   'asana_section_gids',
   'quick_task_section_gid',
   'mossmind_local_tasks',
+  'asana_pat',
+  'anthropic_key',
 ]);
+// Mind maps are keyed per-task ("mindmap_<gid>"), so a fixed Set can't cover
+// them — matched by prefix instead.
+function isAllowedStateKey(key) {
+  return ALLOWED_STATE_KEYS.has(key) || key.startsWith('mindmap_');
+}
 const stateReady = pool
   ? pool.query(`CREATE TABLE IF NOT EXISTS app_state (
       key TEXT PRIMARY KEY,
@@ -74,7 +83,7 @@ app.post('/api/auth/check', (req, res) => {
 app.get('/api/state/:key', async (req, res) => {
   if (!isAuthenticated(req)) return res.status(401).json({ error: 'Unauthorized' });
   if (!pool) return res.status(500).json({ error: 'DATABASE_URL not set on server' });
-  if (!ALLOWED_STATE_KEYS.has(req.params.key)) return res.status(400).json({ error: 'Unknown key' });
+  if (!isAllowedStateKey(req.params.key)) return res.status(400).json({ error: 'Unknown key' });
   try {
     await stateReady;
     const result = await pool.query('SELECT value FROM app_state WHERE key = $1', [req.params.key]);
@@ -87,7 +96,7 @@ app.get('/api/state/:key', async (req, res) => {
 app.put('/api/state/:key', async (req, res) => {
   if (!isAuthenticated(req)) return res.status(401).json({ error: 'Unauthorized' });
   if (!pool) return res.status(500).json({ error: 'DATABASE_URL not set on server' });
-  if (!ALLOWED_STATE_KEYS.has(req.params.key)) return res.status(400).json({ error: 'Unknown key' });
+  if (!isAllowedStateKey(req.params.key)) return res.status(400).json({ error: 'Unknown key' });
   const { value } = req.body;
   if (typeof value !== 'string') return res.status(400).json({ error: 'value must be a string' });
   try {
