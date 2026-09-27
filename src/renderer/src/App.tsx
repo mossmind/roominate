@@ -341,8 +341,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 const CATEGORY_TOGGLE_LABEL: Record<string, string> = { factory: "Outside", creative: "Inside", none: "Incoming" };
 function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryKey; onChange: (v: CategoryKey) => void; size?: "normal" | "small" }) {
   const small = size === "small";
-  const base = small ? 16 : 22;
-  const big = base;
+  const dot = small ? 9 : 11;
   // factory/creative ordered so selected is first (left); uncat always last (right)
   const catPair: CategoryKey[] = value === "factory" ? ["factory", "creative"] : value === "creative" ? ["creative", "factory"] : ["factory", "creative"];
   const ordered: CategoryKey[] = [...catPair, null];
@@ -350,13 +349,12 @@ function CategoryToggle({ value, onChange, size = "normal" }: { value: CategoryK
     <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
       {ordered.map(cat => {
         const active = value === cat;
-        const sz = active ? big : base;
         const label = CATEGORY_TOGGLE_LABEL[cat ?? "none"];
         const activeColor = cat === "creative" ? T.inside : cat === "factory" ? T.outside : T.uncat;
         return (
           <button key={cat ?? "none"} onClick={e => { e.stopPropagation(); onChange(cat); }} title={`Move to ${label}`} aria-label={`Move to ${label}`} aria-pressed={active}
-            style={{ background: active ? activeColor : "transparent", border: "none", borderRadius: T.radiusSm, padding: small ? "7px 7px" : "5px 9px", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", color: active ? ON_ACCENT : T.inkMuted }}>
-            {cat === "creative" ? <InsideIcon width={sz} height={sz} /> : cat === "factory" ? <OutsideIcon width={sz} height={sz} /> : <UncatIcon width={sz} height={sz} />}
+            style={{ background: active ? activeColor : "transparent", border: "none", borderRadius: T.radiusSm, padding: small ? "7px 7px" : "5px 9px", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ width: dot, height: dot, borderRadius: "50%", background: active ? ON_ACCENT : activeColor, flexShrink: 0 }} />
           </button>
         );
       })}
@@ -1062,8 +1060,6 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: task.completed ? "line-through" : "none" }}>{task.name}</div>
-            {category === "factory" && <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: T.radiusSm, background: T.outside }}><OutsideIcon width={13} height={13} style={{ color: ON_ACCENT }} /></span>}
-            {category === "creative" && <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: T.radiusSm, background: T.inside }}><InsideIcon width={13} height={13} style={{ color: ON_ACCENT }} /></span>}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
             {task.completed && <div style={{ color: ON_ACCENT, background: T.inside, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>✓ Completed in Asana</div>}
@@ -1332,11 +1328,8 @@ function CreateProjectModal({ onClose, onCreate, initialCategory = null }: { onC
                 const isSelected = cat === key;
                 return (
                   <button key={String(key)} onClick={() => setCat(key)} aria-pressed={isSelected}
-                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 10px", background: isSelected ? color : T.surfaceMuted, border: "none", borderRadius: T.radiusSm, cursor: "pointer", transition: "background 0.15s" }}>
-                    <div style={{ color: isSelected ? ON_ACCENT : T.inkMuted, display: "flex" }}>
-                      {key === "factory" ? <OutsideIcon width={28} height={28} /> : key === "creative" ? <InsideIcon width={28} height={28} /> : <UncatIcon width={28} height={28} />}
-                    </div>
-                    <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: isSelected ? ON_ACCENT : T.inkMuted }}>{label}</div>
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "18px 10px", background: isSelected ? color : T.surfaceMuted, border: "none", borderRadius: T.radiusSm, cursor: "pointer", transition: "background 0.15s" }}>
+                    <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: isSelected ? ON_ACCENT : T.inkMuted }}>{label}</div>
                   </button>
                 );
               })}
@@ -1549,7 +1542,7 @@ export default function App() {
   const hasUrgentApproval = quickApprovals.some(p => { const d = daysLeft(p.due_on); return d !== null && d <= 3; });
 
   const EMPTY_SLOTS = 2;
-  function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string) {
+  function renderColumn(label: string, items: Task[], targetCat: CategoryKey, accentColor: string) {
     const isOver = dragGid !== null && dragOverCat === targetCat;
     return (
       <div
@@ -1559,9 +1552,6 @@ export default function App() {
         onDrop={e => { e.preventDefault(); const gid = e.dataTransfer.getData("text/plain"); if (gid) updateCategory(gid, targetCat); setDragGid(null); setDragOverCat(undefined); }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, paddingBottom: 12, borderBottom: `2.5px solid ${accentColor}` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 48, height: 48, borderRadius: T.radius, background: accentColor, flexShrink: 0 }}>
-            {icon}
-          </div>
           <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 800, color: T.ink, flex: 1 }}>{label}</div>
           <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: accentColor, border: "none", borderRadius: 999, padding: "3px 11px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
@@ -1596,10 +1586,7 @@ export default function App() {
         {/* Traffic light spacer on Mac — skip on mobile */}
         {!isMobile && <div style={{ width: 60, flexShrink: 0 }} />}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, minWidth: 0 }}>
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: isMobile ? 34 : 48, height: isMobile ? 34 : 48, borderRadius: T.radius, background: T.inside, flexShrink: 0 }}>
-            <MossIcon width={isMobile ? 20 : 28} height={isMobile ? 20 : 28} style={{ color: ON_ACCENT }} />
-          </span>
-          {!isMobile && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>MossMind</div>}
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 17 : 24, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>MossMind</div>
         </div>
         {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} className="btn-primary" style={{ background: T.inside, borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
@@ -1737,13 +1724,12 @@ export default function App() {
                   </div>
                 ) : (
                   [
-                    { label: "Outside", items: allOutside, color: T.outside, icon: <OutsideIcon width={14} height={14} /> },
-                    { label: "Inside", items: allInside, color: T.inside, icon: <InsideIcon width={14} height={14} /> },
-                    { label: "Incoming", items: allUncategorized, color: T.uncat, icon: <UncatIcon width={14} height={14} /> },
-                  ].map(({ label, items, color, icon }) => items.length === 0 ? null : (
+                    { label: "Outside", items: allOutside, color: T.outside },
+                    { label: "Inside", items: allInside, color: T.inside },
+                    { label: "Incoming", items: allUncategorized, color: T.uncat },
+                  ].map(({ label, items, color }) => items.length === 0 ? null : (
                     <div key={label} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 6, borderBottom: `2.5px solid ${color}` }}>
-                        <span style={{ color: ON_ACCENT, background: color, display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: T.radiusSm, flexShrink: 0 }}>{icon}</span>
                         <div style={{ fontFamily: FONT, fontSize: FS.body, fontWeight: 800, color: T.ink, flex: 1 }}>{label}</div>
                         <div style={{ fontFamily: FONT, fontSize: FS.caption, fontWeight: 800, color: ON_ACCENT, background: color, borderRadius: 999, padding: "2px 9px", minWidth: 18, textAlign: "center" }}>{items.length}</div>
                       </div>
@@ -1768,11 +1754,10 @@ export default function App() {
                       <button onClick={() => setProjectsPanelOpen(false)} title="Collapse" aria-label="Collapse projects panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
                     </div>
                     <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 0" }}>
-                      {[{ label: "Outside", items: allOutside, color: T.outside, icon: <OutsideIcon width={18} height={18} /> }, { label: "Inside", items: allInside, color: T.inside, icon: <InsideIcon width={18} height={18} /> }].map(({ label, items, color, icon }) => (
+                      {[{ label: "Outside", items: allOutside, color: T.outside }, { label: "Inside", items: allInside, color: T.inside }].map(({ label, items, color }) => (
                         items.length === 0 ? null : (
                           <div key={label} style={{ marginBottom: 8 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 8px", color: T.inkMuted }}>
-                              {icon}
                               <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>{label}</div>
                             </div>
                             {items.map(p => {
@@ -1856,9 +1841,9 @@ export default function App() {
                         )}
                         <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
                           <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
-                            {renderColumn(<OutsideIcon width={26} height={26} style={{ color: ON_ACCENT, flexShrink: 0 }} />, "Outside", allOutside, "factory", T.outside)}
-                            {renderColumn(<InsideIcon width={26} height={26} style={{ color: ON_ACCENT, flexShrink: 0 }} />, "Inside", allInside, "creative", T.inside)}
-                            {renderColumn(<UncatIcon width={26} height={26} style={{ color: ON_ACCENT, flexShrink: 0 }} />, "Incoming", allUncategorized, null, T.uncat)}
+                            {renderColumn("Outside", allOutside, "factory", T.outside)}
+                            {renderColumn("Inside", allInside, "creative", T.inside)}
+                            {renderColumn("Incoming", allUncategorized, null, T.uncat)}
                           </div>
                         </div>
                       </>
