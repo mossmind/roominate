@@ -6,6 +6,7 @@ import InsideIcon from './assets/icons/Pot.svg?react';
 import OutsideIcon from './assets/icons/Outside.svg?react';
 import UncatIcon from './assets/icons/uncat.svg?react';
 import MossIcon from './assets/icons/moss.svg?react';
+import MossmindLogo from './assets/Logos/Mossmind.svg?react';
 import Sqig1Icon from './assets/icons/Sqig1.svg?react';
 import CacIcon from './assets/icons/Cac.svg?react';
 import CanIcon from './assets/icons/Can.svg?react';
@@ -1654,7 +1655,7 @@ export default function App() {
         {/* Traffic light spacer on Mac — skip on mobile */}
         {!isMobile && <div style={{ width: 60, flexShrink: 0 }} />}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, minWidth: 0 }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 17 : 24, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>MossMind</div>
+          <MossmindLogo aria-label="MossMind" style={{ height: isMobile ? 17 : 24, width: "auto", color: T.ink, display: "block" }} />
         </div>
         {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} className="btn-primary" style={{ background: T.inside, borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />

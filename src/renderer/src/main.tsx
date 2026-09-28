@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { Capacitor } from '@capacitor/core'
 import App from './App'
 import MobileApp from './MobileApp'
+import MossmindLogo from './assets/Logos/Mossmind.svg?react'
 
 const isNative = Capacitor.isNativePlatform()
 const isElectron = typeof window !== 'undefined' && !!(window as any).storage
@@ -59,7 +60,7 @@ function PasswordGate({ children }: { children: React.ReactNode }) {
         .login-input:focus { border-color: ${ink}; }
       `}</style>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, width: 360, maxWidth: '90vw', background: surface, border: `2.5px solid ${ink}`, boxShadow: `6px 6px 0 ${ink}`, borderRadius: 10, padding: '40px 36px', boxSizing: 'border-box' }}>
-        <div style={{ fontFamily: font, fontSize: 28, fontWeight: 800, color: ink }}>MossMind</div>
+        <MossmindLogo aria-label="MossMind" style={{ height: 30, width: 'auto', color: ink, display: 'block' }} />
         <div style={{ width: 40, height: 3, background: inside, borderRadius: 2 }} />
         <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
           <input
