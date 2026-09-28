@@ -176,9 +176,9 @@ interface PrayerEntry {
   text: string
   createdAt: number
   updatedAt: number
-  // A stable, once-assigned position in the star field (0-100, percent of the
+  // A stable, once-assigned position in the field (0-100, percent of the
   // field's box) — generated at creation time, never recomputed, so a given
-  // prayer's star always lands in the same spot.
+  // prayer's bloom always lands in the same spot.
   x: number
   y: number
   size: number         // 0.7-1.3, subtle depth variety between stars
@@ -851,36 +851,34 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 }
 
 // ── Prayer Journal ───────────────────────────────────────────────────────────
-// Flow: a 30s pause, then straight onto a star field of saved entries (no page
-// in between) — writing a new one is always just a "+ New prayer" tap away,
+// Flow: a 30s pause, then straight onto a field of saved entries (no page in
+// between) — writing a new one is always just a "+ New prayer" tap away,
 // never required. An equally capable list view sits alongside the field for
-// search/retrieval. One calm, dark starry backdrop runs through the whole
-// space, pause included, so it reads as one place rather than several.
+// search/retrieval. Styled like the rest of MossMind (light canvas, bordered
+// cards, hard shadows) rather than as a separate dark space — past entries
+// render as soft, slowly pulsing gradient blooms instead of literal stars,
+// visible in the same stable spots through the pause and every screen after.
 const FALLBACK_PRAYER = { prompt: "Commit your work to the LORD, and your plans will be established.", scripture: "Commit your work to the LORD, and your plans will be established.", ref: "Proverbs 16:3" };
 
-const PRAYER = {
-  bg: "linear-gradient(165deg, #171B20 0%, #101317 55%, #14171C 100%)",
-  surface: "rgba(241,234,227,0.05)",
-  surfaceHover: "rgba(241,234,227,0.09)",
-  border: "rgba(241,234,227,0.16)",
-  ink: "#F1EAE3",
-  inkMuted: "rgba(241,234,227,0.55)",
-  star: "#F5EFE8",
-};
+// The four accent hexes double as bloom colors, cycled by a stable hash of
+// each entry's id so a given prayer always renders the same color.
+const BLOOM_COLORS = [T.inside, T.outside, T.urgent, T.uncat];
+function hashString(s: string): number { return s.split("").reduce((a, c) => a + c.charCodeAt(0), 0); }
+function bloomColorFor(id: string): string { return BLOOM_COLORS[hashString(id) % BLOOM_COLORS.length]; }
 
 function newPrayerId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-// A new star gets a random spot, nudged away from existing ones so the field
+// A new bloom gets a random spot, nudged away from existing ones so the field
 // stays legible instead of clumping — generated once at creation and stored,
-// so a given prayer's star is always exactly where it was last time.
-function pickStarPosition(existing: PrayerEntry[]): { x: number; y: number; size: number } {
-  const minDist = 10;
-  let x = 6 + Math.random() * 88, y = 14 + Math.random() * 70;
+// so a given prayer's bloom is always exactly where it was last time.
+function pickBloomPosition(existing: PrayerEntry[]): { x: number; y: number; size: number } {
+  const minDist = 14;
+  let x = 8 + Math.random() * 84, y = 14 + Math.random() * 70;
   for (let attempt = 0; attempt < 24; attempt++) {
     if (!existing.some(p => Math.hypot(p.x - x, p.y - y) < minDist)) break;
-    x = 6 + Math.random() * 88; y = 14 + Math.random() * 70;
+    x = 8 + Math.random() * 84; y = 14 + Math.random() * 70;
   }
   return { x, y, size: 0.7 + Math.random() * 0.6 };
 }
@@ -899,36 +897,60 @@ type PrayerScreen =
   | { kind: "browse"; view: "field" | "list" }
   | { kind: "entry"; id: string };
 
-// Small decorative background points of light — purely atmospheric (not
-// clickable, not data), generated once so the field doesn't feel like an
-// empty void before any prayers have been saved yet.
-function useAmbientStars(count: number) {
+// Large, very faint drifting washes of color — purely atmospheric (not
+// clickable, not data) — so the field has some quiet life to it even before
+// any prayers have been saved. Kept separate from the entry blooms' own pulse
+// so dimming them doesn't touch the blooms' opacity.
+function useAmbientWisps(count: number) {
+  const colors = [T.inside, T.outside, T.uncat];
   return useMemo(() => Array.from({ length: count }, (_, i) => ({
     id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: 1 + Math.random() * 1.6,
-    opacity: 0.12 + Math.random() * 0.22,
-    delay: -(Math.random() * 6),
+    x: 10 + Math.random() * 80,
+    y: 10 + Math.random() * 80,
+    size: 220 + Math.random() * 220,
+    color: colors[i % colors.length],
+    opacity: 0.05 + Math.random() * 0.05,
+    dur: 26 + Math.random() * 16,
+    delay: -(Math.random() * 20),
   })), [count]);
 }
 
-function PrayerStarButton({ entry, justSaved, onOpen }: { entry: PrayerEntry; justSaved: boolean; onOpen: () => void }) {
-  const label = `Prayer from ${formatPrayerDateShort(entry.createdAt)}${entry.title ? `, titled ${entry.title}` : ""}`;
-  const d = 8 + entry.size * 6;
+function PrayerWisp({ wisp }: { wisp: { x: number; y: number; size: number; color: string; opacity: number; dur: number; delay: number } }) {
   return (
-    <button onClick={onOpen} title={label} aria-label={label} className="prayer-focus prayer-entry-star"
-      style={{
-        left: `${entry.x}%`, top: `${entry.y}%`, width: d + 14, height: d + 14,
-        background: "none", border: "none", padding: 0, cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        animation: justSaved ? "starArrive 0.9s cubic-bezier(.34,1.1,.4,1)" : undefined,
-      }}>
-      <span aria-hidden="true" className="prayer-star-twinkle" style={{
-        display: "block", width: d, height: d, borderRadius: "50%",
-        background: PRAYER.star, boxShadow: `0 0 ${6 + entry.size * 6}px rgba(245,239,232,0.55)`,
-        animationDelay: `${-(entry.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 5000) / 1000}s`,
-      }} />
+    <span aria-hidden="true" style={{
+      position: "absolute", left: `${wisp.x}%`, top: `${wisp.y}%`, width: wisp.size, height: wisp.size,
+      transform: "translate(-50%, -50%)", pointerEvents: "none", opacity: wisp.opacity,
+      borderRadius: "42% 58% 63% 37% / 53% 47% 53% 47%",
+      background: `radial-gradient(circle, ${tint(wisp.color, 65)} 0%, ${tint(wisp.color, 0)} 72%)`,
+      filter: "blur(30px)",
+      animation: `wispDrift ${wisp.dur}s ease-in-out infinite`, animationDelay: `${wisp.delay}s`,
+    }} />
+  );
+}
+
+// One saved prayer, rendered as a soft pulsing gradient bloom at its stable
+// position. `interactive=false` (used during the pause) renders the same
+// visual as an inert span — so past prayers are always present and visible,
+// even while tasks are still locked — without letting anything be opened yet.
+function PrayerBloom({ entry, justSaved, interactive, onOpen }: { entry: PrayerEntry; justSaved: boolean; interactive: boolean; onOpen?: () => void }) {
+  const label = `Prayer from ${formatPrayerDateShort(entry.createdAt)}${entry.title ? `, titled ${entry.title}` : ""}`;
+  const color = bloomColorFor(entry.id);
+  const d = 64 + entry.size * 70;
+  const glow = (
+    <span aria-hidden="true" className="prayer-bloom-glow" style={{
+      display: "block", width: "100%", height: "100%",
+      background: `radial-gradient(circle, ${tint(color, 60)} 0%, ${tint(color, 35)} 45%, ${tint(color, 0)} 74%)`,
+      filter: "blur(7px)",
+      animationDelay: `${-(hashString(entry.id) % 6000) / 1000}s`,
+    }} />
+  );
+  const className = `prayer-bloom${justSaved ? " prayer-bloom--new" : ""}`;
+  const style: React.CSSProperties = { left: `${entry.x}%`, top: `${entry.y}%`, width: d, height: d };
+  if (!interactive) return <div aria-hidden="true" className={className} style={style}>{glow}</div>;
+  return (
+    <button onClick={onOpen} title={label} aria-label={label} className={`prayer-focus ${className}`}
+      style={{ ...style, background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+      {glow}
     </button>
   );
 }
@@ -956,7 +978,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const ambientStars = useAmbientStars(46);
+  const ambientWisps = useAmbientWisps(3);
 
   useEffect(() => {
     const audio = new Audio(prayerMusic);
@@ -974,9 +996,10 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
   }, [seconds, isDone]);
 
   // The pause is a fixed 30 seconds either way — once it's over, land right on
-  // the star field itself (not an intermediate "would you like to..." page) —
-  // writing is still entirely optional, via the same "+ New prayer" button
-  // that's always there, and leaving is still one tap away via "Done".
+  // the field of saved prayers itself (not an intermediate "would you like
+  // to..." page) — writing is still entirely optional, via the same
+  // "+ New prayer" button that's always there, and leaving is still one tap
+  // away via "Done".
   useEffect(() => {
     if (isDone) setScreen(s => s.kind === "pause" ? { kind: "browse", view: "field" } : s);
   }, [isDone]);
@@ -1026,7 +1049,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
         savedId = editingId;
         next = entries.map(e => e.id === editingId ? { ...e, title: draftTitle.trim(), text, updatedAt: Date.now() } : e);
       } else {
-        const pos = pickStarPosition(entries);
+        const pos = pickBloomPosition(entries);
         const entry: PrayerEntry = { id: newPrayerId(), title: draftTitle.trim(), text, createdAt: Date.now(), updatedAt: Date.now(), ...pos };
         savedId = entry.id;
         next = [entry, ...entries];
@@ -1062,52 +1085,51 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - seconds / 30);
 
-  // ── Pause — the same 30s ring and countdown as before, now on the same
-  // calm starry backdrop as the rest of the journal (previously its own
-  // warmer, colorful blobs + figure artwork) so the whole space — pause
-  // included — reads as one consistent place rather than two.
+  // ── Pause — the same 30s ring and countdown as before, now styled like the
+  // rest of MossMind (light canvas, bordered card, hard shadow) instead of a
+  // separate dark space. Past prayers render here too, as inert blooms in
+  // their normal spots — visible the whole time, not just once the countdown
+  // ends, even though nothing can be opened until it does.
   if (screen.kind === "pause") {
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: PRAYER.bg }}>
-        <div className="prayer-grain-static" />
-        {ambientStars.map(s => (
-          <span key={s.id} aria-hidden="true" style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, borderRadius: "50%", background: PRAYER.star, opacity: s.opacity, pointerEvents: "none", animation: `starTwinkle ${5 + (s.id % 5)}s ease-in-out infinite`, animationDelay: `${s.delay}s` }} />
-        ))}
+      <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: T.canvas }}>
+        {ambientWisps.map(w => <PrayerWisp key={w.id} wisp={w} />)}
+        {entries.map(entry => <PrayerBloom key={entry.id} entry={entry} justSaved={false} interactive={false} />)}
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 480, width: "100%", animation: "fadeInUp 0.6s ease" }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 56 : 72, fontWeight: 600, color: PRAYER.ink, marginBottom: 20, lineHeight: 1 }}>Prayer</div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 480, width: "100%", background: T.surface, border: tb(2), boxShadow: T.shadowLg, borderRadius: T.radius, padding: isMobile ? "32px 24px" : "44px 48px", animation: "fadeInUp 0.6s ease" }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 44 : 56, fontWeight: 600, color: T.ink, marginBottom: 20, lineHeight: 1 }}>Prayer</div>
             <div style={{ animation: "fadeInUp 0.5s ease", marginBottom: 8 }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 400, color: PRAYER.ink, lineHeight: 1.8, marginBottom: 14 }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 400, color: T.ink, lineHeight: 1.8, marginBottom: 14 }}>
                 "{FALLBACK_PRAYER.prompt}"
               </div>
-              <div style={{ width: 36, height: 2, background: PRAYER.border, margin: "0 auto 14px" }} />
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 400, color: PRAYER.inkMuted, lineHeight: 1.7, marginBottom: 6 }}>
+              <div style={{ width: 36, height: 2, background: T.inside, margin: "0 auto 14px" }} />
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 400, color: T.inkMuted, lineHeight: 1.7, marginBottom: 6 }}>
                 "{FALLBACK_PRAYER.scripture}"
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 500, color: PRAYER.inkMuted, letterSpacing: 0.5, marginBottom: 36 }}>
+              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 500, color: T.inkMuted, letterSpacing: 0.5, marginBottom: 36 }}>
                 {FALLBACK_PRAYER.ref}
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <div style={{ position: "relative", width: 76, height: 76 }}>
                 <svg width={76} height={76} style={{ transform: "rotate(-90deg)" }}>
-                  <circle cx={38} cy={38} r={radius} fill="none" stroke={PRAYER.border} strokeWidth={5} />
-                  <circle cx={38} cy={38} r={radius} fill="none" stroke={PRAYER.ink} strokeWidth={5} strokeLinecap="round"
+                  <circle cx={38} cy={38} r={radius} fill="none" stroke={T.borderMuted} strokeWidth={5} />
+                  <circle cx={38} cy={38} r={radius} fill="none" stroke={T.ink} strokeWidth={5} strokeLinecap="round"
                     strokeDasharray={circumference} strokeDashoffset={dashOffset} style={{ transition: "stroke-dashoffset 1s linear" }} />
                 </svg>
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 22, fontWeight: 900, color: PRAYER.ink }}>{seconds}</div>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 22, fontWeight: 900, color: T.ink }}>{seconds}</div>
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: PRAYER.inkMuted, letterSpacing: 0.5 }}>seconds of stillness</div>
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5 }}>seconds of stillness</div>
             </div>
           </div>
         </div>
-        <button onClick={onUnlock} title="Leave prayer" className="prayer-focus"
-          style={{ position: "absolute", top: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: PRAYER.ink, cursor: "pointer" }}>
+        <button onClick={onUnlock} title="Leave prayer" className="prayer-focus btn-secondary"
+          style={{ position: "absolute", top: 24, right: 24, zIndex: 2, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
           ✕ Leave
         </button>
         <button onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m); }}
-          title={muted ? "Unmute prayer music" : "Mute prayer music"} className="prayer-focus"
-          style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: PRAYER.ink, cursor: "pointer" }}>
+          title={muted ? "Unmute prayer music" : "Mute prayer music"} className="prayer-focus btn-secondary"
+          style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
           {muted ? "♪ Unmute" : "♪ Mute"}
         </button>
         <PrayerStyles />
@@ -1115,7 +1137,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
     );
   }
 
-  // ── Everything after the pause shares this calm, starry backdrop and the
+  // ── Everything after the pause shares this same light backdrop and the
   // same persistent exit/mute chrome, in the same corners as the pause screen.
   const editingExisting = screen.kind === "compose" ? entries.find(e => e.id === screen.editingId) : undefined;
   const viewingEntry = screen.kind === "entry" ? entries.find(e => e.id === screen.id) : undefined;
@@ -1128,19 +1150,16 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
     });
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: PRAYER.bg, display: "flex", flexDirection: "column" }}>
-      <div className="prayer-grain-static" />
-      {screen.kind === "browse" && ambientStars.map(s => (
-        <span key={s.id} aria-hidden="true" style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, borderRadius: "50%", background: PRAYER.star, opacity: s.opacity, pointerEvents: "none", animation: `starTwinkle ${5 + (s.id % 5)}s ease-in-out infinite`, animationDelay: `${s.delay}s` }} />
-      ))}
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: T.canvas, display: "flex", flexDirection: "column" }}>
+      {screen.kind === "browse" && ambientWisps.map(w => <PrayerWisp key={w.id} wisp={w} />)}
 
-      <button onClick={onUnlock} title="Return to tasks" aria-label="Return to tasks" className="prayer-focus"
-        style={{ position: "absolute", top: 24, right: 24, zIndex: 3, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: PRAYER.ink, cursor: "pointer" }}>
+      <button onClick={onUnlock} title="Return to tasks" aria-label="Return to tasks" className="prayer-focus btn-secondary"
+        style={{ position: "absolute", top: 24, right: 24, zIndex: 3, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
         ✕ {isMobile ? "" : "Done"}
       </button>
       <button onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m); }}
-        title={muted ? "Unmute prayer music" : "Mute prayer music"} className="prayer-focus"
-        style={{ position: "absolute", bottom: 24, right: 24, zIndex: 3, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: PRAYER.ink, cursor: "pointer" }}>
+        title={muted ? "Unmute prayer music" : "Mute prayer music"} className="prayer-focus btn-secondary"
+        style={{ position: "absolute", bottom: 24, right: 24, zIndex: 3, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
         {muted ? "♪ Unmute" : "♪ Mute"}
       </button>
 
@@ -1148,7 +1167,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
         <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: isMobile ? "70px 20px 32px" : "40px 56px" }}>
           <div style={{ width: "100%", maxWidth: 560, margin: "0 auto", flex: 1, display: "flex", flexDirection: "column" }}>
             <button onClick={() => setScreen(screen.editingId ? { kind: "entry", id: screen.editingId } : { kind: "browse", view: "field" })}
-              className="prayer-focus" style={{ alignSelf: "flex-start", background: "none", border: "none", color: PRAYER.inkMuted, fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
+              className="prayer-focus" style={{ alignSelf: "flex-start", background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
               ← Back
             </button>
             <div style={{ display: "inline-block", alignSelf: "flex-start", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 18, padding: "3px 10px", borderRadius: 999 }}>
@@ -1156,21 +1175,21 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
             </div>
             <input value={draftTitle} onChange={e => setDraftTitle(e.target.value)} placeholder="Title (optional)" aria-label="Title (optional)"
               className="prayer-focus"
-              style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: PRAYER.ink, background: "transparent", border: "none", borderBottom: `1px solid ${PRAYER.border}`, outline: "none", padding: "4px 0 10px", marginBottom: 18, width: "100%" }} />
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, background: "transparent", border: "none", borderBottom: tb(1.5, T.borderMuted), outline: "none", padding: "4px 0 10px", marginBottom: 18, width: "100%" }} />
             <textarea autoFocus value={draftText} onChange={e => setDraftText(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSave(); }}
               placeholder="Start with one sentence, or write as much as you'd like…" aria-label="Prayer text"
               className="prayer-focus"
-              style={{ width: "100%", flex: 1, minHeight: 220, fontFamily: FONT, fontSize: 15, color: PRAYER.ink, background: PRAYER.surface, border: `1px solid ${PRAYER.border}`, borderRadius: T.radius, padding: "16px 18px", outline: "none", resize: "vertical", boxSizing: "border-box", lineHeight: 1.8 }} />
+              style={{ width: "100%", flex: 1, minHeight: 220, fontFamily: FONT, fontSize: 15, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radius, padding: "16px 18px", outline: "none", resize: "vertical", boxSizing: "border-box", lineHeight: 1.8 }} />
             {saveError && <div style={{ marginTop: 12, fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "8px 12px", display: "inline-block" }}>⚠ {saveError}</div>}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18, marginBottom: 8 }}>
               <button onClick={handleSave} disabled={!draftText.trim() || saving || entriesLoading} className="prayer-focus"
                 title={entriesLoading ? "Still loading your other prayers — one moment…" : undefined}
-                style={{ background: draftText.trim() ? T.inside : PRAYER.surface, color: draftText.trim() ? ON_ACCENT : PRAYER.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 28px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: draftText.trim() && !saving && !entriesLoading ? "pointer" : "default", opacity: saving || entriesLoading ? 0.6 : 1 }}>
+                style={{ background: draftText.trim() ? T.inside : T.surfaceMuted, color: draftText.trim() ? ON_ACCENT : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 28px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: draftText.trim() && !saving && !entriesLoading ? "pointer" : "default", opacity: saving || entriesLoading ? 0.6 : 1 }}>
                 {saving ? "Saving…" : entriesLoading ? "Loading…" : "Save"}
               </button>
               <button onClick={() => setScreen(editingExisting ? { kind: "entry", id: editingExisting.id } : { kind: "browse", view: "field" })} className="prayer-focus"
-                style={{ background: "none", border: "none", color: PRAYER.inkMuted, fontFamily: FONT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                style={{ background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Not now
               </button>
             </div>
@@ -1185,21 +1204,21 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
               entries yet, since the empty state below already carries the
               same "no pressure" framing on its own. */}
           {!entriesLoading && !entriesError && entries.length > 0 && (
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 22, fontWeight: 600, color: PRAYER.ink, marginBottom: 14 }}>Anything on your heart?</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 22, fontWeight: 600, color: T.ink, marginBottom: 14 }}>Anything on your heart?</div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
             <div style={{ display: "flex", gap: 6 }}>
               {(["field", "list"] as const).map(v => (
                 <button key={v} onClick={() => setScreen({ kind: "browse", view: v })} aria-pressed={screen.view === v} className="prayer-focus"
-                  style={{ background: screen.view === v ? PRAYER.ink : "transparent", color: screen.view === v ? "#171B20" : PRAYER.inkMuted, border: `1px solid ${screen.view === v ? PRAYER.ink : PRAYER.border}`, borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
-                  {v === "field" ? "Star Field" : "List"}
+                  style={{ background: screen.view === v ? T.ink : T.surfaceMuted, color: screen.view === v ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+                  {v === "field" ? "Field" : "List"}
                 </button>
               ))}
             </div>
             {screen.view === "list" && (
               <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search your prayers…" aria-label="Search prayers"
                 className="prayer-focus"
-                style={{ flex: 1, minWidth: 160, maxWidth: 320, fontFamily: FONT, fontSize: 13, color: PRAYER.ink, background: PRAYER.surface, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 12px", outline: "none" }} />
+                style={{ flex: 1, minWidth: 160, maxWidth: 320, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 12px", outline: "none" }} />
             )}
             <div style={{ flex: 1 }} />
             <button onClick={() => openCompose(null)} className="prayer-focus"
@@ -1209,18 +1228,18 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
           </div>
 
           {entriesLoading ? (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 13, color: PRAYER.inkMuted }}>Loading your prayers…</div>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>Loading your prayers…</div>
           ) : entriesError ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, textAlign: "center" }}>
               <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "8px 14px" }}>⚠ {entriesError}</div>
               <button onClick={() => setLoadNonce(n => n + 1)} className="prayer-focus"
-                style={{ background: "transparent", color: PRAYER.ink, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                 Try again
               </button>
             </div>
           ) : entries.length === 0 ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: PRAYER.ink, maxWidth: 320, lineHeight: 1.5 }}>Nothing written yet — that's alright. Whenever you're ready.</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, maxWidth: 320, lineHeight: 1.5 }}>Nothing written yet — that's alright. Whenever you're ready.</div>
               <button onClick={() => openCompose(null)} className="prayer-focus"
                 style={{ background: T.inside, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "12px 24px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
                 Write a prayer
@@ -1229,24 +1248,25 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
           ) : screen.view === "field" ? (
             <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
               {[...entries].sort((a, b) => a.createdAt - b.createdAt).map(entry => (
-                <PrayerStarButton key={entry.id} entry={entry} justSaved={entry.id === justSavedId} onOpen={() => { setJustSavedId(null); setScreen({ kind: "entry", id: entry.id }); }} />
+                <PrayerBloom key={entry.id} entry={entry} justSaved={entry.id === justSavedId} interactive
+                  onOpen={() => { setJustSavedId(null); setScreen({ kind: "entry", id: entry.id }); }} />
               ))}
             </div>
           ) : filteredEntries.length === 0 ? (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-              <div style={{ fontFamily: FONT, fontSize: 13, color: PRAYER.inkMuted, fontStyle: "italic" }}>No prayers match "{searchQuery}"</div>
+              <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic" }}>No prayers match "{searchQuery}"</div>
             </div>
           ) : (
             <div style={{ flex: 1, overflowY: "auto" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 560, margin: "0 auto" }}>
                 {filteredEntries.map(entry => (
                   <button key={entry.id} onClick={() => setScreen({ kind: "entry", id: entry.id })} className="prayer-focus"
-                    style={{ display: "flex", flexDirection: "column", gap: 4, textAlign: "left", background: PRAYER.surface, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "14px 16px", cursor: "pointer" }}>
+                    style={{ display: "flex", flexDirection: "column", gap: 4, textAlign: "left", background: T.surface, border: tb(1.5, T.borderMuted), boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "14px 16px", cursor: "pointer" }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: PRAYER.inkMuted, letterSpacing: 0.5, flexShrink: 0 }}>{formatPrayerDateShort(entry.createdAt)}</div>
-                      {entry.title && <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 800, color: PRAYER.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.title}</div>}
+                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5, flexShrink: 0 }}>{formatPrayerDateShort(entry.createdAt)}</div>
+                      {entry.title && <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 800, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.title}</div>}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 13, color: PRAYER.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.text}</div>
+                    <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.text}</div>
                   </button>
                 ))}
               </div>
@@ -1257,9 +1277,9 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
 
       {screen.kind === "entry" && !viewingEntry && !entriesLoading && (
         <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
-          <div style={{ fontFamily: FONT, fontSize: 13, color: PRAYER.inkMuted }}>That prayer isn't here anymore.</div>
+          <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>That prayer isn't here anymore.</div>
           <button onClick={() => setScreen({ kind: "browse", view: "field" })} className="prayer-focus"
-            style={{ background: "transparent", color: PRAYER.ink, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
             ← Back to your prayers
           </button>
         </div>
@@ -1268,16 +1288,16 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
         <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: isMobile ? "70px 20px 32px" : "40px 56px" }}>
           <div style={{ width: "100%", maxWidth: 560, margin: "0 auto" }}>
             <button onClick={() => setScreen({ kind: "browse", view: "field" })} className="prayer-focus"
-              style={{ background: "none", border: "none", color: PRAYER.inkMuted, fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
+              style={{ background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
               ← Back
             </button>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: PRAYER.inkMuted, letterSpacing: 0.5, marginBottom: 10 }}>{formatPrayerDate(viewingEntry.createdAt)}</div>
-            {viewingEntry.title && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: PRAYER.ink, marginBottom: 14, lineHeight: 1.3 }}>{viewingEntry.title}</div>}
-            <div style={{ fontFamily: FONT, fontSize: 16, color: PRAYER.ink, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 28 }}>{viewingEntry.text}</div>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5, marginBottom: 10 }}>{formatPrayerDate(viewingEntry.createdAt)}</div>
+            {viewingEntry.title && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: T.ink, marginBottom: 14, lineHeight: 1.3 }}>{viewingEntry.title}</div>}
+            <div style={{ fontFamily: FONT, fontSize: 16, color: T.ink, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 28 }}>{viewingEntry.text}</div>
 
             {confirmDeleteId === viewingEntry.id ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, background: PRAYER.surface, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "14px 16px" }}>
-                <div style={{ fontFamily: FONT, fontSize: 13, color: PRAYER.ink }}>Delete this prayer? This can't be undone.</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "14px 16px" }}>
+                <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink }}>Delete this prayer? This can't be undone.</div>
                 {deleteError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {deleteError}</div>}
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => handleDelete(viewingEntry.id)} disabled={deleting} className="prayer-focus"
@@ -1285,7 +1305,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
                     {deleting ? "Deleting…" : "Yes, delete"}
                   </button>
                   <button onClick={() => setConfirmDeleteId(null)} className="prayer-focus"
-                    style={{ background: "none", border: `1px solid ${PRAYER.border}`, color: PRAYER.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    style={{ background: "none", border: tb(1.5, T.borderMuted), color: T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                     Cancel
                   </button>
                 </div>
@@ -1293,11 +1313,11 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
             ) : (
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => openCompose(viewingEntry.id)} className="prayer-focus"
-                  style={{ background: "transparent", color: PRAYER.ink, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                   Edit
                 </button>
                 <button onClick={() => { setDeleteError(null); setConfirmDeleteId(viewingEntry.id); }} className="prayer-focus"
-                  style={{ background: "transparent", color: PRAYER.inkMuted, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  style={{ background: "transparent", color: T.inkMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                   Delete
                 </button>
               </div>
@@ -1317,17 +1337,23 @@ function PrayerStyles() {
   return (
     <style>{`
       @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-      @keyframes starTwinkle { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
-      @keyframes starArrive { from { opacity: 0; transform: translate(-50%, -50%) scale(0.2); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-      .prayer-entry-star { position: absolute; transform: translate(-50%, -50%); }
-      .prayer-star-twinkle { animation: starTwinkle 4.5s ease-in-out infinite; transition: transform 0.15s ease; }
-      .prayer-entry-star:hover .prayer-star-twinkle, .prayer-entry-star:focus-visible .prayer-star-twinkle { transform: scale(1.35); animation-play-state: paused; opacity: 1; }
-      .prayer-focus:focus-visible { outline: 2px solid ${PRAYER.ink}; outline-offset: 3px; border-radius: 6px; }
-      .prayer-grain-static {
-        position: absolute; inset: 0; pointer-events: none;
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
-        background-size: 180px 180px; mix-blend-mode: overlay; opacity: 0.1;
+      @keyframes wispDrift {
+        0%   { transform: translate(-50%, -50%) translate(0%, 0%) scale(1); }
+        33%  { transform: translate(-50%, -50%) translate(6%, -8%) scale(1.15); }
+        66%  { transform: translate(-50%, -50%) translate(-8%, 6%) scale(0.9); }
+        100% { transform: translate(-50%, -50%) translate(0%, 0%) scale(1); }
       }
+      @keyframes bloomPulse { 0%, 100% { transform: scale(0.92); opacity: 0.55; } 50% { transform: scale(1.08); opacity: 0.9; } }
+      @keyframes bloomAppear { from { opacity: 0; transform: translate(-50%, -50%) scale(0.35); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+      .prayer-bloom { position: absolute; transform: translate(-50%, -50%); animation: bloomAppear 0.6s ease-out both; }
+      .prayer-bloom--new { animation: bloomAppear 0.9s cubic-bezier(.34,1.4,.4,1) both; }
+      .prayer-bloom-glow {
+        border-radius: 46% 54% 58% 42% / 55% 45% 55% 45%;
+        animation: bloomPulse 6s ease-in-out infinite;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+      .prayer-bloom:hover .prayer-bloom-glow, .prayer-bloom:focus-visible .prayer-bloom-glow { transform: scale(1.15); animation-play-state: paused; opacity: 1; }
+      .prayer-focus:focus-visible { outline: 2px solid ${T.focus}; outline-offset: 3px; border-radius: 6px; }
     `}</style>
   );
 }
