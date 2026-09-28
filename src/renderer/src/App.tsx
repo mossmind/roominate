@@ -879,7 +879,6 @@ function formatPrayerDateShort(ts: number): string {
 
 type PrayerScreen =
   | { kind: "pause" }
-  | { kind: "choice" }
   | { kind: "compose"; editingId: string | null }
   | { kind: "browse"; view: "field" | "list" }
   | { kind: "entry"; id: string };
@@ -958,11 +957,12 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
     return () => clearTimeout(t);
   }, [seconds, isDone]);
 
-  // The pause is a fixed 30 seconds either way — once it's over, move straight
-  // into the (equally optional) next step rather than making that a second
-  // deliberate click on top of the countdown finishing.
+  // The pause is a fixed 30 seconds either way — once it's over, land right on
+  // the star field itself (not an intermediate "would you like to..." page) —
+  // writing is still entirely optional, via the same "+ New prayer" button
+  // that's always there, and leaving is still one tap away via "Done".
   useEffect(() => {
-    if (isDone) setScreen(s => s.kind === "pause" ? { kind: "choice" } : s);
+    if (isDone) setScreen(s => s.kind === "pause" ? { kind: "browse", view: "field" } : s);
   }, [isDone]);
 
   // Loaded in the background as soon as the space opens (during the pause),
@@ -1115,7 +1115,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: PRAYER.bg, display: "flex", flexDirection: "column" }}>
       <div className="prayer-grain-static" />
-      {(screen.kind === "choice" || screen.kind === "browse") && ambientStars.map(s => (
+      {screen.kind === "browse" && ambientStars.map(s => (
         <span key={s.id} aria-hidden="true" style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, borderRadius: "50%", background: PRAYER.star, opacity: s.opacity, pointerEvents: "none", animation: `starTwinkle ${5 + (s.id % 5)}s ease-in-out infinite`, animationDelay: `${s.delay}s` }} />
       ))}
 
@@ -1128,31 +1128,6 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
         style={{ position: "absolute", bottom: 24, right: 24, zIndex: 3, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: PRAYER.ink, cursor: "pointer" }}>
         {muted ? "♪ Unmute" : "♪ Mute"}
       </button>
-
-      {screen.kind === "choice" && (
-        <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", animation: "fadeInUp 0.5s ease" }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 30 : 42, fontWeight: 600, color: PRAYER.ink, marginBottom: 12, lineHeight: 1.2, maxWidth: 480 }}>Anything on your heart?</div>
-          <div style={{ fontFamily: FONT, fontSize: 14, color: PRAYER.inkMuted, marginBottom: 36, maxWidth: 380, lineHeight: 1.6 }}>
-            Writing is completely optional — this is just space, if you want it.
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, width: "100%", maxWidth: 280 }}>
-            <button onClick={() => openCompose(null)} className="prayer-focus"
-              style={{ background: T.inside, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%" }}>
-              Write a prayer
-            </button>
-            <button onClick={onUnlock} className="prayer-focus"
-              style={{ background: "transparent", color: PRAYER.inkMuted, border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer", width: "100%" }}>
-              Not today
-            </button>
-            {!entriesLoading && !entriesError && entries.length > 0 && (
-              <button onClick={() => setScreen({ kind: "browse", view: "field" })} className="prayer-focus"
-                style={{ background: "none", border: "none", color: PRAYER.inkMuted, textDecoration: "underline", textUnderlineOffset: 3, fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 0", marginTop: 4 }}>
-                See your prayers ({entries.length})
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {screen.kind === "compose" && (
         <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: isMobile ? "70px 20px 32px" : "40px 56px" }}>
@@ -1190,6 +1165,13 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
 
       {screen.kind === "browse" && (
         <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: isMobile ? "70px 16px 20px" : "28px 40px 32px" }}>
+          {/* Gentle, low-key invitation — not a separate page to pass through,
+              just a line above the field itself. Skipped once there are no
+              entries yet, since the empty state below already carries the
+              same "no pressure" framing on its own. */}
+          {!entriesLoading && !entriesError && entries.length > 0 && (
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 22, fontWeight: 600, color: PRAYER.ink, marginBottom: 14 }}>Anything on your heart?</div>
+          )}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
             <div style={{ display: "flex", gap: 6 }}>
               {(["field", "list"] as const).map(v => (
