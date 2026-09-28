@@ -1578,12 +1578,6 @@ export default function App() {
   // never approval-section tasks, even before they've been given a category,
   // since those already have their own "Needs Your Approval" banner.
   const allUncategorized = openProjects.filter(p => !categories[p.gid] && (!p.sectionGid || p.sectionGid === INCOMING_SECTION_GID)).sort(byDueDate);
-  // Columns always fill the same 824px row as the Needs-Approval banner
-  // (256px*3 + 28px gap*2), whether 2 or 3 of them are actually showing —
-  // otherwise a hidden Incoming column leaves Outside/Inside looking
-  // narrower and misaligned under that banner.
-  const visibleColumnCount = 2 + (allUncategorized.length > 0 ? 1 : 0);
-  const columnWidth = (824 - 28 * (visibleColumnCount - 1)) / visibleColumnCount;
   const quickApprovals   = openProjects.filter(p => p.sectionGid && QUICK_APPROVAL_SECTIONS[p.sectionGid]).sort(byDueDate);
   const hasUrgentApproval = quickApprovals.some(p => { const d = daysLeft(p.due_on); return d !== null && d <= 3; });
 
@@ -1611,11 +1605,11 @@ export default function App() {
     .sort(byDueDate)
     .slice(0, 3);
 
-  function renderColumn(label: string, items: Task[], targetCat: CategoryKey, accentColor: string, emptySlots: number, columnWidth: number) {
+  function renderColumn(label: string, items: Task[], targetCat: CategoryKey, accentColor: string, emptySlots: number) {
     const isOver = dragGid !== null && dragOverCat === targetCat;
     return (
       <div
-        style={{ display: "flex", flexDirection: "column", width: columnWidth, flexShrink: 0, borderRadius: T.radius, outline: isOver ? `2px solid ${accentColor}` : "2px solid transparent", outlineOffset: 4, transition: "outline-color 0.15s" }}
+        style={{ display: "flex", flexDirection: "column", flex: "1 1 0", minWidth: 0, borderRadius: T.radius, outline: isOver ? `2px solid ${accentColor}` : "2px solid transparent", outlineOffset: 4, transition: "outline-color 0.15s" }}
         onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverCat(targetCat); }}
         onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverCat(undefined); }}
         onDrop={e => { e.preventDefault(); const gid = e.dataTransfer.getData("text/plain"); if (gid) updateCategory(gid, targetCat); setDragGid(null); setDragOverCat(undefined); }}
@@ -1886,8 +1880,12 @@ export default function App() {
               </div>
             )}
 
-            {/* Main content */}
-            <div style={{ flex: 1, overflowY: "auto", position: "relative" }}>
+            {/* Main content — minWidth: 0 is required here: a flex item's default
+                min-width is "auto" (its content's natural width), so without this
+                it refused to shrink below the board's natural width and instead
+                overflowed/clipped whenever a sidebar was open on a narrower window
+                (e.g. a portrait monitor) instead of the board scaling down to fit. */}
+            <div style={{ flex: 1, minWidth: 0, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
               {(() => {
                 const openTodo = openTodoId ? todos.find(t => t.id === openTodoId) ?? null : null;
                 if (openTodo) return (
@@ -1961,12 +1959,15 @@ export default function App() {
                             </div>
                           </div>
                         )}
-                        <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-                          <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }}>
-                            {renderColumn("Outside", allOutside, "factory", T.outside, 1, columnWidth)}
-                            {renderColumn("Inside", allInside, "creative", T.inside, 1, columnWidth)}
-                            {allUncategorized.length > 0 && renderColumn("Incoming", allUncategorized, null, T.uncat, 0, columnWidth)}
-                          </div>
+                        {/* Same maxWidth+auto-margin technique as the Needs-Approval banner
+                            above, so they always cap and shrink identically — columns split
+                            that width evenly via flex instead of a precomputed pixel width,
+                            so this also shrinks properly instead of overflowing when the
+                            window is narrow (e.g. a portrait monitor with a sidebar open). */}
+                        <div style={{ display: "flex", gap: 28, alignItems: "flex-start", maxWidth: 824, marginLeft: "auto", marginRight: "auto", minWidth: 0 }}>
+                          {renderColumn("Outside", allOutside, "factory", T.outside, 1)}
+                          {renderColumn("Inside", allInside, "creative", T.inside, 1)}
+                          {allUncategorized.length > 0 && renderColumn("Incoming", allUncategorized, null, T.uncat, 0)}
                         </div>
                       </>
                     )}
