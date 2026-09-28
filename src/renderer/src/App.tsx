@@ -1098,18 +1098,12 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
 
       {tab === "brief" ? (
         <div className="board-canvas" style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ padding: isMobile ? "24px 16px" : "40px 56px", maxWidth: 680, margin: "0 auto" }}>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>DESCRIPTION</div>
-            {task.notes ? (
-              <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.8, whiteSpace: "pre-wrap", marginBottom: 36 }}>{task.notes}</div>
-            ) : (
-              <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic", marginBottom: 36 }}>No description in Asana yet.</div>
-            )}
+          <div style={{ padding: isMobile ? "24px 16px" : "40px 56px", maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
             {isAsanaTask && (details?.assignee || (details?.customFields.length ?? 0) > 0) && (
-              <>
-                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>DETAILS</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 36 }}>
+              <div style={{ background: T.surface, border: tb(2), boxShadow: T.shadowSm, borderRadius: T.radius, padding: "18px 22px" }}>
+                <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 12, padding: "3px 10px", borderRadius: 999 }}>DETAILS</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {details?.assignee && (
                     <div style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
                       <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, minWidth: 120, flexShrink: 0 }}>Assignee</div>
@@ -1127,17 +1121,28 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                     </div>
                   ))}
                 </div>
-              </>
+              </div>
             )}
 
+            {isAsanaTask && detailsError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {detailsError}</div>}
+
+            <div style={{ background: T.surface, border: tb(2), boxShadow: T.shadowSm, borderRadius: T.radius, padding: "18px 22px" }}>
+              <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 12, padding: "3px 10px", borderRadius: 999 }}>DESCRIPTION</div>
+              {task.notes ? (
+                <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{task.notes}</div>
+              ) : (
+                <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic" }}>No description in Asana yet.</div>
+              )}
+            </div>
+
             {isAsanaTask && details && details.subtasks.length > 0 && (
-              <>
-                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>
+              <div style={{ background: T.surface, border: tb(2), boxShadow: T.shadowSm, borderRadius: T.radius, padding: "18px 22px" }}>
+                <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 12, padding: "3px 10px", borderRadius: 999 }}>
                   SUBTASKS ({details.subtasks.filter(s => !s.completed).length}/{details.subtasks.length})
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 36 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {details.subtasks.map(s => (
-                    <div key={s.gid} style={{ display: "flex", alignItems: "center", gap: 10, background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: "9px 12px" }}>
+                    <div key={s.gid} style={{ display: "flex", alignItems: "center", gap: 10, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "9px 12px" }}>
                       <button onClick={() => handleToggleSubtask(s.gid, !s.completed)} disabled={togglingSubtask === s.gid}
                         title={s.completed ? "Mark not done" : "Mark done"} aria-label={s.completed ? "Mark not done" : "Mark done"}
                         style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, border: tb(1.5, s.completed ? T.inside : T.inkMuted), background: s.completed ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}>
@@ -1148,49 +1153,49 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                     </div>
                   ))}
                 </div>
-              </>
+              </div>
             )}
 
-            {isAsanaTask && detailsError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", marginBottom: 20, display: "inline-block" }}>⚠ {detailsError}</div>}
-
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1, marginBottom: 10 }}>
-              COMMENTS{comments && comments.length > 0 ? ` (${comments.length})` : ""}
-            </div>
-            {commentsError ? (
-              <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {commentsError}</div>
-            ) : comments === null ? (
-              <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted }}>Loading comments…</div>
-            ) : comments.length === 0 ? (
-              <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, fontStyle: "italic" }}>No comments yet.</div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {comments.map(c => (
-                  <div key={c.gid} style={{ background: T.surface, border: tb(1.5), boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "12px 14px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                      <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink }}>{c.author || "Someone"}</div>
-                      <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, flexShrink: 0 }}>{new Date(c.created_at).toLocaleDateString()}</div>
+            <div style={{ background: T.surface, border: tb(2), boxShadow: T.shadowSm, borderRadius: T.radius, padding: "18px 22px" }}>
+              <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 12, padding: "3px 10px", borderRadius: 999 }}>
+                COMMENTS{comments && comments.length > 0 ? ` (${comments.length})` : ""}
+              </div>
+              {commentsError ? (
+                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {commentsError}</div>
+              ) : comments === null ? (
+                <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted }}>Loading comments…</div>
+              ) : comments.length === 0 ? (
+                <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, fontStyle: "italic" }}>No comments yet.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: isAsanaTask ? 16 : 0 }}>
+                  {comments.map(c => (
+                    <div key={c.gid} style={{ background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 14px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                        <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink }}>{c.author || "Someone"}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, flexShrink: 0 }}>{new Date(c.created_at).toLocaleDateString()}</div>
+                      </div>
+                      <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{c.text}</div>
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{c.text}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {isAsanaTask && (
-              <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-                <textarea value={replyText} onChange={e => setReplyText(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handlePostComment(); }}
-                  placeholder="Add a comment — it's posted to this task in Asana…"
-                  style={{ width: "100%", minHeight: 64, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surface, border: tb(1.5), borderRadius: T.radiusSm, padding: "10px 12px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.6 }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <button onClick={handlePostComment} disabled={!replyText.trim() || posting} className={replyText.trim() ? "btn-primary" : "btn-secondary"}
-                    style={{ background: replyText.trim() ? T.inside : T.surfaceMuted, color: replyText.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: replyText.trim() && !posting ? "pointer" : "default", opacity: posting ? 0.6 : 1 }}>
-                    {posting ? "Posting…" : "Post Comment"}
-                  </button>
-                  {postError && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {postError}</div>}
+                  ))}
                 </div>
-              </div>
-            )}
+              )}
+
+              {isAsanaTask && (
+                <div style={{ marginTop: comments && comments.length > 0 ? 0 : 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <textarea value={replyText} onChange={e => setReplyText(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handlePostComment(); }}
+                    placeholder="Add a comment — it's posted to this task in Asana…"
+                    style={{ width: "100%", minHeight: 64, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 12px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.6 }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <button onClick={handlePostComment} disabled={!replyText.trim() || posting} className={replyText.trim() ? "btn-primary" : "btn-secondary"}
+                      style={{ background: replyText.trim() ? T.inside : T.surfaceMuted, color: replyText.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: replyText.trim() && !posting ? "pointer" : "default", opacity: posting ? 0.6 : 1 }}>
+                      {posting ? "Posting…" : "Post Comment"}
+                    </button>
+                    {postError && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {postError}</div>}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ) : (
