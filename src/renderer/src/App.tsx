@@ -16,7 +16,6 @@ import LifIcon from './assets/icons/Lif.svg?react';
 import MumIcon from './assets/icons/Mum.svg?react';
 import Sqig2Icon from './assets/icons/Sqig2.svg?react';
 import prayerMusic from './assets/Prayer Motion Music 1.mp3';
-import prayerFigureSvg from './assets/prayer-figure.svg';
 import PrayBird1 from './assets/PrayIcon/SVG/Bird1.svg?react';
 import PrayBird2 from './assets/PrayIcon/SVG/Bird2.svg?react';
 import PrayBird3 from './assets/PrayIcon/SVG/Bird3.svg?react';
@@ -834,12 +833,11 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 }
 
 // ── Prayer Journal ───────────────────────────────────────────────────────────
-// Flow: pause (30s, unchanged ritual) → choice (write, or not — no pressure
-// either way) → an optional composer → a star field of saved entries, with an
-// equally capable list view alongside it. Every screen after the pause shares
-// one calm, dark "journal" backdrop, distinct from the pause's warmer, more
-// energetic breathing blobs — the shift from color to stillness is itself the
-// cue that the countdown is over and this is now quiet, unhurried space.
+// Flow: a 30s pause, then straight onto a star field of saved entries (no page
+// in between) — writing a new one is always just a "+ New prayer" tap away,
+// never required. An equally capable list view sits alongside the field for
+// search/retrieval. One calm, dark starry backdrop runs through the whole
+// space, pause included, so it reads as one place rather than several.
 const FALLBACK_PRAYER = { prompt: "Commit your work to the LORD, and your plans will be established.", scripture: "Commit your work to the LORD, and your plans will be established.", ref: "Proverbs 16:3" };
 
 const PRAYER = {
@@ -1046,53 +1044,52 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - seconds / 30);
 
-  // ── Pause — unchanged from before: warm breathing blobs, the figure
-  // artwork, and a 30s ring. The only change is what happens when it ends.
+  // ── Pause — the same 30s ring and countdown as before, now on the same
+  // calm starry backdrop as the rest of the journal (previously its own
+  // warmer, colorful blobs + figure artwork) so the whole space — pause
+  // included — reads as one consistent place rather than two.
   if (screen.kind === "pause") {
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: "linear-gradient(150deg, #221816 0%, #1B1311 50%, #201714 100%)" }}>
-        <div className="prayer-moss-blob prayer-moss-blob--a" />
-        <div className="prayer-moss-blob prayer-moss-blob--b" />
-        <div className="prayer-moss-blob prayer-moss-blob--c" />
-        <div className="prayer-moss-blob prayer-moss-blob--d" />
-        <div className="moss-grain" />
-        <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${prayerFigureSvg})`, backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(38,27,24,0.8) 0%, rgba(38,27,24,0.45) 40%, rgba(38,27,24,0.15) 72%, rgba(38,27,24,0.05) 100%)" }} />
-        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", height: "100%", padding: "40px 40px 60px" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: 520, width: "100%", animation: "fadeInUp 0.6s ease" }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 96, fontWeight: 600, color: C.white, marginBottom: 16, lineHeight: 1 }}>Prayer</div>
+      <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: PRAYER.bg }}>
+        <div className="prayer-grain-static" />
+        {ambientStars.map(s => (
+          <span key={s.id} aria-hidden="true" style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, borderRadius: "50%", background: PRAYER.star, opacity: s.opacity, pointerEvents: "none", animation: `starTwinkle ${5 + (s.id % 5)}s ease-in-out infinite`, animationDelay: `${s.delay}s` }} />
+        ))}
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 480, width: "100%", animation: "fadeInUp 0.6s ease" }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 56 : 72, fontWeight: 600, color: PRAYER.ink, marginBottom: 20, lineHeight: 1 }}>Prayer</div>
             <div style={{ animation: "fadeInUp 0.5s ease", marginBottom: 8 }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 400, color: C.white, textAlign: "left", lineHeight: 1.8, marginBottom: 14 }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 400, color: PRAYER.ink, lineHeight: 1.8, marginBottom: 14 }}>
                 "{FALLBACK_PRAYER.prompt}"
               </div>
-              <div style={{ width: 36, height: 2, background: "rgba(255,255,255,0.3)", marginBottom: 14 }} />
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.75)", textAlign: "left", lineHeight: 1.7, marginBottom: 6 }}>
+              <div style={{ width: 36, height: 2, background: PRAYER.border, margin: "0 auto 14px" }} />
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 400, color: PRAYER.inkMuted, lineHeight: 1.7, marginBottom: 6 }}>
                 "{FALLBACK_PRAYER.scripture}"
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.45)", letterSpacing: 0.5, marginBottom: 36 }}>
+              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 500, color: PRAYER.inkMuted, letterSpacing: 0.5, marginBottom: 36 }}>
                 {FALLBACK_PRAYER.ref}
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <div style={{ position: "relative", width: 76, height: 76 }}>
                 <svg width={76} height={76} style={{ transform: "rotate(-90deg)" }}>
-                  <circle cx={38} cy={38} r={radius} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={5} />
-                  <circle cx={38} cy={38} r={radius} fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={5} strokeLinecap="round"
+                  <circle cx={38} cy={38} r={radius} fill="none" stroke={PRAYER.border} strokeWidth={5} />
+                  <circle cx={38} cy={38} r={radius} fill="none" stroke={PRAYER.ink} strokeWidth={5} strokeLinecap="round"
                     strokeDasharray={circumference} strokeDashoffset={dashOffset} style={{ transition: "stroke-dashoffset 1s linear" }} />
                 </svg>
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 22, fontWeight: 900, color: C.white }}>{seconds}</div>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 22, fontWeight: 900, color: PRAYER.ink }}>{seconds}</div>
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 0.5 }}>seconds of stillness</div>
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: PRAYER.inkMuted, letterSpacing: 0.5 }}>seconds of stillness</div>
             </div>
           </div>
         </div>
         <button onClick={onUnlock} title="Leave prayer" className="prayer-focus"
-          style={{ position: "absolute", top: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}>
+          style={{ position: "absolute", top: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: PRAYER.ink, cursor: "pointer" }}>
           ✕ Leave
         </button>
         <button onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m); }}
           title={muted ? "Unmute prayer music" : "Mute prayer music"} className="prayer-focus"
-          style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}>
+          style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: "rgba(255,255,255,0.1)", border: `1px solid ${PRAYER.border}`, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, color: PRAYER.ink, cursor: "pointer" }}>
           {muted ? "♪ Unmute" : "♪ Mute"}
         </button>
         <PrayerStyles />
@@ -1313,15 +1310,6 @@ function PrayerStyles() {
         background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
         background-size: 180px 180px; mix-blend-mode: overlay; opacity: 0.1;
       }
-      /* Same organic animation as the Needs Your Approval background — soft
-         blobs drifting and breathing on independent, uneven cycles — pulling
-         from the full palette (green/orange/red/sage) instead of one or two
-         accents. */
-      .prayer-moss-blob { position: absolute; border-radius: 50%; filter: blur(55px); will-change: transform, opacity; }
-      .prayer-moss-blob--a { top: -8%; left: 26%; width: 46vw; height: 46vw; background: ${T.inside}; animation: mossDriftA 21s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
-      .prayer-moss-blob--b { top: 22%; left: 20%; width: 40vw; height: 40vw; background: ${T.outside}; animation: mossDriftB 25s ease-in-out infinite; animation-delay: -11s; }
-      .prayer-moss-blob--c { top: 46%; left: 26%; width: 37vw; height: 37vw; background: ${T.urgent}; animation: mossDriftC 17s ease-in-out infinite; animation-delay: -6s; }
-      .prayer-moss-blob--d { bottom: -10%; left: 14%; width: 38vw; height: 38vw; background: ${T.uncat}; animation: mossDriftD 20s ease-in-out infinite; animation-delay: -14s; }
     `}</style>
   );
 }
