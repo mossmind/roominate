@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('storage', {
 })
 
 contextBridge.exposeInMainWorld('asana', {
+  getMe: () => ipcRenderer.invoke('asana:getMe'),
   fetchTasks: (sectionGid: string) => ipcRenderer.invoke('asana:fetchTasks', sectionGid),
   fetchSections: (projectGid: string) => ipcRenderer.invoke('asana:fetchSections', projectGid),
   fetchComments: (taskGid: string) => ipcRenderer.invoke('asana:fetchComments', taskGid),

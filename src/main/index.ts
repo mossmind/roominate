@@ -44,6 +44,31 @@ app.whenReady().then(() => {
   ipcMain.handle('storage:set', (_, key: string, value: unknown) => { store.set(key, value); return true })
   ipcMain.handle('storage:delete', (_, key: string) => { store.delete(key); return true })
 
+  // ── Asana: the authenticated user (for matching @mentions in comments) ──
+  ipcMain.handle('asana:getMe', async () => {
+    const pat = store.get('asana_pat') as string | undefined
+    if (!pat) throw new Error('No Asana token set.')
+    return new Promise((resolve, reject) => {
+      const url = `https://app.asana.com/api/1.0/users/me?opt_fields=name,gid`
+      const req = net.request({ method: 'GET', url })
+      req.setHeader('Authorization', `Bearer ${pat}`)
+      req.setHeader('Accept', 'application/json')
+      let data = ''
+      req.on('response', (res) => {
+        res.on('data', (chunk) => (data += chunk.toString()))
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data)
+            if (json.errors) reject(new Error(json.errors[0]?.message || 'Asana API error'))
+            else resolve(json.data)
+          } catch { reject(new Error('Invalid response from Asana')) }
+        })
+      })
+      req.on('error', reject)
+      req.end()
+    })
+  })
+
   // ── Asana: list sections for a project ──────────────────────────────────
   ipcMain.handle('asana:fetchSections', async (_, projectGid: string) => {
     const pat = store.get('asana_pat') as string | undefined

@@ -184,10 +184,28 @@ interface PrayerEntry {
   size: number         // 0.7-1.3, subtle depth variety between stars
 }
 
+// A comment on some task that @mentions the signed-in user — surfaced on the
+// board as a small "bubble" so replies/questions aimed at David don't get
+// lost inside a task he hasn't opened yet.
+interface MentionCard {
+  taskGid: string
+  taskName: string
+  taskUrl: string
+  comment: AsanaComment
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function daysLeft(due: string | null) { return due ? Math.ceil((new Date(due).getTime() - Date.now()) / 86400000) : null; }
 function urgLabel(due: string | null) { const d = daysLeft(due); if (d === null) return null; if (d < 0) return Math.abs(d) + "d overdue"; if (d === 0) return "Due today"; if (d <= 7) return d + "d left"; return null; }
 function urgColorLight(due: string | null) { const d = daysLeft(due); return d !== null && d <= 7 ? (d <= 3 ? T.urgent : T.soon) : T.inkMuted; }
+function timeAgo(iso: string): string {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 60) return mins <= 1 ? "just now" : `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return days < 7 ? `${days}d ago` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 // storage helpers
 async function storageGet(key: string): Promise<string | null> {
@@ -1719,10 +1737,51 @@ export default function App() {
   const [mobileTab, setMobileTab] = useState<'create' | 'tasks' | 'prayer' | null>(null);
   const [mobileCreateName, setMobileCreateName] = useState('');
   const [now, setNow] = useState(() => new Date());
+  const [myAsanaName, setMyAsanaName] = useState<string | null>(null);
+  const [mentionCards, setMentionCards] = useState<MentionCard[]>([]);
+  const projectsRef = useRef<Task[]>([]);
+  useEffect(() => { projectsRef.current = projects; }, [projects]);
 
   useEffect(() => {
     storageGet("theme").then(v => { if (v === "dark" || v === "light") setTheme(v); }).catch(() => {});
   }, []);
+
+  // Who to watch for in comment text — resolved once from Asana itself
+  // rather than guessed/typed in, so it always matches however Asana
+  // actually renders this account's @mentions.
+  useEffect(() => {
+    platformAsana.getMe().then(me => setMyAsanaName(me.name)).catch(() => {});
+  }, []);
+
+  // Checks every open, real (non-local) task's comments for an @mention of
+  // this account — piggybacks on whatever's already on the board rather than
+  // searching the whole workspace, and refreshes on its own slower cadence
+  // (comments change less urgently than the task list itself) plus once
+  // immediately whenever the name resolves. Reads projectsRef (not
+  // `projects` directly) so the interval always sees the latest board
+  // instead of whatever it was when the effect first ran.
+  useEffect(() => {
+    if (!myAsanaName) return;
+    const mentionTag = ("@" + myAsanaName).toLowerCase();
+    let cancelled = false;
+    async function refresh() {
+      const tasks = projectsRef.current.filter(p => !p.completed && !p.gid.startsWith("local_"));
+      const results = await Promise.all(tasks.map(async t => {
+        try {
+          const comments = await platformAsana.fetchComments(t.gid);
+          return comments
+            .filter(c => c.text.toLowerCase().includes(mentionTag))
+            .map(c => ({ taskGid: t.gid, taskName: t.name, taskUrl: t.url, comment: c }));
+        } catch { return []; }
+      }));
+      if (cancelled) return;
+      const flat = results.flat().sort((a, b) => new Date(b.comment.created_at).getTime() - new Date(a.comment.created_at).getTime());
+      setMentionCards(flat.slice(0, 4));
+    }
+    refresh();
+    const id = setInterval(refresh, 3 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [myAsanaName]);
 
   // Drives the welcome section's clock/greeting — updates every 30s, not
   // every second, so it stays informative without being a ticking distraction.
@@ -1964,6 +2023,32 @@ export default function App() {
     );
   }
 
+  // Small "bubble" cards for comments that @mention this account — capped at
+  // 4 so this never turns into another feed to keep up with; nothing renders
+  // at all when there aren't any, so it never costs space it isn't earning.
+  function renderMentionBubbles(compact: boolean) {
+    if (mentionCards.length === 0) return null;
+    return (
+      <div style={{ marginTop: compact ? 14 : 18, display: "flex", flexDirection: "column", gap: compact ? 7 : 8 }}>
+        <div style={{ fontFamily: FONT, fontSize: compact ? 9 : 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>MENTIONS</div>
+        <div style={{ display: "flex", gap: compact ? 8 : 10, flexWrap: "wrap" }}>
+          {mentionCards.map(m => (
+            <button key={m.comment.gid} onClick={() => { const t = projects.find(p => p.gid === m.taskGid); if (t) setOpenTask(t); }}
+              className="btn-secondary"
+              style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 4, width: compact ? "100%" : 240, maxWidth: compact ? undefined : 240, background: T.surface, border: tb(1.5), borderRadius: 14, boxShadow: T.shadowSm, padding: compact ? "9px 12px" : "10px 13px", cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+                <span style={{ fontFamily: FONT, fontSize: compact ? 11 : 12, fontWeight: 800, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.comment.author || "Someone"}</span>
+                <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted, flexShrink: 0 }}>· {timeAgo(m.comment.created_at)}</span>
+              </div>
+              <div style={{ fontFamily: FONT, fontSize: compact ? 12 : 13, color: T.ink, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{m.comment.text}</div>
+              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.taskName}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="board-canvas" style={{ display: "flex", flexDirection: "column", height: "100vh", fontFamily: FONT, overflow: "hidden" }}>
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} onSaved={(gids, quickGid) => { setSectionGids(gids); setQuickTaskSectionGid(quickGid); syncTasks(gids); syncQuickTasks(quickGid); }} />}
@@ -2130,6 +2215,7 @@ export default function App() {
                       ))}
                     </div>
                   )}
+                  {renderMentionBubbles(true)}
                 </div>
                 {projects.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -2249,6 +2335,7 @@ export default function App() {
                           ))}
                         </div>
                       )}
+                      {renderMentionBubbles(false)}
                     </div>
                     {!projects.length ? (
                       <div style={{ textAlign: "center", padding: "80px 40px" }}>

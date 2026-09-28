@@ -206,6 +206,15 @@ export const ai = {
 }
 
 export const asana = {
+  getMe: async (): Promise<{ gid: string; name: string }> => {
+    if (isElectron) return (window as any).asana.getMe()
+    const res = await fetch(`/api/asana/users/me?opt_fields=name,gid`)
+    const json = await res.json() as any
+    if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
+    if (json.error) throw new Error(json.error)
+    return json.data
+  },
+
   fetchSections: async (projectGid: string): Promise<{ gid: string; name: string }[]> => {
     if (isElectron) return (window as any).asana.fetchSections(projectGid)
     const res = await fetch(`/api/asana/projects/${projectGid}/sections?opt_fields=gid,name&limit=100`)
