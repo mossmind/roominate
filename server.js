@@ -25,6 +25,7 @@ const ALLOWED_STATE_KEYS = new Set([
   'mossmind_local_tasks',
   'asana_pat',
   'anthropic_key',
+  'mossmind_prayers',
 ]);
 // Mind maps are keyed per-task ("mindmap_<gid>"), so a fixed Set can't cover
 // them — matched by prefix instead.

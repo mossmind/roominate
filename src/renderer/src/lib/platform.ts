@@ -20,6 +20,7 @@ const SHARED_STATE_KEYS = new Set([
   'mossmind_local_tasks',
   'asana_pat',
   'anthropic_key',
+  'mossmind_prayers',
 ])
 
 // Mind maps are keyed per-task ("mindmap_<gid>"), so they can't live in a fixed
