@@ -2716,7 +2716,7 @@ export default function App() {
           background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
           background-size: 340px 340px;
           mix-blend-mode: overlay;
-          opacity: 0.7;
+          opacity: 0.49;
           animation: grainFlicker 0.7s steps(1) infinite;
         }
         @keyframes grainFlicker {
