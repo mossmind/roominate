@@ -84,10 +84,10 @@ const C = {
   factory:  "#242329",
   creative: "#657946",
 };
-// Fraunces (serif) for the whole app — headings and body alike lean on
+// EB Garamond (serif) for the whole app — headings and body alike lean on
 // weight for hierarchy rather than a second face.
-const FONT = "'Fraunces', Georgia, serif";
-const FONT_DISPLAY = "'Fraunces', Georgia, serif";
+const FONT = "'EB Garamond', Georgia, serif";
+const FONT_DISPLAY = "'EB Garamond', Georgia, serif";
 const b = (w = 2, col = C.brown) => `${w}px solid ${col}`;
 
 // Board tokens — the light, restrained-neo-brutalist surface used by the
@@ -2578,7 +2578,7 @@ export default function App() {
       )}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
         :root {
           /* Reverted to the app's original dark/organic palette (charcoal +
              olive green + cream + coral), in place of the neo-brutalist
