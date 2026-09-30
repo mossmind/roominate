@@ -207,6 +207,52 @@ function timeAgo(iso: string): string {
   return days < 7 ? `${days}d ago` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+// Asana's plain `text` field renders a comment's @mention as a bare profile
+// URL (e.g. "https://app.asana.com/.../profile/123 Can you..."), not "@Name"
+// — so displaying it directly always showed that long, meaningless link.
+// html_text has the real structure instead (an <a data-asana-type="user">
+// wrapping the mention, plus real <a> tags for anything actually pasted),
+// so this walks it with the browser's own HTML parser — never re-inserted
+// into the live DOM, just read back out — and turns it into: a bold "@Name"
+// chip for each mention, a real clickable link for anything else that was
+// linked, and plain text for the rest. Falls back to the plain text field
+// if html_text is missing (e.g. an older cached comment).
+interface CommentSegment { text: string; kind: "text" | "mention" | "link"; href?: string }
+function parseAsanaComment(comment: AsanaComment): CommentSegment[] {
+  if (!comment.htmlText) return [{ text: comment.text, kind: "text" }];
+  const container = document.createElement("div");
+  container.innerHTML = comment.htmlText;
+  const segments: CommentSegment[] = [];
+  function walk(node: ChildNode) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (node.textContent) segments.push({ text: node.textContent, kind: "text" });
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.tagName === "IMG") return; // attachment previews — omitted from the text view, same as before
+      if (el.tagName === "A") {
+        const label = el.textContent || "";
+        if (!label) return;
+        if (el.getAttribute("data-asana-type") === "user") segments.push({ text: label, kind: "mention" });
+        else segments.push({ text: label, kind: "link", href: el.getAttribute("href") || undefined });
+        return;
+      }
+      el.childNodes.forEach(walk);
+    }
+  }
+  container.childNodes.forEach(walk);
+  return segments;
+}
+// linksClickable defaults to true; pass false when this renders inside
+// another clickable element (e.g. a <button>) — real <a> tags can't nest
+// inside one without becoming invalid, ambiguously-clickable markup.
+function AsanaCommentText({ comment, linksClickable = true }: { comment: AsanaComment; linksClickable?: boolean }) {
+  return <>{parseAsanaComment(comment).map((seg, i) => {
+    if (seg.kind === "mention") return <strong key={i} style={{ fontWeight: 800, color: T.ink }}>{seg.text}</strong>;
+    if (seg.kind === "link" && seg.href && linksClickable) return <a key={i} href={seg.href} target="_blank" rel="noopener noreferrer" style={{ color: T.focus, fontWeight: 600 }} onClick={e => e.stopPropagation()}>{seg.text}</a>;
+    return <span key={i}>{seg.text}</span>;
+  })}</>;
+}
+
 // storage helpers
 async function storageGet(key: string): Promise<string | null> {
   const v = await platformStorage.get(key);
@@ -1539,7 +1585,7 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                         <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink }}>{c.author || "Someone"}</div>
                         <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, flexShrink: 0 }}>{new Date(c.created_at).toLocaleDateString()}</div>
                       </div>
-                      <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{c.text}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}><AsanaCommentText comment={c} /></div>
                     </div>
                   ))}
                 </div>
@@ -2087,7 +2133,7 @@ export default function App() {
                 <span style={{ fontFamily: FONT, fontSize: compact ? 11 : 12, fontWeight: 800, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.comment.author || "Someone"}</span>
                 <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted, flexShrink: 0 }}>· {timeAgo(m.comment.created_at)}</span>
               </div>
-              <div style={{ fontFamily: FONT, fontSize: compact ? 12 : 13, color: T.ink, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{m.comment.text}</div>
+              <div style={{ fontFamily: FONT, fontSize: compact ? 12 : 13, color: T.ink, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}><AsanaCommentText comment={m.comment} linksClickable={false} /></div>
               <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.taskName}</div>
             </button>
           ))}
