@@ -84,11 +84,11 @@ const C = {
   factory:  "#242329",
   creative: "#657946",
 };
-// One rounded, friendly sans-serif family for the whole app — headings and body
-// alike lean on weight (not a second, sharper display face) for hierarchy, which
-// keeps the overall voice calmer and less busy.
-const FONT = "'Poppins', system-ui, sans-serif";
-const FONT_DISPLAY = "'Poppins', system-ui, sans-serif";
+// Bricolage Grotesque for the whole app — headings and body alike lean on
+// weight (not a second, sharper display face) for hierarchy — the original
+// typeface from before the neo-brutalist light redesign.
+const FONT = "'Bricolage Grotesque', system-ui, sans-serif";
+const FONT_DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
 const b = (w = 2, col = C.brown) => `${w}px solid ${col}`;
 
 // Board tokens — the light, restrained-neo-brutalist surface used by the
@@ -135,13 +135,13 @@ const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, t
 // tweaked font sizes elsewhere in the file are left alone rather than churned
 // for no visual gain.
 const FS = { caption: 11, label: 12, body: 14, title: 20, display: 28 };
-// None of the four accent hexes (green/orange/red/sage) are legible as text on
-// the light cream canvas — but ink is legible ON TOP of every one of them, in
-// both themes (verified: 4.3-7.8:1). So every accent is used as a solid fill
-// with fixed dark ink content on top, never as colored text/icon-on-canvas.
-// Fixed (not theme-aware) since it must stay dark even in dark mode, where
-// T.ink itself flips to the light cream.
-const ON_ACCENT = "#261B18";
+// None of the four accent hexes (green/terracotta/coral/stone) are legible as
+// text on their own — but dark ink is legible ON TOP of every one of them.
+// So every accent is used as a solid fill with fixed dark ink content on top,
+// never as colored text/icon-on-canvas. Fixed (not theme-aware) since it must
+// stay dark even against the deeper dark-mode variant, where T.ink itself is
+// the light cream.
+const ON_ACCENT = "#242329";
 
 const CATEGORIES = {
   factory:  { label: "Outside", emoji: "⚙️", color: T.outside, text: T.ink },
@@ -2564,52 +2564,53 @@ export default function App() {
       )}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:ital,opsz,wght@0,12..96,400;0,12..96,500;0,12..96,600;0,12..96,700;0,12..96,800;1,12..96,400&display=swap');
         :root {
-          /* The six given hexes (cream/gold/orange/red/ink/sage), used
-             verbatim, plus one addition: gold didn't work as the hero/brand
-             color in practice, so "inside" is now a warm olive-forest green
-             (#509744) chosen to sit naturally alongside the rest of this
-             palette — a true green, unlike sage's pale near-neutral, but
-             still warm/muted rather than a cool or neon green. Gold itself
-             is no longer used anywhere now that it's freed from that role.
-             Accent colors are only ever used as solid fills with dark ink
-             content on top (see ON_ACCENT in App.tsx) since none of them are
-             light-background-text-safe at full saturation — that's a
-             placement choice, not a hex change. */
-          --canvas: #F1EAE3;
-          --surface: #F7F3F0;
-          --surface-muted: #D9D1CB;
-          --ink: #261B18;
-          --ink-muted: #736A65;
-          --border: #261B18;
-          --border-muted: #D5CDC7;
-          --outside: #F29E38;
-          --inside: #509744;
-          --uncat: #A0B0AC;
-          --urgent: #D9564A;
-          --soon: #F29E38;
+          /* Reverted to the app's original dark/organic palette (charcoal +
+             olive green + cream + coral), in place of the neo-brutalist
+             light redesign — same variable names, same structural border/
+             shadow system, so every component using T.* needed zero changes.
+             --inside and --urgent are the two original brand hexes verbatim
+             (see the C object below); --outside/--uncat/--soon are new warm,
+             muted tones chosen to sit naturally alongside them for the
+             Outside/Inside/Uncategorized/urgency system, which didn't exist
+             in the original app. */
+          --canvas: #242329;
+          --surface: #322F35;
+          --surface-muted: #1C1A1E;
+          --ink: #F4EDEA;
+          --ink-muted: #ABA29D;
+          --border: #F4EDEA;
+          --border-muted: #57525A;
+          --outside: #C97D4A;
+          --inside: #657946;
+          --uncat: #9C8F7E;
+          --urgent: #EF9982;
+          --soon: #D9A54A;
           --focus: var(--ink);
           /* Neo-brutalist "hard" shadow — flat, offset, no blur, in the ink color.
-             Using var(--ink) means it auto-flips from a dark offset in light mode
-             to a pale cream offset in dark mode, with zero extra rules. */
+             Using var(--ink) means it auto-flips with the rest of the palette,
+             with zero extra rules. */
           --shadow-sm: 2px 2px 0 var(--ink);
           --shadow-md: 4px 4px 0 var(--ink);
           --shadow-lg: 6px 6px 0 var(--ink);
         }
         [data-theme="dark"] {
-          --canvas: #261B18;
-          --surface: #403634;
-          --surface-muted: #201714;
-          --ink: #F1EAE3;
-          --ink-muted: #B0A8A2;
-          --border: #F1EAE3;
-          --border-muted: #514946;
-          --outside: #F29E38;
-          --inside: #509744;
-          --uncat: #A0B0AC;
-          --urgent: #D9564A;
-          --soon: #F29E38;
+          /* The ☾/☀ toggle's second state — kept meaningfully different (a
+             deeper, near-black variant) rather than identical to :root, so
+             the toggle still does something now that dark is the default. */
+          --canvas: #17151A;
+          --surface: #221F24;
+          --surface-muted: #100E12;
+          --ink: #F4EDEA;
+          --ink-muted: #948C88;
+          --border: #F4EDEA;
+          --border-muted: #3C383E;
+          --outside: #C97D4A;
+          --inside: #657946;
+          --uncat: #9C8F7E;
+          --urgent: #EF9982;
+          --soon: #D9A54A;
           --focus: var(--ink);
           --shadow-sm: 2px 2px 0 var(--ink);
           --shadow-md: 4px 4px 0 var(--ink);
