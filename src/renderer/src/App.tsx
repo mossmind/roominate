@@ -1628,17 +1628,13 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
   const due = task.due_on ? new Date(task.due_on + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
   const ul = urgLabel(task.due_on);
   const uc = urgColorLight(task.due_on);
-  // Tinted with the card's own category color (the same accent its column
-  // header uses) rather than a neutral surface, so a glance at the board
-  // shows which column/category a card belongs to by color alone.
-  const categoryColor = category === "factory" ? T.outside : category === "creative" ? T.inside : T.uncat;
   return (
     <div className="board-card slot-card" role="button" tabIndex={0} draggable
       onDragStart={e => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", task.gid); onDragStart?.(); }}
       onDragEnd={onDragEnd}
       onClick={() => onOpen(task)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
-      style={{ background: `color-mix(in srgb, ${categoryColor} 28%, ${T.surface})`, borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, box-shadow 0.15s ease" }}>
+      style={{ background: T.surface, borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, box-shadow 0.15s ease" }}>
       <div style={{ padding: "16px 16px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
         <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto" }}>
