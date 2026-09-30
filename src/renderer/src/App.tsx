@@ -2656,12 +2656,18 @@ export default function App() {
         /* Graphic grid — a clean graph-paper line grid, distinct from the
            main board's photo-textured canvas, sitting behind the Quick
            Tasks panel. */
+        /* Wobbly, sketchy lines instead of perfectly straight ones — an SVG
+           feTurbulence/feDisplacementMap pair distorts each cell's cross of
+           lines slightly, so tiling them still reads as one continuous
+           hand-drawn grid rather than a repeating glitch. Low stroke-opacity
+           keeps it faint. Line color is a literal cream hex (not a T.* var)
+           since colors inside a data-URI SVG can't resolve the page's CSS
+           custom properties — close enough to T.ink to still look correct
+           against either dark palette variant. */
         .quick-tasks-grid {
           background-color: ${T.surfaceMuted};
-          background-image:
-            linear-gradient(${T.borderMuted} 1px, transparent 1px),
-            linear-gradient(90deg, ${T.borderMuted} 1px, transparent 1px);
-          background-size: 24px 24px;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><filter id='rough' x='-20%25' y='-20%25' width='140%25' height='140%25'><feTurbulence type='fractalNoise' baseFrequency='0.045' numOctaves='2' seed='7' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='3.5'/></filter><g filter='url(%23rough)' stroke='%23F4EDEA' stroke-width='1' stroke-opacity='0.22' stroke-linecap='round' fill='none'><path d='M0 0 H48'/><path d='M0 0 V48'/></g></svg>");
+          background-size: 48px 48px;
         }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         [style*="-webkit-app-region: drag"] { -webkit-app-region: drag; }
