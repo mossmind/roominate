@@ -2512,10 +2512,10 @@ export default function App() {
 
             {/* Todo panel — always visible on home screen */}
             {!openTask && !openTodoId && (
-              <div style={{ border: "none", borderLeft: tb(2), backgroundColor: T.surfaceMuted, display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 272 : 40, transition: "width 0.2s ease", overflow: "hidden", position: "relative", zIndex: 1 }}>
+              <div className="quick-tasks-grid" style={{ border: "none", borderLeft: tb(2), display: "flex", flexDirection: "column", flexShrink: 0, width: todosPanelOpen ? 272 : 40, transition: "width 0.2s ease", overflow: "hidden", position: "relative", zIndex: 1 }}>
                 {todosPanelOpen ? (
                   <>
-                    <div style={{ padding: "20px 16px 14px", display: "flex", flexDirection: "column", gap: 12, background: T.surfaceMuted }}>
+                    <div style={{ padding: "20px 16px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>Quick Tasks</div>
                         <button onClick={() => setTodosPanelOpen(false)} title="Collapse" aria-label="Collapse Quick Tasks panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
@@ -2652,6 +2652,16 @@ export default function App() {
           background-position: center, center;
           background-repeat: no-repeat, repeat;
           background-attachment: local, local;
+        }
+        /* Graphic grid — a clean graph-paper line grid, distinct from the
+           main board's photo-textured canvas, sitting behind the Quick
+           Tasks panel. */
+        .quick-tasks-grid {
+          background-color: ${T.surfaceMuted};
+          background-image:
+            linear-gradient(${T.borderMuted} 1px, transparent 1px),
+            linear-gradient(90deg, ${T.borderMuted} 1px, transparent 1px);
+          background-size: 24px 24px;
         }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         [style*="-webkit-app-region: drag"] { -webkit-app-region: drag; }
