@@ -2638,20 +2638,20 @@ export default function App() {
         .glass-card {
           position: relative;
         }
-        .graph-bg {
-          background-color: #242329;
-          background-image: linear-gradient(rgba(36,35,41,0.75), rgba(36,35,41,0.75)), url(${bgPhoto});
+        /* Board canvas — main dashboard, sidebars, Quick Tasks, Mind Map. The
+           original textured photo background (bg2.png), tiled behind a dark
+           wash in the canvas color — same treatment this had before the
+           light neo-brutalist redesign temporarily swapped it for a flat dot
+           grid (this class was called .graph-bg back then). tint() gives a
+           translucent version of the current canvas color rather than a
+           hardcoded rgba, so the wash stays correct if the palette changes. */
+        .board-canvas {
+          background-color: ${T.canvas};
+          background-image: linear-gradient(${tint(T.canvas, 75)}, ${tint(T.canvas, 75)}), url(${bgPhoto});
           background-size: auto, 40%;
           background-position: center, center;
           background-repeat: no-repeat, repeat;
           background-attachment: local, local;
-        }
-        /* Light board canvas — main dashboard, sidebars, Quick Tasks. A faint dot
-           grid is the only texture left; everything else is a flat, crisp surface. */
-        .board-canvas {
-          background-color: ${T.canvas};
-          background-image: radial-gradient(${T.borderMuted} 1px, transparent 1px);
-          background-size: 22px 22px;
         }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         [style*="-webkit-app-region: drag"] { -webkit-app-region: drag; }
