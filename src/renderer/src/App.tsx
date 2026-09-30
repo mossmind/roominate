@@ -1782,16 +1782,30 @@ export default function App() {
   // this account — piggybacks on whatever's already on the board rather than
   // searching the whole workspace, and refreshes on its own slower cadence
   // (comments change less urgently than the task list itself) plus once
-  // immediately whenever the account resolves. Reads projectsRef (not
-  // `projects` directly) so the interval always sees the latest board
-  // instead of whatever it was when the effect first ran.
+  // immediately whenever the account resolves or the actual set of open
+  // tasks changes. Reads projectsRef (not `projects` directly) so the
+  // interval always sees the latest board instead of whatever it was when
+  // the effect first ran.
   //
   // Matches by the mentioned user's gid inside html_text
   // (data-asana-gid="...") rather than the plain-text "@Name" — Asana's
   // plain `text` field doesn't reliably keep the "@" prefix (it can render
-  // as just the bare name), so a text-substring match silently missed real
-  // mentions. Matching on the gid is exact regardless of how the name is
-  // capitalized or rendered; the "@name" check is kept only as a fallback.
+  // as just a bare profile link), so a text-substring match silently missed
+  // real mentions. Matching on the gid is exact regardless of how the name
+  // is capitalized or rendered; the "@name" check is kept only as a fallback.
+  //
+  // openTaskGidsKey exists to fix a race: this effect used to depend only on
+  // [myAsana], which resolves (from getMe()) independently of — and often
+  // before — the board's own task list finishes its first load. That made
+  // the one immediate refresh() run against an empty project list, with
+  // nothing to re-trigger it until the 3-minute timer. Depending on this
+  // stable, sorted key (not `projects` itself, whose array reference changes
+  // on every sync tick) means the effect properly reruns once real tasks
+  // actually show up, without re-firing on every unrelated render.
+  const openTaskGidsKey = useMemo(
+    () => projects.filter(p => !p.completed && !p.gid.startsWith("local_")).map(p => p.gid).sort().join(","),
+    [projects]
+  );
   useEffect(() => {
     if (!myAsana) return;
     const gidAttr = `data-asana-gid="${myAsana.gid}"`;
@@ -1814,7 +1828,7 @@ export default function App() {
     refresh();
     const id = setInterval(refresh, 3 * 60 * 1000);
     return () => { cancelled = true; clearInterval(id); };
-  }, [myAsana]);
+  }, [myAsana, openTaskGidsKey]);
 
   // Drives the welcome section's clock/greeting — updates every 30s, not
   // every second, so it stays informative without being a ticking distraction.
