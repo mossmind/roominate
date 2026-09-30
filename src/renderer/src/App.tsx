@@ -2164,7 +2164,10 @@ export default function App() {
         {/* Traffic light spacer on Mac — skip on mobile */}
         {!isMobile && <div style={{ width: 60, flexShrink: 0 }} />}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, minWidth: 0 }}>
-          <MossmindLogo aria-label="MossMind" style={{ height: isMobile ? 17 : 24, width: "auto", color: T.ink, display: "block" }} />
+          <button onClick={() => { setOpenTask(null); setOpenTodoId(null); setMobileTab(null); }} title="Back to board" aria-label="MossMind — back to board"
+            style={{ display: "flex", alignItems: "center", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+            <MossmindLogo aria-hidden="true" style={{ height: isMobile ? 17 : 24, width: "auto", color: T.ink, display: "block" }} />
+          </button>
         </div>
         {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} className="btn-primary" style={{ background: T.inside, borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
