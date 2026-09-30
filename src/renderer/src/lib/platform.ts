@@ -126,6 +126,7 @@ interface AsanaApiTask {
 export interface AsanaComment {
   gid: string
   text: string
+  htmlText: string
   created_at: string
   author: string | null
 }
@@ -245,13 +246,17 @@ export const asana = {
 
   fetchComments: async (taskGid: string): Promise<AsanaComment[]> => {
     if (isElectron) return (window as any).asana.fetchComments(taskGid)
-    const res = await fetch(`/api/asana/tasks/${taskGid}/stories?opt_fields=text,created_at,type,created_by.name&limit=100`)
+    // html_text is fetched alongside the plain text so @mentions can be
+    // matched by the mentioned user's actual gid (data-asana-gid="...") —
+    // reliable regardless of exactly how a display name is capitalized/
+    // spelled, unlike matching "@Name" against the plain text.
+    const res = await fetch(`/api/asana/tasks/${taskGid}/stories?opt_fields=text,html_text,created_at,type,created_by.name&limit=100`)
     const json = await res.json() as any
     if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
     if (json.error) throw new Error(json.error)
     return (json.data ?? [])
       .filter((s: any) => s.type === 'comment' && s.text)
-      .map((s: any) => ({ gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }))
+      .map((s: any) => ({ gid: s.gid, text: s.text, htmlText: s.html_text ?? '', created_at: s.created_at, author: s.created_by?.name ?? null }))
   },
 
   setCompleted: async (taskGid: string, completed: boolean): Promise<void> => {
@@ -277,7 +282,7 @@ export const asana = {
     if (json.errors) throw new Error(json.errors[0]?.message || 'Asana API error')
     if (json.error) throw new Error(json.error)
     const s = json.data
-    return { gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }
+    return { gid: s.gid, text: s.text, htmlText: s.html_text ?? '', created_at: s.created_at, author: s.created_by?.name ?? null }
   },
 
   fetchTaskDetails: async (taskGid: string): Promise<AsanaTaskDetails> => {

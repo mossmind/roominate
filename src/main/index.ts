@@ -138,7 +138,7 @@ app.whenReady().then(() => {
     const pat = store.get('asana_pat') as string | undefined
     if (!pat) throw new Error('No Asana token set.')
     return new Promise((resolve, reject) => {
-      const url = `https://app.asana.com/api/1.0/tasks/${taskGid}/stories?opt_fields=text,created_at,type,created_by.name&limit=100`
+      const url = `https://app.asana.com/api/1.0/tasks/${taskGid}/stories?opt_fields=text,html_text,created_at,type,created_by.name&limit=100`
       const req = net.request({ method: 'GET', url })
       req.setHeader('Authorization', `Bearer ${pat}`)
       req.setHeader('Accept', 'application/json')
@@ -152,7 +152,7 @@ app.whenReady().then(() => {
             else resolve(
               (json.data ?? [])
                 .filter((s: any) => s.type === 'comment' && s.text)
-                .map((s: any) => ({ gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null }))
+                .map((s: any) => ({ gid: s.gid, text: s.text, htmlText: s.html_text ?? '', created_at: s.created_at, author: s.created_by?.name ?? null }))
             )
           } catch { reject(new Error('Invalid response from Asana')) }
         })
@@ -208,7 +208,7 @@ app.whenReady().then(() => {
             if (json.errors) reject(new Error(json.errors[0]?.message || 'Asana API error'))
             else {
               const s = json.data
-              resolve({ gid: s.gid, text: s.text, created_at: s.created_at, author: s.created_by?.name ?? null })
+              resolve({ gid: s.gid, text: s.text, htmlText: s.html_text ?? '', created_at: s.created_at, author: s.created_by?.name ?? null })
             }
           } catch { reject(new Error('Invalid response from Asana')) }
         })

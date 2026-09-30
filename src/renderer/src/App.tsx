@@ -1763,7 +1763,7 @@ export default function App() {
   const [mobileTab, setMobileTab] = useState<'create' | 'tasks' | 'prayer' | null>(null);
   const [mobileCreateName, setMobileCreateName] = useState('');
   const [now, setNow] = useState(() => new Date());
-  const [myAsanaName, setMyAsanaName] = useState<string | null>(null);
+  const [myAsana, setMyAsana] = useState<{ gid: string; name: string } | null>(null);
   const [mentionCards, setMentionCards] = useState<MentionCard[]>([]);
   const projectsRef = useRef<Task[]>([]);
   useEffect(() => { projectsRef.current = projects; }, [projects]);
@@ -1772,23 +1772,30 @@ export default function App() {
     storageGet("theme").then(v => { if (v === "dark" || v === "light") setTheme(v); }).catch(() => {});
   }, []);
 
-  // Who to watch for in comment text — resolved once from Asana itself
-  // rather than guessed/typed in, so it always matches however Asana
-  // actually renders this account's @mentions.
+  // Who to watch for in comments — resolved once from Asana itself rather
+  // than guessed/typed in.
   useEffect(() => {
-    platformAsana.getMe().then(me => setMyAsanaName(me.name)).catch(() => {});
+    platformAsana.getMe().then(me => setMyAsana(me)).catch(() => {});
   }, []);
 
   // Checks every open, real (non-local) task's comments for an @mention of
   // this account — piggybacks on whatever's already on the board rather than
   // searching the whole workspace, and refreshes on its own slower cadence
   // (comments change less urgently than the task list itself) plus once
-  // immediately whenever the name resolves. Reads projectsRef (not
+  // immediately whenever the account resolves. Reads projectsRef (not
   // `projects` directly) so the interval always sees the latest board
   // instead of whatever it was when the effect first ran.
+  //
+  // Matches by the mentioned user's gid inside html_text
+  // (data-asana-gid="...") rather than the plain-text "@Name" — Asana's
+  // plain `text` field doesn't reliably keep the "@" prefix (it can render
+  // as just the bare name), so a text-substring match silently missed real
+  // mentions. Matching on the gid is exact regardless of how the name is
+  // capitalized or rendered; the "@name" check is kept only as a fallback.
   useEffect(() => {
-    if (!myAsanaName) return;
-    const mentionTag = ("@" + myAsanaName).toLowerCase();
+    if (!myAsana) return;
+    const gidAttr = `data-asana-gid="${myAsana.gid}"`;
+    const mentionTag = ("@" + myAsana.name).toLowerCase();
     let cancelled = false;
     async function refresh() {
       const tasks = projectsRef.current.filter(p => !p.completed && !p.gid.startsWith("local_"));
@@ -1796,7 +1803,7 @@ export default function App() {
         try {
           const comments = await platformAsana.fetchComments(t.gid);
           return comments
-            .filter(c => c.text.toLowerCase().includes(mentionTag))
+            .filter(c => c.htmlText.includes(gidAttr) || c.text.toLowerCase().includes(mentionTag))
             .map(c => ({ taskGid: t.gid, taskName: t.name, taskUrl: t.url, comment: c }));
         } catch { return []; }
       }));
@@ -1807,7 +1814,7 @@ export default function App() {
     refresh();
     const id = setInterval(refresh, 3 * 60 * 1000);
     return () => { cancelled = true; clearInterval(id); };
-  }, [myAsanaName]);
+  }, [myAsana]);
 
   // Drives the welcome section's clock/greeting — updates every 30s, not
   // every second, so it stays informative without being a ticking distraction.
