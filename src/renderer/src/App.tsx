@@ -16,6 +16,7 @@ import LifIcon from './assets/icons/Lif.svg?react';
 import MumIcon from './assets/icons/Mum.svg?react';
 import Sqig2Icon from './assets/icons/Sqig2.svg?react';
 import prayerMusic from './assets/Prayer Motion Music 1.mp3';
+import prayerVideo from './assets/Prayer Motion 1.mp4';
 import PrayBird1 from './assets/PrayIcon/SVG/Bird1.svg?react';
 import PrayBird2 from './assets/PrayIcon/SVG/Bird2.svg?react';
 import PrayBird3 from './assets/PrayIcon/SVG/Bird3.svg?react';
@@ -1145,7 +1146,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
   if (screen.kind === "pause") {
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden", background: T.canvas }}>
-        {ambientWisps.map(w => <PrayerWisp key={w.id} wisp={w} />)}
+        <video src={prayerVideo} autoPlay loop muted playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
         {entries.map(entry => <PrayerBloom key={entry.id} entry={entry} justSaved={false} interactive={false} />)}
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 480, width: "100%", background: T.surface, border: tb(2), boxShadow: T.shadowLg, borderRadius: T.radius, padding: isMobile ? "32px 24px" : "44px 48px", animation: "fadeInUp 0.6s ease" }}>
