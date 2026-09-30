@@ -56,12 +56,12 @@ function PasswordGate({ children }: { children: React.ReactNode }) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: canvas, fontFamily: font }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:ital,opsz,wght@0,12..96,400;0,12..96,700;0,12..96,800;0,12..96,900&display=swap');
-        .login-btn { transition: transform 0.1s ease, box-shadow 0.1s ease; }
-        .login-btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 ${ink}; }
-        .login-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
+        .login-btn { transition: transform 0.1s ease, opacity 0.1s ease; }
+        .login-btn:hover:not(:disabled) { opacity: 0.9; }
+        .login-btn:active:not(:disabled) { transform: translate(1px, 1px); }
         .login-input:focus { box-shadow: 0 0 0 2px ${ink}; }
       `}</style>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, width: 360, maxWidth: '90vw', background: surface, boxShadow: `6px 6px 0 ${ink}`, borderRadius: 10, padding: '40px 36px', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, width: 360, maxWidth: '90vw', background: surface, borderRadius: 10, padding: '40px 36px', boxSizing: 'border-box' }}>
         <MossmindLogo aria-label="MossMind" style={{ height: 30, width: 'auto', color: ink, display: 'block' }} />
         <div style={{ width: 40, height: 3, background: inside, borderRadius: 2 }} />
         <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
@@ -76,7 +76,7 @@ function PasswordGate({ children }: { children: React.ReactNode }) {
           />
           {error && <div style={{ fontFamily: font, fontSize: 12, fontWeight: 700, color: onAccent, background: urgent, borderRadius: 8, padding: '6px 10px' }}>{error}</div>}
           <button type="submit" disabled={loading} className="login-btn"
-            style={{ background: inside, color: onAccent, border: 'none', boxShadow: `2px 2px 0 ${ink}`, borderRadius: 8, padding: '12px', fontFamily: font, fontSize: 13, fontWeight: 900, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+            style={{ background: inside, color: onAccent, border: 'none', borderRadius: 8, padding: '12px', fontFamily: font, fontSize: 13, fontWeight: 900, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1 }}>
             {loading ? 'Checking…' : 'Enter'}
           </button>
         </form>
