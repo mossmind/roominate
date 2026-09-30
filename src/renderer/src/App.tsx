@@ -84,11 +84,10 @@ const C = {
   factory:  "#242329",
   creative: "#657946",
 };
-// Bricolage Grotesque for the whole app — headings and body alike lean on
-// weight (not a second, sharper display face) for hierarchy — the original
-// typeface from before the neo-brutalist light redesign.
-const FONT = "'Bricolage Grotesque', system-ui, sans-serif";
-const FONT_DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
+// Fraunces (serif) for the whole app — headings and body alike lean on
+// weight for hierarchy rather than a second face.
+const FONT = "'Fraunces', Georgia, serif";
+const FONT_DISPLAY = "'Fraunces', Georgia, serif";
 const b = (w = 2, col = C.brown) => `${w}px solid ${col}`;
 
 // Board tokens — the light, restrained-neo-brutalist surface used by the
@@ -1628,9 +1627,9 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
   const due = task.due_on ? new Date(task.due_on + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
   const ul = urgLabel(task.due_on);
   const uc = urgColorLight(task.due_on);
-  // Solid category color (not blended with the surface) — same accent its
-  // column header uses, with fixed dark ink on top per the app's usual
-  // solid-accent-fill convention (see ON_ACCENT), so text stays legible.
+  // A solid top color bar (same accent its column header uses) instead of
+  // coloring the whole card — reads as a clear category marker without
+  // needing to recolor all the card's text for contrast.
   const categoryColor = category === "factory" ? T.outside : category === "creative" ? T.inside : T.uncat;
   return (
     <div className="board-card slot-card" role="button" tabIndex={0} draggable
@@ -1638,12 +1637,13 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
       onDragEnd={onDragEnd}
       onClick={() => onOpen(task)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
-      style={{ background: categoryColor, borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, box-shadow 0.15s ease" }}>
-      <div style={{ padding: "16px 16px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 700, color: ON_ACCENT, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
+      style={{ background: T.surface, borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, box-shadow 0.15s ease" }}>
+      <div style={{ height: 6, background: categoryColor, flexShrink: 0 }} />
+      <div style={{ padding: "14px 16px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
         <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-            {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: "rgba(36,35,41,0.7)", whiteSpace: "nowrap" }}>{due}</div>}
+            {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
             {ul && (
               <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: ON_ACCENT, background: uc, borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
             )}
@@ -2578,7 +2578,7 @@ export default function App() {
       )}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:ital,opsz,wght@0,12..96,400;0,12..96,500;0,12..96,600;0,12..96,700;0,12..96,800;1,12..96,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&display=swap');
         :root {
           /* Reverted to the app's original dark/organic palette (charcoal +
              olive green + cream + coral), in place of the neo-brutalist
