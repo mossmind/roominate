@@ -911,8 +911,6 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 // cards, hard shadows) rather than as a separate dark space — past entries
 // render as soft, slowly pulsing gradient blooms instead of literal stars,
 // visible in the same stable spots through the pause and every screen after.
-const FALLBACK_PRAYER = { prompt: "Commit your work to the LORD, and your plans will be established.", scripture: "Commit your work to the LORD, and your plans will be established.", ref: "Proverbs 16:3" };
-
 // The four accent hexes double as bloom colors, cycled by a stable hash of
 // each entry's id so a given prayer always renders the same color.
 const BLOOM_COLORS = [T.inside, T.outside, T.urgent, T.uncat];
@@ -1149,31 +1147,16 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
         <video src={prayerVideo} autoPlay loop muted playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
         {entries.map(entry => <PrayerBloom key={entry.id} entry={entry} justSaved={false} interactive={false} />)}
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 480, width: "100%", background: T.surface, border: tb(2), boxShadow: T.shadowLg, borderRadius: T.radius, padding: isMobile ? "32px 24px" : "44px 48px", animation: "fadeInUp 0.6s ease" }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 44 : 56, fontWeight: 600, color: T.ink, marginBottom: 20, lineHeight: 1 }}>Prayer</div>
-            <div style={{ animation: "fadeInUp 0.5s ease", marginBottom: 8 }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 400, color: T.ink, lineHeight: 1.8, marginBottom: 14 }}>
-                "{FALLBACK_PRAYER.prompt}"
-              </div>
-              <div style={{ width: 36, height: 2, background: T.inside, margin: "0 auto 14px" }} />
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 400, color: T.inkMuted, lineHeight: 1.7, marginBottom: 6 }}>
-                "{FALLBACK_PRAYER.scripture}"
-              </div>
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 500, color: T.inkMuted, letterSpacing: 0.5, marginBottom: 36 }}>
-                {FALLBACK_PRAYER.ref}
-              </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, animation: "fadeInUp 0.6s ease", filter: "drop-shadow(0 1px 6px rgba(0,0,0,0.5))" }}>
+            <div style={{ position: "relative", width: 76, height: 76 }}>
+              <svg width={76} height={76} style={{ transform: "rotate(-90deg)" }}>
+                <circle cx={38} cy={38} r={radius} fill="none" stroke="rgba(244,237,234,0.35)" strokeWidth={5} />
+                <circle cx={38} cy={38} r={radius} fill="none" stroke={T.ink} strokeWidth={5} strokeLinecap="round"
+                  strokeDasharray={circumference} strokeDashoffset={dashOffset} style={{ transition: "stroke-dashoffset 1s linear" }} />
+              </svg>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 22, fontWeight: 900, color: T.ink }}>{seconds}</div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <div style={{ position: "relative", width: 76, height: 76 }}>
-                <svg width={76} height={76} style={{ transform: "rotate(-90deg)" }}>
-                  <circle cx={38} cy={38} r={radius} fill="none" stroke={T.borderMuted} strokeWidth={5} />
-                  <circle cx={38} cy={38} r={radius} fill="none" stroke={T.ink} strokeWidth={5} strokeLinecap="round"
-                    strokeDasharray={circumference} strokeDashoffset={dashOffset} style={{ transition: "stroke-dashoffset 1s linear" }} />
-                </svg>
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 22, fontWeight: 900, color: T.ink }}>{seconds}</div>
-              </div>
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5 }}>seconds of stillness</div>
-            </div>
+            <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, letterSpacing: 0.5 }}>seconds of stillness</div>
           </div>
         </div>
         <button onClick={onUnlock} title="Leave prayer" className="prayer-focus btn-secondary"
