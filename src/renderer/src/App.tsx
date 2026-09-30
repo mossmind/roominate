@@ -2705,22 +2705,26 @@ export default function App() {
         /* Organic, filmic grain over the color — a jittery (not smoothly
            interpolated) fractal-noise texture that jumps between a few fixed
            offsets like real film grain, rather than drifting. Shared by the
-           Needs Your Approval background, the pinned bar, and the prayer
-           lock (via .moss-grain in each). */
+           Needs Your Approval background, the pinned bar, and the FAB (via
+           .moss-grain in each). Much coarser and heavier than before: a
+           lower baseFrequency means fewer, bigger blobs of noise instead of
+           fine sand-like speckle, a bigger tile makes each of those blobs
+           cover more screen space, and higher opacity pushes it from a
+           subtle texture into a clearly visible, heavily textured surface. */
         .moss-grain {
           position: absolute; inset: 0; pointer-events: none;
-          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
-          background-size: 180px 180px;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
+          background-size: 340px 340px;
           mix-blend-mode: overlay;
-          opacity: 0.55;
+          opacity: 0.88;
           animation: grainFlicker 0.7s steps(1) infinite;
         }
         @keyframes grainFlicker {
           0%   { background-position: 0px 0px; }
-          20%  { background-position: -37px 21px; }
-          40%  { background-position: 18px -29px; }
-          60%  { background-position: -24px -14px; }
-          80%  { background-position: 31px 9px; }
+          20%  { background-position: -70px 40px; }
+          40%  { background-position: 34px -55px; }
+          60%  { background-position: -46px -26px; }
+          80%  { background-position: 59px 17px; }
           100% { background-position: 0px 0px; }
         }
         /* Same recipe as the prayer lock's animation: flat, fully-saturated
