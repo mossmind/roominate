@@ -125,7 +125,14 @@ const T = {
   shadow:   "var(--shadow-md)",
   shadowLg: "var(--shadow-lg)",
 };
-const tb = (w = 2, col: string = T.border) => `${w}px solid ${col}`;
+// The neo-brutalist redesign's thick, high-contrast outline borders (cards,
+// buttons, modals — every tb() call left at its default color) are gone now
+// that the app is back to the original dark/organic look, which relied on
+// shadow and surface contrast instead of drawn outlines. Calls that pass an
+// explicit *muted* or state color (T.borderMuted, or a functional color like
+// "done vs. not done") are unaffected — those are genuinely subtle dividers
+// or meaningful indicators, not decorative thick lines.
+const tb = (w = 2, col: string = T.border) => col === T.border ? "none" : `${w}px solid ${col}`;
 // Alpha-tinted color — works with the CSS-variable T.* tokens (a hex-alpha suffix
 // like `${T.inside}1f` can't be appended to a var() reference).
 const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, transparent)`;
