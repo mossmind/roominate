@@ -2119,24 +2119,35 @@ export default function App() {
   // Small "bubble" cards for comments that @mention this account — capped at
   // 4 so this never turns into another feed to keep up with; nothing renders
   // at all when there aren't any, so it never costs space it isn't earning.
+  // Same box treatment as the board's own ProjectCard (border, radius,
+  // shadow, fixed slot height) — and the same even-width flex sizing the
+  // Outside/Inside columns use — so these read as part of the same board
+  // rather than a different, smaller-scale widget bolted on top.
   function renderMentionBubbles(compact: boolean) {
     if (mentionCards.length === 0) return null;
     return (
       <div style={{ marginTop: compact ? 14 : 18, display: "flex", flexDirection: "column", gap: compact ? 7 : 8 }}>
         <div style={{ fontFamily: FONT, fontSize: compact ? 9 : 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>MENTIONS</div>
-        <div style={{ display: "flex", gap: compact ? 8 : 10, flexWrap: "wrap" }}>
-          {mentionCards.map(m => (
-            <button key={m.comment.gid} onClick={() => { const t = projects.find(p => p.gid === m.taskGid); if (t) setOpenTask(t); }}
-              className="btn-secondary"
-              style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 4, width: compact ? "100%" : 240, maxWidth: compact ? undefined : 240, background: T.surface, border: tb(1.5), borderRadius: 14, boxShadow: T.shadowSm, padding: compact ? "9px 12px" : "10px 13px", cursor: "pointer" }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
-                <span style={{ fontFamily: FONT, fontSize: compact ? 11 : 12, fontWeight: 800, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.comment.author || "Someone"}</span>
-                <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted, flexShrink: 0 }}>· {timeAgo(m.comment.created_at)}</span>
-              </div>
-              <div style={{ fontFamily: FONT, fontSize: compact ? 12 : 13, color: T.ink, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}><AsanaCommentText comment={m.comment} linksClickable={false} /></div>
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.taskName}</div>
-            </button>
-          ))}
+        <div style={{ display: "flex", flexDirection: compact ? "column" : "row", gap: compact ? 10 : 12 }}>
+          {mentionCards.map(m => {
+            const cat = categories[m.taskGid] ?? null;
+            const tagLabel = cat ? CATEGORIES[cat].label : "Uncategorized";
+            const tagColor = cat ? CATEGORIES[cat].color : T.uncat;
+            return (
+              <button key={m.comment.gid} onClick={() => { const t = projects.find(p => p.gid === m.taskGid); if (t) setOpenTask(t); }}
+                style={{ textAlign: "left", flex: compact ? undefined : "1 1 0", minWidth: 0, width: compact ? "100%" : undefined, height: T.slotHeight, display: "flex", flexDirection: "column", gap: 4, background: T.surface, border: tb(2), borderRadius: T.radius, boxShadow: T.shadow, overflow: "hidden", padding: "10px 14px 12px", cursor: "pointer" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                  <div style={{ display: "inline-block", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: ON_ACCENT, background: tagColor, letterSpacing: 0.5, textTransform: "uppercase", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>{tagLabel}</div>
+                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.comment.author || "Someone"}</span>
+                </div>
+                <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.35, flex: 1, minHeight: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}><AsanaCommentText comment={m.comment} linksClickable={false} /></div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto" }}>
+                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.taskName}</span>
+                  <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted, flexShrink: 0 }}>{timeAgo(m.comment.created_at)}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     );
