@@ -43,19 +43,19 @@ function PasswordGate({ children }: { children: React.ReactNode }) {
   if (!checked) return null
 
   // Matches the main app's design system (App.tsx: the T token palette,
-  // tb() hard borders, flat offset shadows, EB Garamond) — reverted to the
+  // tb() hard borders, flat offset shadows, Cormorant) — reverted to the
   // original dark/organic palette. Hardcoded here rather than imported
   // because this gate renders before App mounts, so App's CSS-variable
   // :root block and @import don't exist yet.
   const canvas = '#242329', surface = '#322F35', surfaceMuted = '#1C1A1E';
   const ink = '#F4EDEA', inkMuted = '#ABA29D', inside = '#657946', urgent = '#EF9982';
   const onAccent = '#242329'; // fixed dark text for content on top of a solid accent fill
-  const font = "'EB Garamond', Georgia, serif";
+  const font = "'Cormorant', Georgia, serif";
 
   if (!authed) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: canvas, fontFamily: font }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;0,800;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,700;1,400&display=swap');
         .login-btn { transition: transform 0.1s ease, opacity 0.1s ease; }
         .login-btn:hover:not(:disabled) { opacity: 0.9; }
         .login-btn:active:not(:disabled) { transform: translate(1px, 1px); }
