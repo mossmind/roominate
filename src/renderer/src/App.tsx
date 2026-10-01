@@ -203,6 +203,10 @@ interface MentionCard {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function daysLeft(due: string | null) { return due ? Math.ceil((new Date(due).getTime() - Date.now()) / 86400000) : null; }
+// "Actionable soon" for the board columns' default (collapsed) view —
+// overdue/due this week, or no due date at all (undated tasks aren't
+// excluded by a date rule, so they're never the thing hidden by default).
+function isActionableSoon(p: Task): boolean { const d = daysLeft(p.due_on); return d === null || d <= 7; }
 function urgLabel(due: string | null) { const d = daysLeft(due); if (d === null) return null; if (d < 0) return Math.abs(d) + "d overdue"; if (d === 0) return "Due today"; if (d <= 7) return d + "d left"; return null; }
 function urgColorLight(due: string | null) { const d = daysLeft(due); return d !== null && d <= 7 ? (d <= 3 ? T.urgent : T.soon) : T.inkMuted; }
 function timeAgo(iso: string): string {
@@ -1798,6 +1802,18 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [createCategory, setCreateCategory] = useState<CategoryKey>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  // ADHD-friendly hierarchy: the reminder chips are the one thing meant to
+  // register instantly — Coming Up and Mentions are real but secondary, so
+  // they start collapsed behind one small disclosure instead of competing
+  // for attention at the same visual weight on every single load.
+  const [showMoreToday, setShowMoreToday] = useState(false);
+  const [calmMode, setCalmMode] = useState(false);
+  // Progressive disclosure on the board columns: each one shows only what's
+  // actionable soon by default (undated tasks stay visible too — hiding
+  // those behind a click risks them being forgotten entirely, not just
+  // deferred) with a "+N more" to reveal anything due further out, so a long
+  // backlog doesn't turn into a wall of cards to re-triage on every visit.
+  const [expandedColumns, setExpandedColumns] = useState<Set<string>>(new Set());
   const hasFetched = useRef(false);
   const syncInFlight = useRef(false);
   const isMobile = useIsMobile();
@@ -1811,6 +1827,7 @@ export default function App() {
 
   useEffect(() => {
     storageGet("theme").then(v => { if (v === "dark" || v === "light") setTheme(v); }).catch(() => {});
+    storageGet("calm_mode").then(v => { if (v === "true") setCalmMode(true); }).catch(() => {});
   }, []);
 
   // Who to watch for in comments — resolved once from Asana itself rather
@@ -1881,6 +1898,16 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-calm", calmMode ? "true" : "false");
+  }, [calmMode]);
+
+  function toggleCalmMode() {
+    const next = !calmMode;
+    setCalmMode(next);
+    storageSet("calm_mode", String(next)).catch(() => {});
+  }
 
   function toggleTheme() {
     const next = theme === "light" ? "dark" : "light";
@@ -2080,6 +2107,10 @@ export default function App() {
 
   function renderColumn(icon: React.ReactNode, label: string, items: Task[], targetCat: CategoryKey, accentColor: string, emptySlots: number) {
     const isOver = dragGid !== null && dragOverCat === targetCat;
+    const expanded = expandedColumns.has(label);
+    const hasDeferred = items.some(p => !isActionableSoon(p));
+    const visible = expanded ? items : items.filter(isActionableSoon);
+    const hiddenCount = items.length - visible.length;
     return (
       <div
         style={{ display: "flex", flexDirection: "column", flex: "1 1 0", minWidth: 0, borderRadius: T.radius, outline: isOver ? `2px solid ${accentColor}` : "2px solid transparent", outlineOffset: 4, transition: "outline-color 0.15s" }}
@@ -2095,7 +2126,7 @@ export default function App() {
           <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: ON_ACCENT, background: accentColor, border: "none", borderRadius: 999, padding: "3px 11px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
-          {items.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
+          {visible.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
           {Array.from({ length: emptySlots }).map((_, i) => {
             const active = isOver && i === 0;
             return (
@@ -2109,6 +2140,16 @@ export default function App() {
               </button>
             );
           })}
+          {hasDeferred && (
+            <button onClick={() => setExpandedColumns(prev => {
+                const next = new Set(prev);
+                if (next.has(label)) next.delete(label); else next.add(label);
+                return next;
+              })}
+              style={{ background: "none", border: "none", padding: "4px 0", marginTop: 4, cursor: "pointer", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: T.inkMuted, textAlign: "left" }}>
+              {expanded ? "Show less" : `+${hiddenCount} more, not due soon`}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -2177,6 +2218,7 @@ export default function App() {
           {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
           <button onClick={() => syncTasks()} disabled={syncing} title="Sync tasks from Asana" aria-label="Sync tasks from Asana" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 17 : 13, fontWeight: 800, color: T.ink, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1, opacity: syncing ? 0.5 : 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
           <button onClick={toggleTheme} title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 12px", fontFamily: FONT, fontSize: 14, color: T.ink, cursor: "pointer", lineHeight: 1 }}>{theme === "light" ? "☾" : "☀"}</button>
+          <button onClick={toggleCalmMode} title={calmMode ? "Turn off calm mode (restore texture & motion)" : "Turn on calm mode (less texture & motion)"} aria-label={calmMode ? "Turn off calm mode" : "Turn on calm mode"} aria-pressed={calmMode} className="btn-secondary" style={{ background: calmMode ? T.inside : T.surfaceMuted, color: calmMode ? ON_ACCENT : T.ink, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 12px", fontFamily: FONT, fontSize: 14, cursor: "pointer", lineHeight: 1 }}>◌</button>
           <button onClick={() => setShowSettings(true)} title="Settings" aria-label="Settings" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 12px", fontFamily: FONT, fontSize: 14, color: T.ink, cursor: "pointer", lineHeight: 1 }}>⚙</button>
         </div>
       </div>
@@ -2311,8 +2353,14 @@ export default function App() {
                       <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "5px 12px" }}>Nothing urgent — clear runway ✓</div>
                     )}
                   </div>
-                  {upcomingTasks.length > 0 && (
-                    <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 7 }}>
+                  {(upcomingTasks.length > 0 || mentionCards.length > 0) && (
+                    <button onClick={() => setShowMoreToday(s => !s)} aria-expanded={showMoreToday}
+                      style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", padding: 0, marginTop: 12, cursor: "pointer", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5 }}>
+                      {showMoreToday ? "▾" : "▸"} {showMoreToday ? "Less" : "More for today"}
+                    </button>
+                  )}
+                  {showMoreToday && upcomingTasks.length > 0 && (
+                    <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 7 }}>
                       <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
                       {upcomingTasks.map(p => (
                         <button key={p.gid} onClick={() => setOpenTask(p)}
@@ -2324,7 +2372,7 @@ export default function App() {
                       ))}
                     </div>
                   )}
-                  {renderMentionBubbles(true)}
+                  {showMoreToday && renderMentionBubbles(true)}
                 </div>
                 {projects.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -2431,8 +2479,14 @@ export default function App() {
                           <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "6px 14px" }}>Nothing urgent — clear runway ✓</div>
                         )}
                       </div>
-                      {upcomingTasks.length > 0 && (
-                        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {(upcomingTasks.length > 0 || mentionCards.length > 0) && (
+                        <button onClick={() => setShowMoreToday(s => !s)} aria-expanded={showMoreToday}
+                          style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", padding: 0, marginTop: 16, cursor: "pointer", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5 }}>
+                          {showMoreToday ? "▾" : "▸"} {showMoreToday ? "Less" : "More for today"}
+                        </button>
+                      )}
+                      {showMoreToday && upcomingTasks.length > 0 && (
+                        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                           <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
                           {upcomingTasks.map(p => (
                             <button key={p.gid} onClick={() => setOpenTask(p)}
@@ -2444,7 +2498,7 @@ export default function App() {
                           ))}
                         </div>
                       )}
-                      {renderMentionBubbles(false)}
+                      {showMoreToday && renderMentionBubbles(false)}
                     </div>
                     {!projects.length ? (
                       <div style={{ textAlign: "center", padding: "80px 40px" }}>
@@ -2812,6 +2866,19 @@ export default function App() {
             scroll-behavior: auto !important;
           }
         }
+        /* Calm mode — a manual, independent-of-OS-setting version of the same
+           reduced-motion collapse above, plus turning off the heaviest
+           textures (grain overlay, the board's photo background, the Quick
+           Tasks grid) since sensory sensitivity is a common ADHD co-trait and
+           this app leans hard into texture/motion as part of its look. */
+        [data-calm="true"] *, [data-calm="true"] *::before, [data-calm="true"] *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+        }
+        [data-calm="true"] .moss-grain { display: none !important; }
+        [data-calm="true"] .board-canvas { background-image: none !important; }
+        [data-calm="true"] .quick-tasks-grid { background-image: none !important; }
       `}</style>
     </div>
   );
