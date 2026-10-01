@@ -2355,8 +2355,14 @@ export default function App() {
                   </div>
                   {(upcomingTasks.length > 0 || mentionCards.length > 0) && (
                     <button onClick={() => setShowMoreToday(s => !s)} aria-expanded={showMoreToday}
-                      style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", padding: 0, marginTop: 12, cursor: "pointer", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5 }}>
-                      {showMoreToday ? "▾" : "▸"} {showMoreToday ? "Less" : "More for today"}
+                      style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, marginTop: 12, cursor: "pointer", fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5 }}>
+                      <span>{showMoreToday ? "▾" : "▸"} {showMoreToday ? "Less" : "More for today"}</span>
+                      {!showMoreToday && mentionCards.length > 0 && (
+                        <span aria-label={`${mentionCards.length} mention${mentionCards.length === 1 ? "" : "s"} waiting`}
+                          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 15, height: 15, borderRadius: 999, background: T.inside, color: ON_ACCENT, fontSize: 9, fontWeight: 800, padding: "0 4px" }}>
+                          {mentionCards.length}
+                        </span>
+                      )}
                     </button>
                   )}
                   {showMoreToday && upcomingTasks.length > 0 && (
@@ -2481,8 +2487,14 @@ export default function App() {
                       </div>
                       {(upcomingTasks.length > 0 || mentionCards.length > 0) && (
                         <button onClick={() => setShowMoreToday(s => !s)} aria-expanded={showMoreToday}
-                          style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", padding: 0, marginTop: 16, cursor: "pointer", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5 }}>
-                          {showMoreToday ? "▾" : "▸"} {showMoreToday ? "Less" : "More for today"}
+                          style={{ display: "flex", alignItems: "center", gap: 7, background: "none", border: "none", padding: 0, marginTop: 16, cursor: "pointer", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.inkMuted, letterSpacing: 0.5 }}>
+                          <span>{showMoreToday ? "▾" : "▸"} {showMoreToday ? "Less" : "More for today"}</span>
+                          {!showMoreToday && mentionCards.length > 0 && (
+                            <span aria-label={`${mentionCards.length} mention${mentionCards.length === 1 ? "" : "s"} waiting`}
+                              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 17, height: 17, borderRadius: 999, background: T.inside, color: ON_ACCENT, fontSize: 10, fontWeight: 800, padding: "0 5px" }}>
+                              {mentionCards.length}
+                            </span>
+                          )}
                         </button>
                       )}
                       {showMoreToday && upcomingTasks.length > 0 && (
