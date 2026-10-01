@@ -2126,14 +2126,18 @@ export default function App() {
     return (
       <div style={{ marginTop: compact ? 14 : 18, display: "flex", flexDirection: "column", gap: compact ? 7 : 8 }}>
         <div style={{ fontFamily: FONT, fontSize: compact ? 10 : 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>MENTIONS</div>
-        <div style={{ display: "flex", flexDirection: compact ? "column" : "row", gap: compact ? 10 : 12 }}>
+        {/* 2 columns x 2 rows (up to the 4-card cap) — same maxWidth:824 +
+            gap:28 math as the Outside/Inside columns below, so each card's
+            width matches a column's width exactly rather than scaling off
+            however many mention cards happen to be showing. */}
+        <div style={{ display: compact ? "flex" : "grid", flexDirection: compact ? "column" : undefined, gridTemplateColumns: compact ? undefined : "1fr 1fr", gap: compact ? 10 : 28 }}>
           {mentionCards.map(m => {
             const cat = categories[m.taskGid] ?? null;
             const tagLabel = cat ? CATEGORIES[cat].label : "Uncategorized";
             const tagColor = cat ? CATEGORIES[cat].color : T.uncat;
             return (
               <button key={m.comment.gid} onClick={() => { const t = projects.find(p => p.gid === m.taskGid); if (t) setOpenTask(t); }}
-                style={{ textAlign: "left", flex: compact ? undefined : "1 1 0", minWidth: 0, width: compact ? "100%" : undefined, height: T.slotHeight, display: "flex", flexDirection: "column", gap: 4, background: T.surface, border: tb(2), borderRadius: T.radius, boxShadow: T.shadow, overflow: "hidden", padding: "10px 14px 12px", cursor: "pointer" }}>
+                style={{ textAlign: "left", width: "100%", minWidth: 0, height: T.slotHeight, display: "flex", flexDirection: "column", gap: 4, background: T.surface, border: tb(2), borderRadius: T.radius, boxShadow: T.shadow, overflow: "hidden", padding: "10px 14px 12px", cursor: "pointer" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                   <div style={{ display: "inline-block", fontFamily: FONT, fontSize: 10, fontWeight: 800, color: ON_ACCENT, background: tagColor, letterSpacing: 0.5, textTransform: "uppercase", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>{tagLabel}</div>
                   <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.comment.author || "Someone"}</span>
