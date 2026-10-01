@@ -141,7 +141,7 @@ const tint = (col: string, pct: number) => `color-mix(in srgb, ${col} ${pct}%, t
 // (page/section titles, card titles, labels, body, captions). Existing micro-
 // tweaked font sizes elsewhere in the file are left alone rather than churned
 // for no visual gain.
-const FS = { caption: 11, label: 12, body: 14, title: 20, display: 28 };
+const FS = { caption: 12, label: 13, body: 15, title: 21, display: 29 };
 // None of the four accent hexes (green/terracotta/coral/stone) are legible as
 // text on their own — but dark ink is legible ON TOP of every one of them.
 // So every accent is used as a solid fill with fixed dark ink content on top,
@@ -346,23 +346,23 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
         <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 10, padding: "3px 10px", borderRadius: 999 }}>CONNECTION</div>
         {isElectron ? (
           <>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
+            <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Asana Personal Access Token</div>
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="1/…"
-                style={{ flex: 1, fontFamily: FONT, fontSize: 13, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box" }} />
+                style={{ flex: 1, fontFamily: FONT, fontSize: 14, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box" }} />
               <button onClick={loadSections} disabled={!pat.trim() || loadingSections} className="btn-primary"
-                style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
+                style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: pat.trim() ? "pointer" : "not-allowed", opacity: pat.trim() ? 1 : 0.5, flexShrink: 0 }}>
                 {loadingSections ? "Loading…" : "Load Sections"}
               </button>
             </div>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Anthropic API Key (for AI mind maps)</div>
+            <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.inkMuted, textTransform: "none", letterSpacing: 1, marginBottom: 6 }}>Anthropic API Key (for AI mind maps)</div>
             <input type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…"
-              style={{ width: "100%", fontFamily: FONT, fontSize: 13, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box", marginBottom: 20 }} />
+              style={{ width: "100%", fontFamily: FONT, fontSize: 14, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", background: T.surfaceMuted, color: T.ink, boxSizing: "border-box", marginBottom: 20 }} />
           </>
         ) : (
           <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
             <button onClick={loadSections} disabled={loadingSections} className="btn-primary"
-              style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "10px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
               {loadingSections ? "Loading…" : "Load Sections"}
             </button>
           </div>
@@ -373,10 +373,10 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
           SECTIONS TO SYNC ({selectedGids.length} selected)
         </div>
 
-        {sectionError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", marginBottom: 10 }}>{sectionError}</div>}
+        {sectionError && <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", marginBottom: 10 }}>{sectionError}</div>}
 
         {sections.length === 0 && (
-          <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginBottom: 16, fontStyle: "italic" }}>
+          <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, marginBottom: 16, fontStyle: "italic" }}>
             Enter your token and click "Load Sections" to pick which sections to sync.
           </div>
         )}
@@ -388,7 +388,7 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
               return (
                 <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: checked ? tint(T.inside, 14) : T.surfaceMuted, border: "none", transition: "all 0.15s" }}>
                   <input type="checkbox" checked={checked} onChange={() => toggleSection(sec.gid)} style={{ width: 16, height: 16, accentColor: T.inside, flexShrink: 0 }} />
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: checked ? 700 : 500, color: T.ink }}>{sec.name}</span>
+                  <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: checked ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
               );
             })}
@@ -402,12 +402,12 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
               <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: !quickTaskGid ? tint(T.inside, 14) : T.surfaceMuted, border: "none" }}>
                 <input type="radio" checked={!quickTaskGid} onChange={() => setQuickTaskGid("")} style={{ accentColor: T.inside }} />
-                <span style={{ fontFamily: FONT, fontSize: 13, color: T.ink }}>None</span>
+                <span style={{ fontFamily: FONT, fontSize: 14, color: T.ink }}>None</span>
               </label>
               {sections.map(sec => (
                 <label key={sec.gid} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: T.radiusSm, background: quickTaskGid === sec.gid ? tint(T.inside, 14) : T.surfaceMuted, border: "none" }}>
                   <input type="radio" checked={quickTaskGid === sec.gid} onChange={() => setQuickTaskGid(sec.gid)} style={{ accentColor: T.inside }} />
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: quickTaskGid === sec.gid ? 700 : 500, color: T.ink }}>{sec.name}</span>
+                  <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: quickTaskGid === sec.gid ? 700 : 500, color: T.ink }}>{sec.name}</span>
                 </label>
               ))}
             </div>
@@ -416,10 +416,10 @@ function SettingsPanel({ onClose, onSaved }: { onClose: () => void; onSaved: (se
 
         <div style={{ borderTop: tb(2), margin: "20px 0 20px" }} />
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={save} className="btn-primary" style={{ flex: 1, background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+          <button onClick={save} className="btn-primary" style={{ flex: 1, background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer" }}>
             {saved ? "✓ Saved!" : "Save"}
           </button>
-          <button onClick={onClose} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "12px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, color: T.inkMuted, cursor: "pointer" }}>Done</button>
+          <button onClick={onClose} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "12px 20px", fontFamily: FONT, fontSize: 14, fontWeight: 700, color: T.inkMuted, cursor: "pointer" }}>Done</button>
         </div>
       </div>
     </div>
@@ -707,7 +707,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             style={{ height: isCentral ? 8 : 6, background: cardColor, cursor: connectMode ? 'crosshair' : 'grab', flexShrink: 0 }} />
           {hasLabel && (
             <div onMouseDown={e => onMD(e, node.id)} style={{ padding: '6px 10px 0', cursor: connectMode ? 'crosshair' : 'grab' }}>
-              <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 900, color: T.ink, letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>
+              <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 900, color: T.ink, letterSpacing: 0.8 }}>{ntStyle.prefix} {ntStyle.label}</span>
             </div>
           )}
 
@@ -715,14 +715,14 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
             // Non-image file (PDF, doc, etc.) — local path (Electron) or dataUrl (web)
             <div onMouseDown={e => e.stopPropagation()} style={{ padding: '12px 10px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>
+                <span style={{ fontSize: 25, lineHeight: 1, flexShrink: 0 }}>
                   {node.fileExt === 'pdf' ? '📄' : ['mp4','mov','avi'].includes(node.fileExt ?? '') ? '🎬' : ['mp3','wav','aac'].includes(node.fileExt ?? '') ? '🎵' : ['doc','docx'].includes(node.fileExt ?? '') ? '📝' : '📁'}
                 </span>
-                <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.ink, wordBreak: 'break-all', lineHeight: 1.35 }}>{node.fileName}</div>
+                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: T.ink, wordBreak: 'break-all', lineHeight: 1.35 }}>{node.fileName}</div>
               </div>
               <button onMouseDown={e => e.stopPropagation()}
                 onClick={() => node.filePath ? platformFiles.openPath(node.filePath) : window.open(node.url, '_blank')}
-                style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: '5px 0', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, cursor: 'pointer', width: '100%' }}>
+                style={{ background: T.surfaceMuted, border: "none", borderRadius: T.radiusSm, padding: '5px 0', fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.ink, cursor: 'pointer', width: '100%' }}>
                 Open ↗
               </button>
             </div>
@@ -731,24 +731,24 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
               <img src={node.url} alt="" style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.minHeight = '60px'; (e.target as HTMLImageElement).style.background = T.surfaceMuted; }} />
               {node.filePath && (
                 <button onMouseDown={e => e.stopPropagation()} onClick={() => platformFiles.openPath(node.filePath!)}
-                  style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(38,27,24,0.65)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: T.radiusSm, padding: '3px 8px', fontFamily: FONT, fontSize: 9, fontWeight: 700, color: '#FFFFFF', cursor: 'pointer' }}>
+                  style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(38,27,24,0.65)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: T.radiusSm, padding: '3px 8px', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: '#FFFFFF', cursor: 'pointer' }}>
                   Open ↗
                 </button>
               )}
               {editingId === node.id
-                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 6, fontFamily: FONT, fontSize: 11, background: 'transparent', border: 'none', borderBottom: `1px solid ${T.borderMuted}`, outline: 'none', color: T.inkMuted, boxSizing: 'border-box' }} />
-                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 6, fontFamily: FONT, fontSize: 11, color: node.text ? T.inkMuted : T.borderMuted, cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
+                ? <input autoFocus value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === 'Enter' && setEditingId(null)} onMouseDown={e => e.stopPropagation()} style={{ width: '100%', marginTop: 6, fontFamily: FONT, fontSize: 12, background: 'transparent', border: 'none', borderBottom: `1px solid ${T.borderMuted}`, outline: 'none', color: T.inkMuted, boxSizing: 'border-box' }} />
+                : <div onMouseDown={e => { e.stopPropagation(); setEditingId(node.id); }} style={{ marginTop: 6, fontFamily: FONT, fontSize: 12, color: node.text ? T.inkMuted : T.borderMuted, cursor: 'text', minHeight: 14 }}>{node.text || 'caption…'}</div>}
             </div>
           ) : (
             <div style={{ padding: '10px 10px 8px' }}>
               <textarea value={node.text} onChange={e => updateNode(node.id, { text: e.target.value })} placeholder={node.nodeType === 'vibe' ? 'describe the feeling…' : node.nodeType === 'person' ? 'who is this for…' : node.nodeType === 'visual' ? 'color, imagery, texture…' : node.nodeType === 'nextstep' ? 'the one next move…' : 'type here…'}
                 onMouseDown={e => e.stopPropagation()}
-                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: isCentral ? 36 : node.nodeType === 'nextstep' ? 44 : 52, fontFamily: FONT, fontSize: isCentral ? 16 : node.nodeType === 'nextstep' ? 14 : 12, fontWeight: isCentral ? 700 : node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: T.ink, resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', display: 'block', cursor: 'text', padding: 0, textAlign: isCentral ? 'center' : 'left' }} />
+                style={{ width: '100%', height: node.h ? node.h - 30 : 52, minHeight: isCentral ? 36 : node.nodeType === 'nextstep' ? 44 : 52, fontFamily: FONT, fontSize: isCentral ? 17 : node.nodeType === 'nextstep' ? 15 : 13, fontWeight: isCentral ? 700 : node.nodeType === 'nextstep' ? 800 : 500, fontStyle: node.nodeType === 'vibe' ? 'italic' : 'normal', background: 'transparent', border: 'none', outline: 'none', color: T.ink, resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', display: 'block', cursor: 'text', padding: 0, textAlign: isCentral ? 'center' : 'left' }} />
               <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 6, position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setColorPickerNode(colorPickerNode === node.id ? null : node.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer' }}>
                   <div style={{ width: 18, height: 18, background: cardColor, borderRadius: '50%', border: "none", boxShadow: T.shadowSm, flexShrink: 0 }} />
-                  <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted }}>▾</span>
+                  <span style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted }}>▾</span>
                 </button>
                 {colorPickerNode === node.id && (
                   <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 500, background: T.surface, border: tb(2), borderRadius: 8, padding: 6, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 4, boxShadow: T.shadowLg }}>
@@ -777,7 +777,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         </div>
         <button onMouseDown={e => { e.stopPropagation(); removeNode(node.id); }} title="Delete node" aria-label="Delete node"
           className="node-delete"
-          style={{ position: 'absolute', top: -8, right: -8, width: 18, height: 18, borderRadius: '50%', background: T.surface, border: "none", boxShadow: T.shadowSm, color: T.ink, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, opacity: 0, transition: 'opacity 0.15s' }}>×</button>
+          style={{ position: 'absolute', top: -8, right: -8, width: 18, height: 18, borderRadius: '50%', background: T.surface, border: "none", boxShadow: T.shadowSm, color: T.ink, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, opacity: 0, transition: 'opacity 0.15s' }}>×</button>
       </div>
     );
   });
@@ -790,7 +790,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
           const s = NODE_TYPE_STYLES[nt]
           return (
             <button key={nt} onClick={() => addTextNode(nt)} title={`Add a ${s.label} note`}
-              style={{ background: s.bg, color: 'rgba(255,255,255,0.92)', border: 'none', borderRadius: 20, padding: '5px 13px', fontFamily: FONT, fontSize: 10, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3, transition: 'opacity 0.15s' }}
+              style={{ background: s.bg, color: 'rgba(255,255,255,0.92)', border: 'none', borderRadius: 20, padding: '5px 13px', fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3, transition: 'opacity 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
               {s.label}
@@ -803,7 +803,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
         {/* + menu */}
         <div style={{ position: 'relative' }}>
           <button onClick={() => setShowAddMenu(v => !v)} title="Add other node" aria-label="Add other node" aria-expanded={showAddMenu}
-            style={{ background: showAddMenu ? T.ink : T.surfaceMuted, color: showAddMenu ? T.surface : T.ink, border: "none", borderRadius: 20, width: 30, height: 28, fontFamily: FONT, fontSize: 16, fontWeight: 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>
+            style={{ background: showAddMenu ? T.ink : T.surfaceMuted, color: showAddMenu ? T.surface : T.ink, border: "none", borderRadius: 20, width: 30, height: 28, fontFamily: FONT, fontSize: 17, fontWeight: 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>
             +
           </button>
           {showAddMenu && (
@@ -815,7 +815,7 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
                 { label: 'File', action: () => { addFileNode(); setShowAddMenu(false) } },
               ].map(item => (
                 <button key={item.label} onClick={item.action}
-                  style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '8px 16px', fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.ink, cursor: 'pointer', textAlign: 'left' }}
+                  style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '8px 16px', fontFamily: FONT, fontSize: 12, fontWeight: 600, color: T.ink, cursor: 'pointer', textAlign: 'left' }}
                   onMouseEnter={e => (e.currentTarget.style.background = T.surfaceMuted)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                   {item.label}
@@ -828,13 +828,13 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
 
         {/* Link toggle */}
         <button onClick={() => { setConnectMode(v => !v); setConnecting(null); setShowAddMenu(false) }} title="Draw a connection between two nodes" aria-pressed={connectMode}
-          style={{ background: connectMode ? T.ink : T.surfaceMuted, color: connectMode ? T.surface : T.ink, border: "none", borderRadius: 20, padding: '5px 12px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ background: connectMode ? T.ink : T.surfaceMuted, color: connectMode ? T.surface : T.ink, border: "none", borderRadius: 20, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
           {connectMode ? (connecting ? '→ pick 2nd' : '→ pick 1st') : '⤢ Link'}
         </button>
 
         {/* AI generate */}
         <button onClick={generate} disabled={generating} title="Generate mind map nodes from the project brief"
-          style={{ background: generating ? T.surfaceMuted : T.inside, color: generating ? T.inkMuted : ON_ACCENT, border: 'none', borderRadius: 20, padding: '5px 14px', fontFamily: FONT, fontSize: 10, fontWeight: 700, cursor: generating ? 'default' : 'pointer', transition: 'opacity 0.15s' }}>
+          style={{ background: generating ? T.surfaceMuted : T.inside, color: generating ? T.inkMuted : ON_ACCENT, border: 'none', borderRadius: 20, padding: '5px 14px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: generating ? 'default' : 'pointer', transition: 'opacity 0.15s' }}>
           {generating ? 'Generating…' : '✦ AI'}
         </button>
       </div>
@@ -857,13 +857,13 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       {showImgInput && (
         <div style={{ padding: '6px 12px 8px', border: "none", display: 'flex', gap: 8, alignItems: 'center' }}>
           <input value={urlInput} onChange={e => setUrlInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addImageNode()} placeholder="Paste image URL…" autoFocus
-            style={{ fontFamily: FONT, fontSize: 11, background: T.surfaceMuted, border: tb(1.5), borderRadius: 6, padding: '5px 10px', outline: 'none', color: T.ink, flex: 1 }} />
-          <button onClick={addImageNode} style={{ background: T.inside, color: ON_ACCENT, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
-          <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} title="Cancel" aria-label="Cancel" style={{ background: 'transparent', color: T.inkMuted, border: 'none', fontSize: 14, cursor: 'pointer', padding: '0 2px' }}>✕</button>
+            style={{ fontFamily: FONT, fontSize: 12, background: T.surfaceMuted, border: tb(1.5), borderRadius: 6, padding: '5px 10px', outline: 'none', color: T.ink, flex: 1 }} />
+          <button onClick={addImageNode} style={{ background: T.inside, color: ON_ACCENT, border: 'none', borderRadius: 6, padding: '5px 12px', fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+          <button onClick={() => { setShowImgInput(false); setUrlInput(''); }} title="Cancel" aria-label="Cancel" style={{ background: 'transparent', color: T.inkMuted, border: 'none', fontSize: 15, cursor: 'pointer', padding: '0 2px' }}>✕</button>
         </div>
       )}
 
-      {genError && <div style={{ margin: '0 12px 6px', fontFamily: FONT, fontSize: 10, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: '4px 8px' }}>{genError}</div>}
+      {genError && <div style={{ margin: '0 12px 6px', fontFamily: FONT, fontSize: 11, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: '4px 8px' }}>{genError}</div>}
     </div>
   );
 
@@ -874,10 +874,10 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       {edgeSvg}
       {loaded && nodes.length === 0 && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', gap: 14 }}>
-          <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>Get it out of your head — vibes, people, next step</div>
+          <div style={{ fontFamily: FONT, fontSize: 14, color: T.inkMuted }}>Get it out of your head — vibes, people, next step</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {(['vibe', 'person', 'nextstep'] as MindNodeType[]).map(nt => (
-              <div key={nt} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, padding: '3px 8px', borderRadius: 12, background: T.surfaceMuted }}>
+              <div key={nt} style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, padding: '3px 8px', borderRadius: 12, background: T.surfaceMuted }}>
                 {NODE_TYPE_STYLES[nt].prefix} {NODE_TYPE_STYLES[nt].label}
               </div>
             ))}
@@ -894,8 +894,8 @@ function MindMap({ taskGid, taskName = '', taskNotes = '', fullscreen = false }:
       {toolbar}
       {nextStepNode && (
         <div style={{ background: NODE_TYPE_STYLES.nextstep.bg, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-          <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.65)', letterSpacing: 1, flexShrink: 0 }}>NEXT STEP</span>
-          <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: C.white, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextStepNode.text}</span>
+          <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.65)', letterSpacing: 1, flexShrink: 0 }}>NEXT STEP</span>
+          <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: 800, color: C.white, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextStepNode.text}</span>
         </div>
       )}
       {canvas}
@@ -1154,18 +1154,18 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
                 <circle cx={38} cy={38} r={radius} fill="none" stroke={T.ink} strokeWidth={5} strokeLinecap="round"
                   strokeDasharray={circumference} strokeDashoffset={dashOffset} style={{ transition: "stroke-dashoffset 1s linear" }} />
               </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 22, fontWeight: 900, color: T.ink }}>{seconds}</div>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 23, fontWeight: 900, color: T.ink }}>{seconds}</div>
             </div>
-            <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, letterSpacing: 0.5 }}>seconds of stillness</div>
+            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.ink, letterSpacing: 0.5 }}>seconds of stillness</div>
           </div>
         </div>
         <button onClick={onUnlock} title="Leave prayer" className="prayer-focus btn-secondary"
-          style={{ position: "absolute", top: 24, right: 24, zIndex: 2, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          style={{ position: "absolute", top: 24, right: 24, zIndex: 2, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
           ✕ Leave
         </button>
         <button onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m); }}
           title={muted ? "Unmute prayer music" : "Mute prayer music"} className="prayer-focus btn-secondary"
-          style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
           {muted ? "♪ Unmute" : "♪ Mute"}
         </button>
         <PrayerStyles />
@@ -1190,12 +1190,12 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
       {screen.kind === "browse" && ambientWisps.map(w => <PrayerWisp key={w.id} wisp={w} />)}
 
       <button onClick={onUnlock} title="Return to tasks" aria-label="Return to tasks" className="prayer-focus btn-secondary"
-        style={{ position: "absolute", top: 24, right: 24, zIndex: 3, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+        style={{ position: "absolute", top: 24, right: 24, zIndex: 3, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
         ✕ {isMobile ? "" : "Done"}
       </button>
       <button onClick={() => { const a = audioRef.current; if (!a) return; a.muted = !a.muted; setMuted(m => !m); }}
         title={muted ? "Unmute prayer music" : "Mute prayer music"} className="prayer-focus btn-secondary"
-        style={{ position: "absolute", bottom: 24, right: 24, zIndex: 3, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+        style={{ position: "absolute", bottom: 24, right: 24, zIndex: 3, background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "8px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
         {muted ? "♪ Unmute" : "♪ Mute"}
       </button>
 
@@ -1203,7 +1203,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
         <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: isMobile ? "70px 20px 32px" : "40px 56px" }}>
           <div style={{ width: "100%", maxWidth: 560, margin: "0 auto", flex: 1, display: "flex", flexDirection: "column" }}>
             <button onClick={() => setScreen(screen.editingId ? { kind: "entry", id: screen.editingId } : { kind: "browse", view: "field" })}
-              className="prayer-focus" style={{ alignSelf: "flex-start", background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
+              className="prayer-focus" style={{ alignSelf: "flex-start", background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
               ← Back
             </button>
             <div style={{ display: "inline-block", alignSelf: "flex-start", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 18, padding: "3px 10px", borderRadius: 999 }}>
@@ -1211,21 +1211,21 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
             </div>
             <input value={draftTitle} onChange={e => setDraftTitle(e.target.value)} placeholder="Title (optional)" aria-label="Title (optional)"
               className="prayer-focus"
-              style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, background: "transparent", border: "none", borderBottom: tb(1.5, T.borderMuted), outline: "none", padding: "4px 0 10px", marginBottom: 18, width: "100%" }} />
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 23, fontWeight: 600, color: T.ink, background: "transparent", border: "none", borderBottom: tb(1.5, T.borderMuted), outline: "none", padding: "4px 0 10px", marginBottom: 18, width: "100%" }} />
             <textarea autoFocus value={draftText} onChange={e => setDraftText(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSave(); }}
               placeholder="Start with one sentence, or write as much as you'd like…" aria-label="Prayer text"
               className="prayer-focus"
-              style={{ width: "100%", flex: 1, minHeight: 220, fontFamily: FONT, fontSize: 15, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radius, padding: "16px 18px", outline: "none", resize: "vertical", boxSizing: "border-box", lineHeight: 1.8 }} />
-            {saveError && <div style={{ marginTop: 12, fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "8px 12px", display: "inline-block" }}>⚠ {saveError}</div>}
+              style={{ width: "100%", flex: 1, minHeight: 220, fontFamily: FONT, fontSize: 16, color: T.ink, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radius, padding: "16px 18px", outline: "none", resize: "vertical", boxSizing: "border-box", lineHeight: 1.8 }} />
+            {saveError && <div style={{ marginTop: 12, fontFamily: FONT, fontSize: 13, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "8px 12px", display: "inline-block" }}>⚠ {saveError}</div>}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18, marginBottom: 8 }}>
               <button onClick={handleSave} disabled={!draftText.trim() || saving || entriesLoading} className="prayer-focus"
                 title={entriesLoading ? "Still loading your other prayers — one moment…" : undefined}
-                style={{ background: draftText.trim() ? T.inside : T.surfaceMuted, color: draftText.trim() ? ON_ACCENT : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 28px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: draftText.trim() && !saving && !entriesLoading ? "pointer" : "default", opacity: saving || entriesLoading ? 0.6 : 1 }}>
+                style={{ background: draftText.trim() ? T.inside : T.surfaceMuted, color: draftText.trim() ? ON_ACCENT : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "12px 28px", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: draftText.trim() && !saving && !entriesLoading ? "pointer" : "default", opacity: saving || entriesLoading ? 0.6 : 1 }}>
                 {saving ? "Saving…" : entriesLoading ? "Loading…" : "Save"}
               </button>
               <button onClick={() => setScreen(editingExisting ? { kind: "entry", id: editingExisting.id } : { kind: "browse", view: "field" })} className="prayer-focus"
-                style={{ background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                style={{ background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                 Not now
               </button>
             </div>
@@ -1240,13 +1240,13 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
               entries yet, since the empty state below already carries the
               same "no pressure" framing on its own. */}
           {!entriesLoading && !entriesError && entries.length > 0 && (
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 22, fontWeight: 600, color: T.ink, marginBottom: 14 }}>Anything on your heart?</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 19 : 23, fontWeight: 600, color: T.ink, marginBottom: 14 }}>Anything on your heart?</div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
             <div style={{ display: "flex", gap: 6 }}>
               {(["field", "list"] as const).map(v => (
                 <button key={v} onClick={() => setScreen({ kind: "browse", view: v })} aria-pressed={screen.view === v} className="prayer-focus"
-                  style={{ background: screen.view === v ? T.ink : T.surfaceMuted, color: screen.view === v ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+                  style={{ background: screen.view === v ? T.ink : T.surfaceMuted, color: screen.view === v ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
                   {v === "field" ? "Field" : "List"}
                 </button>
               ))}
@@ -1254,30 +1254,30 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
             {screen.view === "list" && (
               <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search your prayers…" aria-label="Search prayers"
                 className="prayer-focus"
-                style={{ flex: 1, minWidth: 160, maxWidth: 320, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 12px", outline: "none" }} />
+                style={{ flex: 1, minWidth: 160, maxWidth: 320, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 12px", outline: "none" }} />
             )}
             <div style={{ flex: 1 }} />
             <button onClick={() => openCompose(null)} className="prayer-focus"
-              style={{ background: T.inside, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+              style={{ background: T.inside, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
               + New prayer
             </button>
           </div>
 
           {entriesLoading ? (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>Loading your prayers…</div>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT, fontSize: 14, color: T.inkMuted }}>Loading your prayers…</div>
           ) : entriesError ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, textAlign: "center" }}>
-              <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "8px 14px" }}>⚠ {entriesError}</div>
+              <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "8px 14px" }}>⚠ {entriesError}</div>
               <button onClick={() => setLoadNonce(n => n + 1)} className="prayer-focus"
-                style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Try again
               </button>
             </div>
           ) : entries.length === 0 ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, maxWidth: 320, lineHeight: 1.5 }}>Nothing written yet — that's alright. Whenever you're ready.</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 500, color: T.ink, maxWidth: 320, lineHeight: 1.5 }}>Nothing written yet — that's alright. Whenever you're ready.</div>
               <button onClick={() => openCompose(null)} className="prayer-focus"
-                style={{ background: T.inside, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "12px 24px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
+                style={{ background: T.inside, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "12px 24px", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
                 Write a prayer
               </button>
             </div>
@@ -1290,7 +1290,7 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
             </div>
           ) : filteredEntries.length === 0 ? (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-              <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic" }}>No prayers match "{searchQuery}"</div>
+              <div style={{ fontFamily: FONT, fontSize: 14, color: T.inkMuted, fontStyle: "italic" }}>No prayers match "{searchQuery}"</div>
             </div>
           ) : (
             <div style={{ flex: 1, overflowY: "auto" }}>
@@ -1299,10 +1299,10 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
                   <button key={entry.id} onClick={() => setScreen({ kind: "entry", id: entry.id })} className="prayer-focus"
                     style={{ display: "flex", flexDirection: "column", gap: 4, textAlign: "left", background: T.surface, border: tb(1.5, T.borderMuted), boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "14px 16px", cursor: "pointer" }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5, flexShrink: 0 }}>{formatPrayerDateShort(entry.createdAt)}</div>
-                      {entry.title && <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 800, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.title}</div>}
+                      <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5, flexShrink: 0 }}>{formatPrayerDateShort(entry.createdAt)}</div>
+                      {entry.title && <div style={{ fontFamily: FONT, fontSize: 15, fontWeight: 800, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.title}</div>}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.text}</div>
+                    <div style={{ fontFamily: FONT, fontSize: 14, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.text}</div>
                   </button>
                 ))}
               </div>
@@ -1313,9 +1313,9 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
 
       {screen.kind === "entry" && !viewingEntry && !entriesLoading && (
         <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
-          <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>That prayer isn't here anymore.</div>
+          <div style={{ fontFamily: FONT, fontSize: 14, color: T.inkMuted }}>That prayer isn't here anymore.</div>
           <button onClick={() => setScreen({ kind: "browse", view: "field" })} className="prayer-focus"
-            style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
             ← Back to your prayers
           </button>
         </div>
@@ -1324,24 +1324,24 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
         <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: isMobile ? "70px 20px 32px" : "40px 56px" }}>
           <div style={{ width: "100%", maxWidth: 560, margin: "0 auto" }}>
             <button onClick={() => setScreen({ kind: "browse", view: "field" })} className="prayer-focus"
-              style={{ background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
+              style={{ background: "none", border: "none", color: T.inkMuted, fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: "6px 0", marginBottom: 20 }}>
               ← Back
             </button>
-            <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5, marginBottom: 10 }}>{formatPrayerDate(viewingEntry.createdAt)}</div>
-            {viewingEntry.title && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: T.ink, marginBottom: 14, lineHeight: 1.3 }}>{viewingEntry.title}</div>}
-            <div style={{ fontFamily: FONT, fontSize: 16, color: T.ink, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 28 }}>{viewingEntry.text}</div>
+            <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: T.inkMuted, letterSpacing: 0.5, marginBottom: 10 }}>{formatPrayerDate(viewingEntry.createdAt)}</div>
+            {viewingEntry.title && <div style={{ fontFamily: FONT_DISPLAY, fontSize: 27, fontWeight: 600, color: T.ink, marginBottom: 14, lineHeight: 1.3 }}>{viewingEntry.title}</div>}
+            <div style={{ fontFamily: FONT, fontSize: 17, color: T.ink, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 28 }}>{viewingEntry.text}</div>
 
             {confirmDeleteId === viewingEntry.id ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, background: T.surface, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "14px 16px" }}>
-                <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink }}>Delete this prayer? This can't be undone.</div>
-                {deleteError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {deleteError}</div>}
+                <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink }}>Delete this prayer? This can't be undone.</div>
+                {deleteError && <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {deleteError}</div>}
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => handleDelete(viewingEntry.id)} disabled={deleting} className="prayer-focus"
-                    style={{ background: T.urgent, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+                    style={{ background: T.urgent, color: ON_ACCENT, border: "none", borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.6 : 1 }}>
                     {deleting ? "Deleting…" : "Yes, delete"}
                   </button>
                   <button onClick={() => setConfirmDeleteId(null)} className="prayer-focus"
-                    style={{ background: "none", border: tb(1.5, T.borderMuted), color: T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    style={{ background: "none", border: tb(1.5, T.borderMuted), color: T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                     Cancel
                   </button>
                 </div>
@@ -1349,11 +1349,11 @@ function PrayerSpace({ onUnlock }: { onUnlock: () => void }) {
             ) : (
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => openCompose(viewingEntry.id)} className="prayer-focus"
-                  style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  style={{ background: "transparent", color: T.ink, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                   Edit
                 </button>
                 <button onClick={() => { setDeleteError(null); setConfirmDeleteId(viewingEntry.id); }} className="prayer-focus"
-                  style={{ background: "transparent", color: T.inkMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  style={{ background: "transparent", color: T.inkMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                   Delete
                 </button>
               </div>
@@ -1462,15 +1462,15 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ background: T.surface, border: "none", borderBottom: tb(2), padding: isMobile ? "10px 12px" : "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: isMobile ? 8 : 16, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
-        <button onClick={onBack} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
+        <button onClick={onBack} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 800, color: T.ink, cursor: "pointer", flexShrink: 0 }}>← Back</button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 18 : 24, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: task.completed ? "line-through" : "none" }}>{task.name}</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 19 : 25, fontWeight: 600, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: task.completed ? "line-through" : "none" }}>{task.name}</div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 2, alignItems: "center" }}>
-            {task.completed && <div style={{ color: ON_ACCENT, background: T.inside, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>✓ Completed in Asana</div>}
-            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
-            {ul && <div style={{ color: ON_ACCENT, background: uc, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 9, fontWeight: 800 }}>{ul}</div>}
+            {task.completed && <div style={{ color: ON_ACCENT, background: T.inside, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 10, fontWeight: 800 }}>✓ Completed in Asana</div>}
+            {task.due_on && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted }}>{task.due_on}</div>}
+            {ul && <div style={{ color: ON_ACCENT, background: uc, borderRadius: T.radiusSm, padding: "1px 8px", fontFamily: FONT, fontSize: 10, fontWeight: 800 }}>{ul}</div>}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
@@ -1478,20 +1478,20 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
           {isAsanaTask && (
             <button onClick={handleToggleComplete} disabled={completing} title={task.completed ? "Reopen in Asana" : "Mark complete in Asana"}
               className={task.completed ? "btn-secondary" : "btn-primary"}
-              style={{ background: task.completed ? T.surfaceMuted : T.inside, color: task.completed ? T.inkMuted : ON_ACCENT, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: completing ? "default" : "pointer", opacity: completing ? 0.6 : 1, flexShrink: 0 }}>
+              style={{ background: task.completed ? T.surfaceMuted : T.inside, color: task.completed ? T.inkMuted : ON_ACCENT, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: completing ? "default" : "pointer", opacity: completing ? 0.6 : 1, flexShrink: 0 }}>
               {completing ? "…" : task.completed ? "↩ Reopen" : "✓ Mark Complete"}
             </button>
           )}
-          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} className="btn-secondary" style={{ background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
+          {task.url && <button onClick={() => window.open(task.url, "_blank", "noopener,noreferrer")} className="btn-secondary" style={{ background: T.surfaceMuted, color: T.ink, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>{isMobile ? "↗" : "Asana ↗"}</button>}
         </div>
-        {completeError && <div style={{ flexBasis: "100%", fontFamily: FONT, fontSize: 11, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {completeError}</div>}
+        {completeError && <div style={{ flexBasis: "100%", fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {completeError}</div>}
       </div>
 
       {/* Brief / Mind Map switcher */}
       <div style={{ background: T.surface, padding: "10px 20px", display: "flex", gap: 8, flexShrink: 0 }}>
         {(["brief", "mindmap"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} aria-pressed={tab === t}
-            style={{ background: tab === t ? T.ink : T.surfaceMuted, color: tab === t ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer" }}>
+            style={{ background: tab === t ? T.ink : T.surfaceMuted, color: tab === t ? T.surface : T.inkMuted, border: "none", borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
             {t === "brief" ? "Brief" : "Mind Map"}
           </button>
         ))}
@@ -1507,17 +1507,17 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {details?.assignee && (
                     <div style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
-                      <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, minWidth: 120, flexShrink: 0 }}>Assignee</div>
-                      <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, fontWeight: 600 }}>{details.assignee}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: T.inkMuted, minWidth: 120, flexShrink: 0 }}>Assignee</div>
+                      <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, fontWeight: 600 }}>{details.assignee}</div>
                     </div>
                   )}
                   {details?.customFields.map(f => (
                     <div key={f.gid} style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
-                      <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, minWidth: 120, flexShrink: 0 }}>{f.name}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: T.inkMuted, minWidth: 120, flexShrink: 0 }}>{f.name}</div>
                       {/^https?:\/\//.test(f.displayValue) ? (
-                        <a href={f.displayValue} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT, fontSize: 13, color: T.focus, fontWeight: 600, wordBreak: "break-all" }}>{f.displayValue} ↗</a>
+                        <a href={f.displayValue} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT, fontSize: 14, color: T.focus, fontWeight: 600, wordBreak: "break-all" }}>{f.displayValue} ↗</a>
                       ) : (
-                        <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, fontWeight: 600 }}>{f.displayValue}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, fontWeight: 600 }}>{f.displayValue}</div>
                       )}
                     </div>
                   ))}
@@ -1525,14 +1525,14 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
               </div>
             )}
 
-            {isAsanaTask && detailsError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {detailsError}</div>}
+            {isAsanaTask && detailsError && <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {detailsError}</div>}
 
             <div style={{ background: T.surface, border: tb(2), boxShadow: T.shadowSm, borderRadius: T.radius, padding: "18px 22px" }}>
               <div style={{ display: "inline-block", fontFamily: FONT, fontSize: FS.caption, fontWeight: 900, color: ON_ACCENT, background: T.inside, letterSpacing: 1.5, marginBottom: 12, padding: "3px 10px", borderRadius: 999 }}>DESCRIPTION</div>
               {task.notes ? (
-                <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{task.notes}</div>
+                <div style={{ fontFamily: FONT, fontSize: 15, color: T.ink, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{task.notes}</div>
               ) : (
-                <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic" }}>No description in Asana yet.</div>
+                <div style={{ fontFamily: FONT, fontSize: 14, color: T.inkMuted, fontStyle: "italic" }}>No description in Asana yet.</div>
               )}
             </div>
 
@@ -1547,10 +1547,10 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                       <button onClick={() => handleToggleSubtask(s.gid, !s.completed)} disabled={togglingSubtask === s.gid}
                         title={s.completed ? "Mark not done" : "Mark done"} aria-label={s.completed ? "Mark not done" : "Mark done"}
                         style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, border: tb(1.5, s.completed ? T.inside : T.inkMuted), background: s.completed ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}>
-                        {s.completed && <span style={{ color: ON_ACCENT, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                        {s.completed && <span style={{ color: ON_ACCENT, fontSize: 11, fontWeight: 900, lineHeight: 1 }}>✓</span>}
                       </button>
-                      <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 500, color: s.completed ? T.inkMuted : T.ink, textDecoration: s.completed ? "line-through" : "none", flex: 1, minWidth: 0 }}>{s.name}</div>
-                      {s.due_on && <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: T.inkMuted, flexShrink: 0 }}>{s.due_on}</div>}
+                      <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 500, color: s.completed ? T.inkMuted : T.ink, textDecoration: s.completed ? "line-through" : "none", flex: 1, minWidth: 0 }}>{s.name}</div>
+                      {s.due_on && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, flexShrink: 0 }}>{s.due_on}</div>}
                     </div>
                   ))}
                 </div>
@@ -1562,20 +1562,20 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                 COMMENTS{comments && comments.length > 0 ? ` (${comments.length})` : ""}
               </div>
               {commentsError ? (
-                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {commentsError}</div>
+                <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "6px 10px", display: "inline-block" }}>⚠ {commentsError}</div>
               ) : comments === null ? (
-                <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted }}>Loading comments…</div>
+                <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted }}>Loading comments…</div>
               ) : comments.length === 0 ? (
-                <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, fontStyle: "italic" }}>No comments yet.</div>
+                <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, fontStyle: "italic" }}>No comments yet.</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: isAsanaTask ? 16 : 0 }}>
                   {comments.map(c => (
                     <div key={c.gid} style={{ background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "12px 14px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                        <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink }}>{c.author || "Someone"}</div>
-                        <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, flexShrink: 0 }}>{new Date(c.created_at).toLocaleDateString()}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: T.ink }}>{c.author || "Someone"}</div>
+                        <div style={{ fontFamily: FONT, fontSize: 11, color: T.inkMuted, flexShrink: 0 }}>{new Date(c.created_at).toLocaleDateString()}</div>
                       </div>
-                      <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}><AsanaCommentText comment={c} /></div>
+                      <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.6, whiteSpace: "pre-wrap" }}><AsanaCommentText comment={c} /></div>
                     </div>
                   ))}
                 </div>
@@ -1586,13 +1586,13 @@ function TaskDetail({ task, category, onCategoryChange, onBack, onToggleComplete
                   <textarea value={replyText} onChange={e => setReplyText(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handlePostComment(); }}
                     placeholder="Add a comment — it's posted to this task in Asana…"
-                    style={{ width: "100%", minHeight: 64, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 12px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.6 }} />
+                    style={{ width: "100%", minHeight: 64, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surfaceMuted, border: tb(1.5, T.borderMuted), borderRadius: T.radiusSm, padding: "10px 12px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.6 }} />
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <button onClick={handlePostComment} disabled={!replyText.trim() || posting} className={replyText.trim() ? "btn-primary" : "btn-secondary"}
-                      style={{ background: replyText.trim() ? T.inside : T.surfaceMuted, color: replyText.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: replyText.trim() && !posting ? "pointer" : "default", opacity: posting ? 0.6 : 1 }}>
+                      style={{ background: replyText.trim() ? T.inside : T.surfaceMuted, color: replyText.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "8px 18px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: replyText.trim() && !posting ? "pointer" : "default", opacity: posting ? 0.6 : 1 }}>
                       {posting ? "Posting…" : "Post Comment"}
                     </button>
-                    {postError && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {postError}</div>}
+                    {postError && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: ON_ACCENT, background: T.urgent, borderRadius: T.radiusSm, padding: "4px 8px", display: "inline-block" }}>⚠ {postError}</div>}
                   </div>
                 </div>
               )}
@@ -1624,12 +1624,12 @@ function ProjectCard({ task, category, onOpen, onCategoryChange, onDragStart, on
       style={{ background: T.surface, borderRadius: T.radius, overflow: "hidden", cursor: "grab", display: "flex", flexDirection: "column", width: "100%", height: T.slotHeight, transition: "transform 0.15s ease, box-shadow 0.15s ease" }}>
       <div style={{ height: 6, background: categoryColor, flexShrink: 0 }} />
       <div style={{ padding: "14px 16px 14px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
+        <div style={{ fontFamily: FONT, fontSize: 18, fontWeight: 700, color: T.ink, lineHeight: 1.3, textAlign: "left", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{task.name}</div>
         <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-            {due && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
+            {due && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: T.inkMuted, whiteSpace: "nowrap" }}>{due}</div>}
             {ul && (
-              <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: ON_ACCENT, background: uc, borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
+              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: ON_ACCENT, background: uc, borderRadius: T.radiusSm, padding: "1px 6px", whiteSpace: "nowrap" }}>{ul}</div>
             )}
           </div>
           <CategoryToggle value={category} onChange={onCategoryChange} size="small" />
@@ -1648,13 +1648,13 @@ function TodoCard({ item, onOpen, onToggle, onClose }: { item: TodoItem; onOpen?
       <div style={{ padding: "9px 10px", display: "flex", alignItems: "flex-start", gap: 9 }}>
         <button onClick={onToggle} title={item.done ? "Mark not done" : "Mark done"} aria-label={item.done ? "Mark not done" : "Mark done"}
           style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, marginTop: 2, border: tb(1.5, item.done ? T.inside : T.inkMuted), background: item.done ? T.inside : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s", padding: 0 }}>
-          {item.done && <span style={{ color: ON_ACCENT, fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+          {item.done && <span style={{ color: ON_ACCENT, fontSize: 11, fontWeight: 900, lineHeight: 1 }}>✓</span>}
         </button>
-        <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 500, color: item.done ? T.inkMuted : T.ink, textDecoration: item.done ? "line-through" : "none", flex: 1, minWidth: 0, wordBreak: "break-word" }}>
+        <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 500, color: item.done ? T.inkMuted : T.ink, textDecoration: item.done ? "line-through" : "none", flex: 1, minWidth: 0, wordBreak: "break-word" }}>
           {item.title}
         </div>
         <button onClick={onClose} title="Delete this task" aria-label="Delete this task"
-          style={{ background: "transparent", border: "none", color: T.inkMuted, fontSize: 14, cursor: "pointer", padding: "0 2px", lineHeight: 1, flexShrink: 0 }}
+          style={{ background: "transparent", border: "none", color: T.inkMuted, fontSize: 15, cursor: "pointer", padding: "0 2px", lineHeight: 1, flexShrink: 0 }}
           onMouseEnter={e => (e.currentTarget.style.color = T.urgent)}
           onMouseLeave={e => (e.currentTarget.style.color = T.inkMuted)}>✕</button>
       </div>
@@ -1671,22 +1671,22 @@ function TodoDetail({ item, onUpdate, onDelete, onBack }: { item: TodoItem; onUp
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ background: T.surface, border: "none", borderBottom: tb(2), padding: "14px 24px", flexShrink: 0, display: "flex", alignItems: "center", gap: 14, position: "relative", zIndex: 1 }}>
-        <button onClick={onBack} title="Back to Quick Tasks" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, cursor: "pointer" }}>← Back</button>
+        <button onClick={onBack} title="Back to Quick Tasks" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 13, fontWeight: 800, color: T.ink, cursor: "pointer" }}>← Back</button>
         <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => title.trim() && onUpdate({ title: title.trim() })} onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-          style={{ flex: 1, fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink, background: "transparent", border: "none", outline: "none", minWidth: 0 }} />
+          style={{ flex: 1, fontFamily: FONT_DISPLAY, fontSize: 23, fontWeight: 600, color: T.ink, background: "transparent", border: "none", outline: "none", minWidth: 0 }} />
         <button onClick={() => onUpdate({ done: !item.done })} className={item.done ? "btn-secondary" : "btn-primary"}
-          style={{ background: item.done ? T.surfaceMuted : T.inside, color: item.done ? T.ink : ON_ACCENT, borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+          style={{ background: item.done ? T.surfaceMuted : T.inside, color: item.done ? T.ink : ON_ACCENT, borderRadius: T.radiusSm, padding: "6px 16px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
           {item.done ? "↩ Reopen" : "✓ Done"}
         </button>
         <button onClick={() => { onDelete(); onBack(); }} title="Delete this task" className="btn-secondary"
-          style={{ background: T.surfaceMuted, color: T.inkMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
+          style={{ background: T.surfaceMuted, color: T.inkMuted, borderRadius: T.radiusSm, padding: "6px 14px", fontFamily: FONT, fontSize: 13, cursor: "pointer", flexShrink: 0 }}>
           Delete
         </button>
       </div>
       <div className="board-canvas" style={{ flex: 1, overflowY: "auto", padding: "48px 64px" }}>
         <textarea value={notes} onChange={e => { setNotes(e.target.value); onUpdate({ notes: e.target.value }); }}
           placeholder="Add notes…"
-          style={{ width: "100%", maxWidth: 560, minHeight: 200, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surface, border: tb(2), boxShadow: T.shadowSm, borderRadius: T.radius, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.8, display: "block" }} />
+          style={{ width: "100%", maxWidth: 560, minHeight: 200, fontFamily: FONT, fontSize: 15, color: T.ink, background: T.surface, border: tb(2), boxShadow: T.shadowSm, borderRadius: T.radius, padding: "14px 16px", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.8, display: "block" }} />
       </div>
     </div>
   );
@@ -1716,36 +1716,36 @@ function CreateProjectModal({ onClose, onCreate, initialCategory = null }: { onC
       <div style={{ background: T.surface, border: tb(2.5), boxShadow: T.shadowLg, borderRadius: T.radius, width: 480, maxWidth: "90vw", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{ background: T.surfaceMuted, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>New Project</div>
-          <button onClick={onClose} title="Close" aria-label="Close" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 23, fontWeight: 600, color: T.ink }}>New Project</div>
+          <button onClick={onClose} title="Close" aria-label="Close" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 21, lineHeight: 1, padding: 0 }}>×</button>
         </div>
 
         {/* Body */}
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Name */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>PROJECT NAME</label>
+            <label style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>PROJECT NAME</label>
             <input autoFocus value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCreate()} placeholder="Name your project…"
-              style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.surfaceMuted, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 500, color: T.ink, background: T.surfaceMuted, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
           </div>
 
           {/* Description */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>DESCRIPTION</label>
+            <label style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>DESCRIPTION</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project about…"
-              style={{ fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 90, lineHeight: 1.7 }} />
+              style={{ fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surfaceMuted, border: tb(2), borderRadius: T.radiusSm, padding: "10px 14px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 90, lineHeight: 1.7 }} />
           </div>
 
           {/* Category */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <label style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>CATEGORY</label>
+            <label style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>CATEGORY</label>
             <div style={{ display: "flex", gap: 10 }}>
               {([["factory", "Outside", T.outside], ["creative", "Inside", T.inside], [null, "Incoming", T.uncat]] as [CategoryKey, string, string][]).map(([key, label, color]) => {
                 const isSelected = cat === key;
                 return (
                   <button key={String(key)} onClick={() => setCat(key)} aria-pressed={isSelected}
                     style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "18px 10px", background: isSelected ? color : T.surfaceMuted, border: "none", borderRadius: T.radiusSm, cursor: "pointer", transition: "background 0.15s" }}>
-                    <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: isSelected ? ON_ACCENT : T.inkMuted }}>{label}</div>
+                    <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, color: isSelected ? ON_ACCENT : T.inkMuted }}>{label}</div>
                   </button>
                 );
               })}
@@ -1755,9 +1755,9 @@ function CreateProjectModal({ onClose, onCreate, initialCategory = null }: { onC
 
         {/* Footer */}
         <div style={{ padding: "16px 24px", display: "flex", justifyContent: "flex-end", gap: 10 }}>
-          <button onClick={onClose} className="btn-secondary" style={{ background: T.surfaceMuted, color: T.inkMuted, borderRadius: T.radiusSm, padding: "10px 20px", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+          <button onClick={onClose} className="btn-secondary" style={{ background: T.surfaceMuted, color: T.inkMuted, borderRadius: T.radiusSm, padding: "10px 20px", fontFamily: FONT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleCreate} disabled={!name.trim()} className={name.trim() ? "btn-primary" : "btn-secondary"}
-            style={{ background: name.trim() ? T.inside : T.surfaceMuted, color: name.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "10px 24px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+            style={{ background: name.trim() ? T.inside : T.surfaceMuted, color: name.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "10px 24px", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
             Create Project
           </button>
         </div>
@@ -2091,8 +2091,8 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 48, height: 48, borderRadius: T.radius, background: accentColor, flexShrink: 0 }}>
             {icon}
           </div>
-          <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 800, color: T.ink, flex: 1 }}>{label}</div>
-          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: accentColor, border: "none", borderRadius: 999, padding: "3px 11px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
+          <div style={{ fontFamily: FONT, fontSize: 27, fontWeight: 800, color: T.ink, flex: 1 }}>{label}</div>
+          <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: ON_ACCENT, background: accentColor, border: "none", borderRadius: 999, padding: "3px 11px", minWidth: 20, textAlign: "center" }}>{items.length}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 100, flex: 1, paddingTop: 16 }}>
           {items.map(p => <ProjectCard key={p.gid} task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />)}
@@ -2104,8 +2104,8 @@ export default function App() {
                 style={{ '--slot-accent': accentColor, height: T.slotHeight, flexShrink: 0, border: `2px dashed ${active ? accentColor : T.borderMuted}`, borderRadius: T.radius, background: T.surfaceMuted, transition: "border-color 0.15s, background 0.15s", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 0 } as React.CSSProperties}
                 onMouseEnter={e => (e.currentTarget.style.background = tint(accentColor, 10))}
                 onMouseLeave={e => (e.currentTarget.style.background = T.surfaceMuted)}>
-                <span style={{ width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${T.inkMuted}`, color: T.inkMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, lineHeight: 1, flexShrink: 0 }}>+</span>
-                <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: T.inkMuted }}>Add a task</span>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${T.inkMuted}`, color: T.inkMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, lineHeight: 1, flexShrink: 0 }}>+</span>
+                <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.inkMuted }}>Add a task</span>
               </button>
             );
           })}
@@ -2125,7 +2125,7 @@ export default function App() {
     if (mentionCards.length === 0) return null;
     return (
       <div style={{ marginTop: compact ? 14 : 18, display: "flex", flexDirection: "column", gap: compact ? 7 : 8 }}>
-        <div style={{ fontFamily: FONT, fontSize: compact ? 9 : 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>MENTIONS</div>
+        <div style={{ fontFamily: FONT, fontSize: compact ? 10 : 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>MENTIONS</div>
         <div style={{ display: "flex", flexDirection: compact ? "column" : "row", gap: compact ? 10 : 12 }}>
           {mentionCards.map(m => {
             const cat = categories[m.taskGid] ?? null;
@@ -2135,13 +2135,13 @@ export default function App() {
               <button key={m.comment.gid} onClick={() => { const t = projects.find(p => p.gid === m.taskGid); if (t) setOpenTask(t); }}
                 style={{ textAlign: "left", flex: compact ? undefined : "1 1 0", minWidth: 0, width: compact ? "100%" : undefined, height: T.slotHeight, display: "flex", flexDirection: "column", gap: 4, background: T.surface, border: tb(2), borderRadius: T.radius, boxShadow: T.shadow, overflow: "hidden", padding: "10px 14px 12px", cursor: "pointer" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                  <div style={{ display: "inline-block", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: ON_ACCENT, background: tagColor, letterSpacing: 0.5, textTransform: "uppercase", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>{tagLabel}</div>
-                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.comment.author || "Someone"}</span>
+                  <div style={{ display: "inline-block", fontFamily: FONT, fontSize: 10, fontWeight: 800, color: ON_ACCENT, background: tagColor, letterSpacing: 0.5, textTransform: "uppercase", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>{tagLabel}</div>
+                  <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.comment.author || "Someone"}</span>
                 </div>
-                <div style={{ fontFamily: FONT, fontSize: 13, color: T.ink, lineHeight: 1.35, flex: 1, minHeight: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}><AsanaCommentText comment={m.comment} linksClickable={false} /></div>
+                <div style={{ fontFamily: FONT, fontSize: 14, color: T.ink, lineHeight: 1.35, flex: 1, minHeight: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}><AsanaCommentText comment={m.comment} linksClickable={false} /></div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.taskName}</span>
-                  <span style={{ fontFamily: FONT, fontSize: 9, color: T.inkMuted, flexShrink: 0 }}>{timeAgo(m.comment.created_at)}</span>
+                  <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.taskName}</span>
+                  <span style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, flexShrink: 0 }}>{timeAgo(m.comment.created_at)}</span>
                 </div>
               </button>
             );
@@ -2167,13 +2167,13 @@ export default function App() {
             <MossmindLogo aria-hidden="true" style={{ height: isMobile ? 17 : 24, width: "auto", color: T.ink, display: "block" }} />
           </button>
         </div>
-        {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} className="btn-primary" style={{ background: T.inside, borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
+        {!isMobile && <button onClick={() => { setCreateCategory(null); setShowCreate(true); }} className="btn-primary" style={{ background: T.inside, borderRadius: T.radiusSm, padding: "7px 16px", fontFamily: FONT, fontSize: 13, fontWeight: 800, color: ON_ACCENT, cursor: "pointer", letterSpacing: 0.3, flexShrink: 0 }}>+ Create</button>}
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
-          {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
-          <button onClick={() => syncTasks()} disabled={syncing} title="Sync tasks from Asana" aria-label="Sync tasks from Asana" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 16 : 12, fontWeight: 800, color: T.ink, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1, opacity: syncing ? 0.5 : 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
-          <button onClick={toggleTheme} title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>{theme === "light" ? "☾" : "☀"}</button>
-          <button onClick={() => setShowSettings(true)} title="Settings" aria-label="Settings" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 12px", fontFamily: FONT, fontSize: 13, color: T.ink, cursor: "pointer", lineHeight: 1 }}>⚙</button>
+          {syncMsg && !isMobile && <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: syncMsg.startsWith("✓") ? T.inside : T.urgent }}>{syncMsg}</div>}
+          <button onClick={() => syncTasks()} disabled={syncing} title="Sync tasks from Asana" aria-label="Sync tasks from Asana" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 14px", fontFamily: FONT, fontSize: isMobile ? 17 : 13, fontWeight: 800, color: T.ink, cursor: syncing ? "not-allowed" : "pointer", lineHeight: 1, opacity: syncing ? 0.5 : 1 }}>{syncing ? "…" : "↻"}{!isMobile && (syncing ? " Syncing" : " Sync")}</button>
+          <button onClick={toggleTheme} title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 12px", fontFamily: FONT, fontSize: 14, color: T.ink, cursor: "pointer", lineHeight: 1 }}>{theme === "light" ? "☾" : "☀"}</button>
+          <button onClick={() => setShowSettings(true)} title="Settings" aria-label="Settings" className="btn-secondary" style={{ background: T.surfaceMuted, borderRadius: T.radiusSm, padding: isMobile ? "10px" : "6px 12px", fontFamily: FONT, fontSize: 14, color: T.ink, cursor: "pointer", lineHeight: 1 }}>⚙</button>
         </div>
       </div>
 
@@ -2188,12 +2188,12 @@ export default function App() {
             <div className="moss-grain" />
           </div>
           <div style={{ position: "relative", zIndex: 1, padding: "7px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>⚡</span>
-            <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: T.ink, flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>⚡</span>
+            <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: T.ink, flex: 1, minWidth: 0 }}>
               {quickApprovals.length} task{quickApprovals.length === 1 ? "" : "s"} waiting on your approval
             </div>
             <button onClick={() => { setOpenTask(null); setOpenTodoId(null); }} className="btn-primary"
-              style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "4px 12px", fontFamily: FONT, fontSize: 11, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+              style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "4px 12px", fontFamily: FONT, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
               View →
             </button>
           </div>
@@ -2210,8 +2210,8 @@ export default function App() {
                 return (
                   <button key={tab} onClick={() => setMobileTab(p => p === tab ? null : tab)} title={tab === "create" ? "New project" : tab === "tasks" ? "Quick Tasks" : "Prayer"}
                     style={{ width: 52, height: 58, background: active ? T.ink : T.surfaceMuted, border: "none", boxShadow: active ? T.shadowSm : "none", borderRadius: `${T.radius}px 0 0 ${T.radius}px`, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: active ? T.surface : T.inkMuted, transition: "background 0.15s, color 0.15s" }}>
-                    {tab === "prayer" ? <PrayerIcon width={18} height={18} /> : tab === "create" ? <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> : <span style={{ fontSize: 14 }}>☑</span>}
-                    <span style={{ fontFamily: FONT, fontSize: 8, fontWeight: 800, letterSpacing: 0.4 }}>{tab === "create" ? "Create" : tab === "tasks" ? "Tasks" : "Prayer"}</span>
+                    {tab === "prayer" ? <PrayerIcon width={18} height={18} /> : tab === "create" ? <span style={{ fontSize: 21, lineHeight: 1 }}>+</span> : <span style={{ fontSize: 15 }}>☑</span>}
+                    <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: 0.4 }}>{tab === "create" ? "Create" : tab === "tasks" ? "Tasks" : "Prayer"}</span>
                   </button>
                 );
               })}
@@ -2224,10 +2224,10 @@ export default function App() {
                 <div style={{ position: "absolute", inset: 0, background: T.canvas, transform: mobileTab ? "translateX(0)" : "translateX(100%)", transition: "transform 0.22s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
                   {/* Panel header */}
                   <div style={{ background: T.surface, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: T.shadowSm, flexShrink: 0, position: "relative", zIndex: 1 }}>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 23, fontWeight: 600, color: T.ink }}>
                       {mobileTab === "create" ? "New Project" : mobileTab === "tasks" ? "Quick Tasks" : "Prayer"}
                     </div>
-                    <button onClick={() => setMobileTab(null)} title="Close" aria-label="Close" style={{ background: "none", border: "none", color: T.inkMuted, fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "2px 6px" }}>×</button>
+                    <button onClick={() => setMobileTab(null)} title="Close" aria-label="Close" style={{ background: "none", border: "none", color: T.inkMuted, fontSize: 23, cursor: "pointer", lineHeight: 1, padding: "2px 6px" }}>×</button>
                   </div>
 
                   {/* Create panel */}
@@ -2236,10 +2236,10 @@ export default function App() {
                       <input autoFocus value={mobileCreateName} onChange={e => setMobileCreateName(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && mobileCreateName.trim()) { createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); } }}
                         placeholder="Project name…"
-                        style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink, background: T.surfaceMuted, border: tb(2), borderRadius: T.radiusSm, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                        style={{ fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 500, color: T.ink, background: T.surfaceMuted, border: tb(2), borderRadius: T.radiusSm, padding: "12px 14px", outline: "none", width: "100%", boxSizing: "border-box" }} />
                       <button onClick={() => { if (!mobileCreateName.trim()) return; createProject({ gid: "local_" + Date.now(), name: mobileCreateName.trim(), due_on: null, notes: "", url: "" }, null); setMobileCreateName(""); setMobileTab(null); }} disabled={!mobileCreateName.trim()}
                         className={mobileCreateName.trim() ? "btn-primary" : "btn-secondary"}
-                        style={{ background: mobileCreateName.trim() ? T.inside : T.surfaceMuted, color: mobileCreateName.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 13, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
+                        style={{ background: mobileCreateName.trim() ? T.inside : T.surfaceMuted, color: mobileCreateName.trim() ? ON_ACCENT : T.inkMuted, borderRadius: T.radiusSm, padding: "12px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: mobileCreateName.trim() ? "pointer" : "default", width: "100%" }}>
                         Create Project
                       </button>
                     </div>
@@ -2251,8 +2251,8 @@ export default function App() {
                       <div style={{ padding: "16px 20px", flexShrink: 0 }}>
                         <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                           <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
-                            style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surfaceMuted, border: tb(1.5), borderRadius: T.radiusSm, padding: "9px 12px", outline: "none", minWidth: 0 }} />
-                          <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 16, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                            style={{ flex: 1, fontFamily: FONT, fontSize: 14, color: T.ink, background: T.surfaceMuted, border: tb(1.5), borderRadius: T.radiusSm, padding: "9px 12px", outline: "none", minWidth: 0 }} />
+                          <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "9px 14px", fontFamily: FONT, fontSize: 17, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                         </form>
                       </div>
                       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -2261,13 +2261,13 @@ export default function App() {
                         ))}
                         {todos.filter(t => t.done).length > 0 && (
                           <>
-                            <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5, paddingTop: 10, paddingBottom: 2 }}>DONE</div>
+                            <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5, paddingTop: 10, paddingBottom: 2 }}>DONE</div>
                             {todos.filter(t => t.done).map(t => (
                               <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: false }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
                             ))}
                           </>
                         )}
-                        {todos.length === 0 && <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, textAlign: "center", paddingTop: 32 }}>No tasks yet</div>}
+                        {todos.length === 0 && <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, textAlign: "center", paddingTop: 32 }}>No tasks yet</div>}
                       </div>
                     </>
                   )}
@@ -2276,14 +2276,14 @@ export default function App() {
                   {mobileTab === "prayer" && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 28px", textAlign: "center", gap: 24, flex: 1 }}>
                       <PrayerIcon width={52} height={52} style={{ color: T.ink, opacity: 0.8 }} />
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 600, color: T.ink, lineHeight: 1.3 }}>Open the Door</div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 29, fontWeight: 600, color: T.ink, lineHeight: 1.3 }}>Open the Door</div>
                       <div style={{ width: 32, height: 2, background: T.inside }} />
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontStyle: "italic", color: T.inkMuted, lineHeight: 1.7 }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontStyle: "italic", color: T.inkMuted, lineHeight: 1.7 }}>
                         "Behold, I stand at the door and knock."
-                        <div style={{ fontFamily: FONT, fontSize: 11, fontStyle: "normal", fontWeight: 700, marginTop: 4 }}>Rev 3:20</div>
+                        <div style={{ fontFamily: FONT, fontSize: 12, fontStyle: "normal", fontWeight: 700, marginTop: 4 }}>Rev 3:20</div>
                       </div>
                       <button onClick={() => { setMobileTab(null); setShowPrayer(true); }} className="btn-primary"
-                        style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 14, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
+                        style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "14px 0", fontFamily: FONT, fontSize: 15, fontWeight: 800, cursor: "pointer", width: "100%", marginTop: 8 }}>
                         Begin Prayer →
                       </button>
                     </div>
@@ -2298,24 +2298,24 @@ export default function App() {
                 {/* Welcome section — same orienting purpose as the desktop board's,
                     condensed for the narrower mobile column. */}
                 <div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: T.ink, lineHeight: 1.15 }}>{greeting}</div>
-                  <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: T.inkMuted, marginTop: 2, marginBottom: 12 }}>{dateStr} · {timeStr}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 25, fontWeight: 700, color: T.ink, lineHeight: 1.15 }}>{greeting}</div>
+                  <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: T.inkMuted, marginTop: 2, marginBottom: 12 }}>{dateStr} · {timeStr}</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {reminderChips.length > 0 ? reminderChips.map(chip => (
-                      <div key={chip.label} style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: ON_ACCENT, background: chip.color, borderRadius: 999, padding: "5px 12px" }}>{chip.label}</div>
+                      <div key={chip.label} style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: chip.color, borderRadius: 999, padding: "5px 12px" }}>{chip.label}</div>
                     )) : (
-                      <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "5px 12px" }}>Nothing urgent — clear runway ✓</div>
+                      <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "5px 12px" }}>Nothing urgent — clear runway ✓</div>
                     )}
                   </div>
                   {upcomingTasks.length > 0 && (
                     <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 7 }}>
-                      <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
+                      <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
                       {upcomingTasks.map(p => (
                         <button key={p.gid} onClick={() => setOpenTask(p)}
                           style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", width: "100%" }}>
                           <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.soon, flexShrink: 0 }} />
-                          <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: T.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                          <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: T.inkMuted, flexShrink: 0 }}>{urgLabel(p.due_on)}</span>
+                          <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                          <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, flexShrink: 0 }}>{urgLabel(p.due_on)}</span>
                         </button>
                       ))}
                     </div>
@@ -2324,9 +2324,9 @@ export default function App() {
                 </div>
                 {projects.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                    <div style={{ fontSize: 36, marginBottom: 12 }}>🌿</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 500, color: T.ink }}>No tasks yet</div>
-                    <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginTop: 8 }}>Add your Asana token in ⚙ Settings, then Sync</div>
+                    <div style={{ fontSize: 37, marginBottom: 12 }}>🌿</div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 500, color: T.ink }}>No tasks yet</div>
+                    <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, marginTop: 8 }}>Add your Asana token in ⚙ Settings, then Sync</div>
                   </div>
                 ) : (
                   [
@@ -2356,15 +2356,15 @@ export default function App() {
                 {projectsPanelOpen ? (
                   <>
                     <div style={{ padding: "16px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: T.ink }}>Projects</div>
-                      <button onClick={() => setProjectsPanelOpen(false)} title="Collapse" aria-label="Collapse projects panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: T.ink }}>Projects</div>
+                      <button onClick={() => setProjectsPanelOpen(false)} title="Collapse" aria-label="Collapse projects panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 17, lineHeight: 1, padding: "4px 6px" }}>‹</button>
                     </div>
                     <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 0" }}>
                       {[{ label: "Outside", items: allOutside, color: T.outside }, { label: "Inside", items: allInside, color: T.inside }].map(({ label, items, color }) => (
                         items.length === 0 ? null : (
                           <div key={label} style={{ marginBottom: 8 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 8px", color: T.inkMuted }}>
-                              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>{label}</div>
+                              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: T.ink, letterSpacing: 0 }}>{label}</div>
                             </div>
                             {items.map(p => {
                               const isCurrent = openTask.gid === p.gid;
@@ -2373,8 +2373,8 @@ export default function App() {
                                   style={{ width: "calc(100% - 20px)", margin: "0 10px 10px", background: T.surface, border: tb(isCurrent ? 2.5 : 1.5, isCurrent ? T.ink : T.border), boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: 0, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", overflow: "hidden", transition: "box-shadow 0.15s, border-color 0.15s" }}>
                                   <div style={{ height: 5, background: color, flexShrink: 0 }} />
                                   <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
-                                    <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: T.ink, lineHeight: 1.35 }}>{p.name}</div>
-                                    {p.due_on && <div style={{ fontFamily: FONT, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>{p.due_on}</div>}
+                                    <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: isCurrent ? 700 : 500, color: T.ink, lineHeight: 1.35 }}>{p.name}</div>
+                                    {p.due_on && <div style={{ fontFamily: FONT, fontSize: 11, color: T.inkMuted, fontWeight: 600 }}>{p.due_on}</div>}
                                   </div>
                                 </button>
                               );
@@ -2383,15 +2383,15 @@ export default function App() {
                         )
                       ))}
                       {allOutside.length === 0 && allInside.length === 0 && (
-                        <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, textAlign: "center", paddingTop: 24 }}>No categorized projects</div>
+                        <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, textAlign: "center", paddingTop: 24 }}>No categorized projects</div>
                       )}
                     </div>
                   </>
                 ) : (
                   <button onClick={() => setProjectsPanelOpen(true)} title="Expand projects panel" aria-label="Expand projects panel"
                     style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: T.inkMuted }}>
-                    <span style={{ fontSize: 16 }}>›</span>
-                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>PROJECTS</div>
+                    <span style={{ fontSize: 17 }}>›</span>
+                    <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>PROJECTS</div>
                   </button>
                 )}
               </div>
@@ -2418,24 +2418,24 @@ export default function App() {
                         arriving, what day/time it is, and only the handful of things
                         actually worth flagging right now (not a re-list of every task). */}
                     <div style={{ marginBottom: 32, maxWidth: 824, marginLeft: "auto", marginRight: "auto" }}>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 34, fontWeight: 700, color: T.ink, lineHeight: 1.15 }}>{greeting}</div>
-                      <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.inkMuted, marginTop: 4, marginBottom: 16 }}>{dateStr} · {timeStr}</div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 35, fontWeight: 700, color: T.ink, lineHeight: 1.15 }}>{greeting}</div>
+                      <div style={{ fontFamily: FONT, fontSize: 15, fontWeight: 600, color: T.inkMuted, marginTop: 4, marginBottom: 16 }}>{dateStr} · {timeStr}</div>
                       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                         {reminderChips.length > 0 ? reminderChips.map(chip => (
-                          <div key={chip.label} style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: chip.color, borderRadius: 999, padding: "6px 14px" }}>{chip.label}</div>
+                          <div key={chip.label} style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: ON_ACCENT, background: chip.color, borderRadius: 999, padding: "6px 14px" }}>{chip.label}</div>
                         )) : (
-                          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "6px 14px" }}>Nothing urgent — clear runway ✓</div>
+                          <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: ON_ACCENT, background: T.inside, borderRadius: 999, padding: "6px 14px" }}>Nothing urgent — clear runway ✓</div>
                         )}
                       </div>
                       {upcomingTasks.length > 0 && (
                         <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
-                          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
+                          <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.2 }}>COMING UP</div>
                           {upcomingTasks.map(p => (
                             <button key={p.gid} onClick={() => setOpenTask(p)}
                               style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", width: "100%" }}>
                               <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.soon, flexShrink: 0 }} />
-                              <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: T.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                              <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: T.inkMuted, flexShrink: 0 }}>{urgLabel(p.due_on)}</span>
+                              <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 600, color: T.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                              <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: T.inkMuted, flexShrink: 0 }}>{urgLabel(p.due_on)}</span>
                             </button>
                           ))}
                         </div>
@@ -2444,9 +2444,9 @@ export default function App() {
                     </div>
                     {!projects.length ? (
                       <div style={{ textAlign: "center", padding: "80px 40px" }}>
-                        <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 500, color: T.ink }}>No tasks yet</div>
-                        <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, marginTop: 8 }}>Add your Asana Personal Access Token in ⚙ Settings, then hit Sync</div>
+                        <div style={{ fontSize: 49, marginBottom: 16 }}>🌿</div>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 25, fontWeight: 500, color: T.ink }}>No tasks yet</div>
+                        <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, marginTop: 8 }}>Add your Asana Personal Access Token in ⚙ Settings, then hit Sync</div>
                       </div>
                     ) : (
                       <>
@@ -2462,14 +2462,14 @@ export default function App() {
                             </div>
                             <div style={{ position: "relative", zIndex: 1 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                                <span style={{ fontSize: 20, lineHeight: 1 }}>⚡</span>
-                                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
-                                <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 800, color: ON_ACCENT, background: T.soon, borderRadius: 10, padding: "2px 10px", minWidth: 22, textAlign: "center" }}>{quickApprovals.length}</div>
+                                <span style={{ fontSize: 21, lineHeight: 1 }}>⚡</span>
+                                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 23, fontWeight: 700, color: T.ink, flex: 1 }}>Needs Your Approval</div>
+                                <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 800, color: ON_ACCENT, background: T.soon, borderRadius: 10, padding: "2px 10px", minWidth: 22, textAlign: "center" }}>{quickApprovals.length}</div>
                               </div>
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                                 {quickApprovals.map(p => (
                                   <div key={p.gid} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
-                                    <div style={{ display: "inline-block", fontFamily: FONT, fontSize: 9, fontWeight: 800, color: ON_ACCENT, background: T.soon, letterSpacing: 0.5, textTransform: "uppercase", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
+                                    <div style={{ display: "inline-block", fontFamily: FONT, fontSize: 10, fontWeight: 800, color: ON_ACCENT, background: T.soon, letterSpacing: 0.5, textTransform: "uppercase", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>{QUICK_APPROVAL_SECTIONS[p.sectionGid!]}</div>
                                     <ProjectCard task={p} category={categories[p.gid] || null} onOpen={t => setOpenTask(t)} onCategoryChange={cat => updateCategory(p.gid, cat)} onDragStart={() => setDragGid(p.gid)} onDragEnd={() => { setDragGid(null); setDragOverCat(undefined); }} />
                                   </div>
                                 ))}
@@ -2501,13 +2501,13 @@ export default function App() {
                   <>
                     <div style={{ padding: "20px 16px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, color: T.ink }}>Quick Tasks</div>
-                        <button onClick={() => setTodosPanelOpen(false)} title="Collapse" aria-label="Collapse Quick Tasks panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "4px 6px" }}>‹</button>
+                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 23, fontWeight: 600, color: T.ink }}>Quick Tasks</div>
+                        <button onClick={() => setTodosPanelOpen(false)} title="Collapse" aria-label="Collapse Quick Tasks panel" style={{ background: "none", border: "none", color: T.inkMuted, cursor: "pointer", fontSize: 17, lineHeight: 1, padding: "4px 6px" }}>‹</button>
                       </div>
                       <form onSubmit={e => { e.preventDefault(); addTodo(); }} style={{ display: "flex", gap: 8 }}>
                         <input value={newTodoText} onChange={e => setNewTodoText(e.target.value)} placeholder="Add a task…"
-                          style={{ flex: 1, fontFamily: FONT, fontSize: 12, color: T.ink, background: T.surface, border: tb(1.5), boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "7px 10px", outline: "none", minWidth: 0 }} />
-                        <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 14, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
+                          style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: T.ink, background: T.surface, border: tb(1.5), boxShadow: T.shadowSm, borderRadius: T.radiusSm, padding: "7px 10px", outline: "none", minWidth: 0 }} />
+                        <button type="submit" title="Add task" aria-label="Add task" className="btn-primary" style={{ background: T.inside, color: ON_ACCENT, borderRadius: T.radiusSm, padding: "7px 12px", fontFamily: FONT, fontSize: 15, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>+</button>
                       </form>
                     </div>
                     <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -2516,24 +2516,24 @@ export default function App() {
                       ))}
                       {todos.filter(t => t.done).length > 0 && (
                         <>
-                          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5, paddingTop: 12, paddingBottom: 2 }}>DONE</div>
+                          <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, letterSpacing: 1.5, paddingTop: 12, paddingBottom: 2 }}>DONE</div>
                           {todos.filter(t => t.done).map(t => (
                             <TodoCard key={t.id} item={t} onToggle={e => { e.stopPropagation(); updateTodo(t.id, { done: false }); }} onClose={e => { e.stopPropagation(); deleteTodo(t.id); }} />
                           ))}
                         </>
                       )}
                       {todos.length === 0 && (
-                        <div style={{ fontFamily: FONT, fontSize: 12, color: T.inkMuted, textAlign: "center", paddingTop: 32 }}>No tasks yet</div>
+                        <div style={{ fontFamily: FONT, fontSize: 13, color: T.inkMuted, textAlign: "center", paddingTop: 32 }}>No tasks yet</div>
                       )}
                     </div>
                   </>
                 ) : (
                   <button onClick={() => setTodosPanelOpen(true)} title="Expand Quick Tasks" aria-label="Expand Quick Tasks panel"
                     style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, gap: 8, color: T.inkMuted }}>
-                    <span style={{ fontSize: 16 }}>‹</span>
-                    <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
+                    <span style={{ fontSize: 17 }}>‹</span>
+                    <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, color: T.inkMuted, writingMode: "vertical-rl", letterSpacing: 1.5 }}>QUICK TASKS</div>
                     {todos.filter(t => !t.done).length > 0 && (
-                      <div style={{ background: T.inside, color: ON_ACCENT, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 10, fontWeight: 800, writingMode: "vertical-rl" }}>
+                      <div style={{ background: T.inside, color: ON_ACCENT, borderRadius: 10, padding: "2px 6px", fontFamily: FONT, fontSize: 11, fontWeight: 800, writingMode: "vertical-rl" }}>
                         {todos.filter(t => !t.done).length}
                       </div>
                     )}

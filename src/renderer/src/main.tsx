@@ -72,15 +72,15 @@ function PasswordGate({ children }: { children: React.ReactNode }) {
             onChange={e => setPassword(e.target.value)}
             placeholder="Enter password…"
             autoFocus
-            style={{ fontFamily: font, fontSize: 14, color: ink, background: surfaceMuted, border: 'none', borderRadius: 8, padding: '12px 14px', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+            style={{ fontFamily: font, fontSize: 15, color: ink, background: surfaceMuted, border: 'none', borderRadius: 8, padding: '12px 14px', outline: 'none', width: '100%', boxSizing: 'border-box' }}
           />
-          {error && <div style={{ fontFamily: font, fontSize: 12, fontWeight: 700, color: onAccent, background: urgent, borderRadius: 8, padding: '6px 10px' }}>{error}</div>}
+          {error && <div style={{ fontFamily: font, fontSize: 13, fontWeight: 700, color: onAccent, background: urgent, borderRadius: 8, padding: '6px 10px' }}>{error}</div>}
           <button type="submit" disabled={loading} className="login-btn"
-            style={{ background: inside, color: onAccent, border: 'none', borderRadius: 8, padding: '12px', fontFamily: font, fontSize: 13, fontWeight: 900, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+            style={{ background: inside, color: onAccent, border: 'none', borderRadius: 8, padding: '12px', fontFamily: font, fontSize: 14, fontWeight: 900, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1 }}>
             {loading ? 'Checking…' : 'Enter'}
           </button>
         </form>
-        <div style={{ fontFamily: font, fontSize: 11, fontWeight: 600, color: inkMuted }}>Private workspace</div>
+        <div style={{ fontFamily: font, fontSize: 12, fontWeight: 600, color: inkMuted }}>Private workspace</div>
       </div>
     </div>
   )
